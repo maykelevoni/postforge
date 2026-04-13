@@ -6,7 +6,7 @@ Total: 19 tasks
 - [x] 001: Project Scaffold & Config
 - [x] 002: Prisma Schema & Database Setup
 - [x] 003: Auth.js Setup (Credentials + Google OAuth)
-- [ ] 004: Core Lib Utilities (ai, falai, settings, utm, seeds)
+- [x] 004: Core Lib Utilities (ai, falai, settings, utm, seeds)
 - [ ] 005: Auth Pages (Sign In + Register)
 - [ ] 006: Dashboard Layout & Sidebar (dark theme)
 - [ ] 007: Settings API + Page
