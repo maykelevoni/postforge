@@ -17,11 +17,6 @@
 .DS_Store
 *.pem
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
 # local env files
 .env*.local
 .env
@@ -35,3 +30,6 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations/*/migration.sql
+
+# tests (to be added later)
+tests/
