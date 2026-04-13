@@ -9,7 +9,7 @@ Total: 19 tasks
 - [x] 004: Core Lib Utilities (ai, falai, settings, utm, seeds)
 - [x] 005: Auth Pages (Sign In + Register)
 - [x] 006: Dashboard Layout & Sidebar (dark theme)
-- [ ] 007: Settings API + Page
+- [x] 007: Settings API + Page
 - [ ] 008: Research Worker (YouTube + Reddit + NewsAPI)
 - [ ] 009: Discover Worker (App Ideas + ClickBank)
 - [ ] 010: Research API + Research Page
