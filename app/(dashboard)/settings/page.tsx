@@ -155,6 +155,7 @@ export default function SettingsPage() {
 
   const handleChange = (key: string, value: string) => {
     setPendingChanges(prev => ({ ...prev, [key]: value }));
+    setSettings(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {

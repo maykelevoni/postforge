@@ -123,8 +123,9 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit}>
         <div style={formGroupStyle}>
-          <label style={labelStyle}>Name</label>
+          <label htmlFor="name" style={labelStyle}>Name</label>
           <input
+            id="name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -135,8 +136,9 @@ export default function RegisterPage() {
         </div>
 
         <div style={formGroupStyle}>
-          <label style={labelStyle}>Email</label>
+          <label htmlFor="email" style={labelStyle}>Email</label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -147,8 +149,9 @@ export default function RegisterPage() {
         </div>
 
         <div style={formGroupStyle}>
-          <label style={labelStyle}>Password</label>
+          <label htmlFor="password" style={labelStyle}>Password</label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

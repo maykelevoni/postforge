@@ -70,9 +70,10 @@ export default function ApiKeysSection({ settings, onSave }: ApiKeysSectionProps
 
     return (
       <div key={key} style={formGroupStyle}>
-        <label style={labelStyle}>{label}</label>
+        <label htmlFor={key} style={labelStyle}>{label}</label>
         <div style={{ display: "flex", gap: "8px" }}>
           <input
+            id={key}
             type={isPassword && !isShowingKey ? "password" : "text"}
             value={value}
             onChange={(e) => handleChange(key, e.target.value)}

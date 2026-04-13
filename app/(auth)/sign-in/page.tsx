@@ -4,7 +4,9 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { env } from "@/env.mjs";
+const hasGoogle = !!(
+  process.env.NEXT_PUBLIC_GOOGLE_ENABLED === "true"
+);
 
 export default function SignInPage() {
   const router = useRouter();
@@ -138,8 +140,9 @@ export default function SignInPage() {
 
       <form onSubmit={handleSubmit}>
         <div style={formGroupStyle}>
-          <label style={labelStyle}>Email</label>
+          <label htmlFor="email" style={labelStyle}>Email</label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -150,8 +153,9 @@ export default function SignInPage() {
         </div>
 
         <div style={formGroupStyle}>
-          <label style={labelStyle}>Password</label>
+          <label htmlFor="password" style={labelStyle}>Password</label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -166,7 +170,7 @@ export default function SignInPage() {
         </button>
       </form>
 
-      {env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && (
+      {hasGoogle && (
         <button
           type="button"
           onClick={handleGoogleSignIn}
@@ -177,9 +181,9 @@ export default function SignInPage() {
         </button>
       )}
 
-      <a href="/register" style={linkStyle}>
-        Don't have an account? <a style={anchorStyle}>Register</a>
-      </a>
+      <p style={linkStyle}>
+        Don't have an account? <a href="/register" style={anchorStyle}>Register</a>
+      </p>
     </div>
   );
 }

@@ -76,7 +76,7 @@ test.describe('Research page', () => {
     } else {
       // No topics available — verify the filter bar UI is still present
       await expect(page.getByRole('button', { name: 'All' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'New' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'New', exact: true })).toBeVisible();
     }
   });
 });
