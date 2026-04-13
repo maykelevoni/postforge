@@ -30,6 +30,3 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations/*/migration.sql
-
-# tests (to be added later)
-tests/

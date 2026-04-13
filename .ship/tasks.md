@@ -21,4 +21,4 @@ Total: 19 tasks
 - [x] 016: Content API + Content Page
 - [x] 017: Promote API + Promote Page
 - [x] 018: Today Page (Command Center)
-- [ ] 019: Playwright Tests
+- [x] 019: Playwright Tests
