@@ -18,7 +18,7 @@ Total: 19 tasks
 - [x] 013: Posting Worker (post-bridge + Systeme.io)
 - [x] 014: Worker Entry + Cron Registration
 - [x] 015: SSE + Engine Run API
-- [ ] 016: Content API + Content Page
+- [x] 016: Content API + Content Page
 - [ ] 017: Promote API + Promote Page
 - [ ] 018: Today Page (Command Center)
 - [ ] 019: Playwright Tests
