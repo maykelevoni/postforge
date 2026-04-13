@@ -8,7 +8,7 @@ Total: 19 tasks
 - [x] 003: Auth.js Setup (Credentials + Google OAuth)
 - [x] 004: Core Lib Utilities (ai, falai, settings, utm, seeds)
 - [x] 005: Auth Pages (Sign In + Register)
-- [ ] 006: Dashboard Layout & Sidebar (dark theme)
+- [x] 006: Dashboard Layout & Sidebar (dark theme)
 - [ ] 007: Settings API + Page
 - [ ] 008: Research Worker (YouTube + Reddit + NewsAPI)
 - [ ] 009: Discover Worker (App Ideas + ClickBank)
