@@ -17,7 +17,7 @@ Total: 19 tasks
 - [x] 012: Content Generation Worker
 - [x] 013: Posting Worker (post-bridge + Systeme.io)
 - [x] 014: Worker Entry + Cron Registration
-- [ ] 015: SSE + Engine Run API
+- [x] 015: SSE + Engine Run API
 - [ ] 016: Content API + Content Page
 - [ ] 017: Promote API + Promote Page
 - [ ] 018: Today Page (Command Center)
