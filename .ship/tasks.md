@@ -11,7 +11,7 @@ Total: 19 tasks
 - [x] 006: Dashboard Layout & Sidebar (dark theme)
 - [x] 007: Settings API + Page
 - [x] 008: Research Worker (YouTube + Reddit + NewsAPI)
-- [ ] 009: Discover Worker (App Ideas + ClickBank)
+- [x] 009: Discover Worker (App Ideas + ClickBank)
 - [ ] 010: Research API + Research Page
 - [ ] 011: Discover API + Discover Page
 - [ ] 012: Content Generation Worker
