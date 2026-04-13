@@ -10,7 +10,7 @@ Total: 19 tasks
 - [x] 005: Auth Pages (Sign In + Register)
 - [x] 006: Dashboard Layout & Sidebar (dark theme)
 - [x] 007: Settings API + Page
-- [ ] 008: Research Worker (YouTube + Reddit + NewsAPI)
+- [x] 008: Research Worker (YouTube + Reddit + NewsAPI)
 - [ ] 009: Discover Worker (App Ideas + ClickBank)
 - [ ] 010: Research API + Research Page
 - [ ] 011: Discover API + Discover Page
