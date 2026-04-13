@@ -1,4 +1,3 @@
-// This is a placeholder schema - it will be replaced in Task 002
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,7 +7,253 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Placeholder model - will be replaced in Task 002
-model Placeholder {
-  id Int @id @default(autoincrement())
+// --- Auth.js required models ---
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// --- App models ---
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  researchTopics  ResearchTopic[]
+  discoverItems   DiscoverItem[]
+  promotions      Promotion[]
+  contentPieces   ContentPiece[]
+  newsletters     Newsletter[]
+  scheduleEntries ScheduleEntry[]
+  engineRuns      EngineRun[]
+  settings        Setting[]
+
+  @@map("users")
+}
+
+model ResearchTopic {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  source    String   // "youtube" | "reddit" | "newsapi"
+  title     String
+  url       String?
+  summary   String?
+  score     Int      @default(5)
+  status    String   @default("new") // "new" | "used" | "dismissed"
+  createdAt DateTime @default(now())
+
+  discoverItems DiscoverItem[]
+
+  @@index([userId])
+  @@map("research_topics")
+}
+
+model DiscoverItem {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     String   // "app_idea" | "affiliate"
+  status   String   @default("pending") // "pending" | "approved" | "dismissed"
+  topicId  String?
+  topic    ResearchTopic? @relation(fields: [topicId], references: [id])
+  createdAt DateTime @default(now())
+
+  appIdea   AppIdea?
+  affiliate AffiliateProduct?
+  promotion Promotion?
+
+  @@index([userId])
+  @@map("discover_items")
+}
+
+model AppIdea {
+  id               String       @id @default(cuid())
+  discoverItemId   String       @unique
+  discoverItem     DiscoverItem @relation(fields: [discoverItemId], references: [id], onDelete: Cascade)
+  title            String
+  problem          String       @db.Text
+  targetAudience   String
+  coreFeatures     String       @db.Text  // JSON array
+  monetization     String
+  competition      String       @db.Text
+  whyNow           String       @db.Text
+  landingPageHtml  String       @db.Text
+  systemeFunnelUrl String?
+  createdAt        DateTime     @default(now())
+
+  @@map("app_ideas")
+}
+
+model AffiliateProduct {
+  id             String       @id @default(cuid())
+  discoverItemId String       @unique
+  discoverItem   DiscoverItem @relation(fields: [discoverItemId], references: [id], onDelete: Cascade)
+  name           String
+  vendor         String
+  affiliateLink  String
+  description    String       @db.Text
+  commissionRate Float
+  avgPayout      Float?
+  gravityScore   Float?
+  imageUrl       String?
+  promoRules     String       @db.Text  // full text rules
+  contentAngles  String       @db.Text  // JSON array of suggested angles
+  createdAt      DateTime     @default(now())
+
+  @@map("affiliate_products")
+}
+
+model Promotion {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discoverItemId String?       @unique
+  discoverItem   DiscoverItem? @relation(fields: [discoverItemId], references: [id])
+  name           String
+  type           String        // "app_idea" | "affiliate"
+  description    String        @db.Text
+  url            String        // landing page or affiliate link
+  funnelUrl      String?       // Systeme.io funnel URL
+  priority       Int           @default(5) // 1-10 rotation weight
+  status         String        @default("active") // "active" | "paused" | "archived"
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  contentPieces ContentPiece[]
+  newsletters   Newsletter[]
+
+  @@index([userId])
+  @@map("promotions")
+}
+
+model ContentPiece {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promotionId  String?
+  promotion    Promotion? @relation(fields: [promotionId], references: [id])
+  date         DateTime
+  platform     String     // "twitter" | "linkedin" | "reddit" | "instagram" | "tiktok"
+  content      String     @db.Text
+  imageUrl     String?    // fal.ai Flux image URL
+  videoUrl     String?    // fal.ai Kling video URL (instagram + tiktok)
+  status       String     @default("draft") // "draft" | "scheduled" | "published" | "failed"
+  approved     Boolean    @default(false)
+  postBridgeId String?
+  postedAt     DateTime?
+  scheduledAt  DateTime?
+  error        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([userId])
+  @@map("content_pieces")
+}
+
+model Newsletter {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promotionId String?
+  promotion   Promotion? @relation(fields: [promotionId], references: [id])
+  date        DateTime
+  subject     String
+  body        String     @db.Text
+  status      String     @default("draft") // "draft" | "scheduled" | "sent" | "failed"
+  approved    Boolean    @default(false)
+  sentAt      DateTime?
+  scheduledAt DateTime?
+  error       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId])
+  @@map("newsletters")
+}
+
+model ScheduleEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform   String   // "twitter" | "linkedin" | "reddit" | "instagram" | "tiktok" | "email"
+  time       String   // "HH:MM" 24h
+  daysOfWeek String   @default("[1,2,3,4,5]") // JSON int[] 0=Sun..6=Sat
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@map("schedule_entries")
+}
+
+model EngineRun {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  type      String   // "research" | "discover" | "content" | "posting" | "full"
+  status    String   // "running" | "completed" | "failed"
+  log       String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("engine_runs")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId])
+  @@map("settings")
 }

@@ -3,7 +3,7 @@ Generated: 2026-04-13
 Total: 19 tasks
 
 ## Checklist
-- [ ] 001: Project Scaffold & Config
+- [x] 001: Project Scaffold & Config
 - [ ] 002: Prisma Schema & Database Setup
 - [ ] 003: Auth.js Setup (Credentials + Google OAuth)
 - [ ] 004: Core Lib Utilities (ai, falai, settings, utm, seeds)
