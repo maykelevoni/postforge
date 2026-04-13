@@ -19,6 +19,6 @@ Total: 19 tasks
 - [x] 014: Worker Entry + Cron Registration
 - [x] 015: SSE + Engine Run API
 - [x] 016: Content API + Content Page
-- [ ] 017: Promote API + Promote Page
+- [x] 017: Promote API + Promote Page
 - [ ] 018: Today Page (Command Center)
 - [ ] 019: Playwright Tests
