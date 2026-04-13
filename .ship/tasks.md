@@ -14,7 +14,7 @@ Total: 19 tasks
 - [x] 009: Discover Worker (App Ideas + ClickBank)
 - [x] 010: Research API + Research Page
 - [x] 011: Discover API + Discover Page
-- [ ] 012: Content Generation Worker
+- [x] 012: Content Generation Worker
 - [ ] 013: Posting Worker (post-bridge + Systeme.io)
 - [ ] 014: Worker Entry + Cron Registration
 - [ ] 015: SSE + Engine Run API
