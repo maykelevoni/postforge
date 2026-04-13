@@ -20,5 +20,5 @@ Total: 19 tasks
 - [x] 015: SSE + Engine Run API
 - [x] 016: Content API + Content Page
 - [x] 017: Promote API + Promote Page
-- [ ] 018: Today Page (Command Center)
+- [x] 018: Today Page (Command Center)
 - [ ] 019: Playwright Tests
