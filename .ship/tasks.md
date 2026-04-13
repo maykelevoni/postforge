@@ -16,7 +16,7 @@ Total: 19 tasks
 - [x] 011: Discover API + Discover Page
 - [x] 012: Content Generation Worker
 - [x] 013: Posting Worker (post-bridge + Systeme.io)
-- [ ] 014: Worker Entry + Cron Registration
+- [x] 014: Worker Entry + Cron Registration
 - [ ] 015: SSE + Engine Run API
 - [ ] 016: Content API + Content Page
 - [ ] 017: Promote API + Promote Page
