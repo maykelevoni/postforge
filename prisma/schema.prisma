@@ -70,6 +70,8 @@ model User {
   scheduleEntries ScheduleEntry[]
   engineRuns      EngineRun[]
   settings        Setting[]
+  services        Service[]
+  serviceTickets  ServiceTicket[]
 
   @@map("users")
 }
@@ -166,6 +168,7 @@ model Promotion {
 
   contentPieces ContentPiece[]
   newsletters   Newsletter[]
+  service       Service?
 
   @@index([userId])
   @@map("promotions")
@@ -256,4 +259,53 @@ model Setting {
   @@unique([userId, key])
   @@index([userId])
   @@map("settings")
+}
+
+model Service {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  description       String    @db.Text
+  type              String    // "video_content" | "social_package" | "newsletter_package" | "landing_page" | "content_strategy"
+  deliverables      String    @db.Text  // template description (what AI generates)
+  priceMin          Float
+  priceMax          Float
+  turnaroundDays    Int       @default(3)
+  funnelUrl         String?   // Systeme.io landing page URL
+  status            String    @default("active") // "active" | "paused"
+  promotionId       String?   @unique
+  promotion         Promotion? @relation(fields: [promotionId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tickets ServiceTicket[]
+
+  @@index([userId])
+  @@map("services")
+}
+
+model ServiceTicket {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId    String
+  service      Service   @relation(fields: [serviceId], references: [id])
+  clientName   String
+  clientEmail  String
+  niche        String    // e.g., "Minecraft", "fitness", "crypto"
+  message      String    @db.Text
+  source       String?   // which funnel/page they came from
+  status       String    @default("new") // "new" | "quoted" | "in_progress" | "delivered" | "closed"
+  quote        String?   @db.Text  // AI-generated proposal (editable)
+  quoteSentAt  DateTime?
+  notes        String?   @db.Text  // internal notes
+  deliverables String?   @db.Text  // JSON — generated content per type
+  deliveredAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([serviceId])
+  @@map("service_tickets")
 }
