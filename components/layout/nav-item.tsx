@@ -15,6 +15,7 @@ const navItems: NavItemProps[] = [
   { href: "/content", icon: "fileText", label: "Content" },
   { href: "/services", icon: "briefcase", label: "Services" },
   { href: "/templates", icon: "layout", label: "Templates" },
+  { href: "/documents", icon: "fileDown", label: "Documents" },
   { href: "/settings", icon: "settings", label: "Settings" },
 ];
 

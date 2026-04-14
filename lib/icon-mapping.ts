@@ -53,6 +53,7 @@ export const iconMap = {
 
   // Content icons
   file: 'File',
+  fileDown: 'FileDown',
   image: 'Image',
   imagePlus: 'ImagePlus',
   video: 'Video',
