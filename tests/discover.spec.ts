@@ -22,9 +22,8 @@ test.describe('Discover page', () => {
     // Verify subtitle
     await expect(page.getByText('AI-surfaced opportunities')).toBeVisible();
 
-    // Verify both tabs are present
+    // Verify App Ideas tab is present
     await expect(page.getByRole('button', { name: /App Ideas/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Affiliate Products/i })).toBeVisible();
   });
 
   test('App Ideas tab is clickable and shows its content area', async ({ page }) => {
@@ -47,21 +46,4 @@ test.describe('Discover page', () => {
     expect(hasNoPending || true).toBe(true);
   });
 
-  test('Affiliate Products tab is clickable and shows its content area', async ({ page }) => {
-    await page.goto('/discover');
-    await expect(page.getByRole('heading', { name: 'Discover' })).toBeVisible();
-
-    // Click Affiliate Products tab
-    const affiliateTab = page.getByRole('button', { name: /Affiliate Products/i });
-    await affiliateTab.click();
-
-    // Wait for loading to finish
-    await expect(page.getByText('Loading...')).not.toBeVisible({ timeout: 5000 });
-
-    // Verify the tab is still visible after click
-    await expect(affiliateTab).toBeVisible();
-
-    // Verify the page heading is still intact
-    await expect(page.getByRole('heading', { name: 'Discover' })).toBeVisible();
-  });
 });

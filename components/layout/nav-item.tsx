@@ -13,7 +13,6 @@ const navItems: NavItemProps[] = [
   { href: "/research", icon: "trending", label: "Research" },
   { href: "/discover", icon: "sparkles", label: "Discover" },
   { href: "/content", icon: "fileText", label: "Content" },
-  { href: "/promote", icon: "megaphone", label: "Promote" },
   { href: "/services", icon: "briefcase", label: "Services" },
   { href: "/templates", icon: "layout", label: "Templates" },
   { href: "/settings", icon: "settings", label: "Settings" },

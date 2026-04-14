@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import AppIdeaCard from "@/components/dashboard/discover/app-idea-card";
-import AffiliateCard from "@/components/dashboard/discover/affiliate-card";
 
 const pageStyle: React.CSSProperties = {
   padding: "24px",
@@ -73,7 +72,7 @@ interface DiscoverItem {
 }
 
 export default function DiscoverPage() {
-  const [activeTab, setActiveTab] = useState<"app_idea" | "affiliate">("app_idea");
+  const [activeTab, setActiveTab] = useState<"app_idea">("app_idea");
   const [items, setItems] = useState<DiscoverItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -125,7 +124,6 @@ export default function DiscoverPage() {
   };
 
   const pendingAppIdeas = items.filter(item => item.type === "app_idea").length;
-  const pendingAffiliates = items.filter(item => item.type === "affiliate").length;
 
   return (
     <div style={pageStyle}>
@@ -137,17 +135,10 @@ export default function DiscoverPage() {
       <div style={tabsStyle}>
         <button
           onClick={() => setActiveTab("app_idea")}
-          style={activeTab === "app_idea" ? activeTabStyle : tabStyle}
+          style={activeTabStyle}
         >
           App Ideas
           {pendingAppIdeas > 0 && <span style={badgeStyle}>{pendingAppIdeas}</span>}
-        </button>
-        <button
-          onClick={() => setActiveTab("affiliate")}
-          style={activeTab === "affiliate" ? activeTabStyle : tabStyle}
-        >
-          Affiliate Products
-          {pendingAffiliates > 0 && <span style={badgeStyle}>{pendingAffiliates}</span>}
         </button>
       </div>
 
@@ -170,15 +161,7 @@ export default function DiscoverPage() {
                 onApprove={handleApprove}
                 onDismiss={handleDismiss}
               />
-            ) : (
-              <AffiliateCard
-                key={item.id}
-                {...item.affiliate}
-                id={item.id}
-                onApprove={handleApprove}
-                onDismiss={handleDismiss}
-              />
-            )
+            ) : null
           )}
         </div>
       )}

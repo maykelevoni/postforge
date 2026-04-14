@@ -42,16 +42,13 @@ const sidebarActiveTabStyle: React.CSSProperties = {
 const topbarTabStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: "8px",
-  padding: "8px 14px",
-  borderRadius: "20px",
+  justifyContent: "center",
+  padding: "8px 10px",
+  borderRadius: "8px",
   border: "none",
   backgroundColor: "transparent",
   color: "#888",
-  fontSize: "13px",
-  fontWeight: "500",
   cursor: "pointer",
-  whiteSpace: "nowrap",
   transition: "all 0.2s ease",
   flexShrink: 0,
 };
@@ -80,8 +77,8 @@ export function PlatformTabs({
           style={{
             display: "flex",
             overflowX: "auto",
-            gap: "4px",
-            padding: "12px 16px",
+            gap: "2px",
+            padding: "8px 12px",
           }}
         >
           {categories.map((category) => (
@@ -105,9 +102,9 @@ export function PlatformTabs({
                   e.currentTarget.style.color = "#888";
                 }
               }}
+              title={category.label}
             >
-              <Icon name={category.icon as any} size={15} />
-              <span>{category.label}</span>
+              <Icon name={category.icon as any} size={18} />
             </button>
           ))}
         </div>

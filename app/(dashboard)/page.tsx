@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import QueueCard from "@/components/dashboard/today/queue-card";
-import PromotionCard from "@/components/dashboard/today/promotion-card";
 import ResearchFeed from "@/components/dashboard/today/research-feed";
 
 const pageStyle: React.CSSProperties = {
@@ -86,14 +85,12 @@ interface EngineRun {
 export default function TodayPage() {
   const [engineRun, setEngineRun] = useState<EngineRun>({});
   const [queueItems, setQueueItems] = useState<any[]>([]);
-  const [activePromotion, setActivePromotion] = useState<any>(null);
   const [researchTopics, setResearchTopics] = useState<any[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
     // Load initial data
     loadQueue();
-    loadActivePromotion();
     loadResearch();
 
     // Setup SSE connection
@@ -143,20 +140,6 @@ export default function TodayPage() {
       }
     } catch (error) {
       console.error("Failed to load queue:", error);
-    }
-  };
-
-  const loadActivePromotion = async () => {
-    try {
-      const response = await fetch("/api/promote?status=active");
-      if (response.ok) {
-        const data = await response.json();
-        if (data.length > 0) {
-          setActivePromotion(data[0]);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load promotion:", error);
     }
   };
 
@@ -235,7 +218,6 @@ export default function TodayPage() {
       <div style={middleRowStyle}>
         <QueueCard items={queueItems} />
         <div style={rightColumnStyle}>
-          {activePromotion && <PromotionCard {...activePromotion} />}
           <ResearchFeed topics={researchTopics} />
         </div>
       </div>
