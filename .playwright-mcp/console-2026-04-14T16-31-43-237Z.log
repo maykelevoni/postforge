@@ -1,0 +1,49 @@
+[      17ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[   17916ms] [LOG] [Fast Refresh] done in 17899ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[   18053ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[   19369ms] [LOG] [Fast Refresh] done in 1315ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[   20729ms] [ERROR] Failed to fetch RSC payload for http://localhost:3003/. Falling back to browser navigation. TypeError: Failed to fetch
+    at fetchServerResponse (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/router-reducer/fetch-server-response.js:58:27)
+    at refreshReducer (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/router-reducer/reducers/refresh-reducer.js:34:67)
+    at clientReducer (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/router-reducer/router-reducer.js:37:59)
+    at Object.action (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/shared/lib/router/action-queue.js:150:55)
+    at runAction (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/shared/lib/router/action-queue.js:56:38)
+    at runRemainingActions (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/shared/lib/router/action-queue.js:30:13)
+    at handleResult (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/shared/lib/router/action-queue.js:66:9) @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[   21707ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[   35029ms] [LOG] Selected template: {id: cmnytsh9y000013pj7385q4nw, name: X Ways to Benefit Without Pain, category: twitter, type: prebuilt, template: {number} ways to {benefit} without {pain} in {time}. 🧵} @ webpack-internal:///(app-pages-browser)/./app/(dashboard)/templates/page.tsx:206
+[  319896ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  321298ms] [LOG] [Fast Refresh] done in 1403ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[  321920ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3003/settings:0
+[  321920ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3003/settings:0
+[  321921ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3003/settings:0
+[  321921ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3003/settings:0
+[  321921ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3003/settings:0
+[  321921ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3003/settings:0
+[  321921ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3003/settings:0
+[  325402ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  327562ms] [LOG] [Fast Refresh] done in 2161ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[  330397ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330397ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330401ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330402ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330407ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330408ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330777ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330777ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330778ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330778ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330779ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  330779ms] [WARNING] Icon "power" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[  589403ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[  696448ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  698178ms] [LOG] [Fast Refresh] done in 1731ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[  700160ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/templates:0
+[  700332ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/css/app/layout.css?v=1776185003301:0
+[  700346ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/chunks/main-app.js?v=1776185003301:0
+[  700348ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/chunks/app-pages-internals.js:0
+[  705605ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/css/app/layout.css?v=1776185008394:0
+[  705665ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/chunks/main-app.js?v=1776185008394:0
+[  705667ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/chunks/app-pages-internals.js:0
+[  705669ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/chunks/app/(dashboard)/layout.js:0
+[  705672ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3003/_next/static/chunks/app/(dashboard)/templates/page.js:0

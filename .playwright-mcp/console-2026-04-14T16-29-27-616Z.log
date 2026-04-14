@@ -1,0 +1,7 @@
+[    1803ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[    2140ms] [WARNING] Icon "reddit" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[    2140ms] [WARNING] Icon "reddit" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[    2502ms] [WARNING] Icon "reddit" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[    2503ms] [WARNING] Icon "reddit" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[    2753ms] [WARNING] Icon "reddit" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16
+[    2753ms] [WARNING] Icon "reddit" not found in lucide-react @ webpack-internal:///(app-pages-browser)/./components/ui/icon.tsx:16

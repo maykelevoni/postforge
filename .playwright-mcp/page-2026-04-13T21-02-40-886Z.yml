@@ -1,0 +1,19 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e43]:
+    - heading "Sign In" [level=1] [ref=e44]
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]: Email
+        - textbox [ref=e48]
+      - generic [ref=e49]:
+        - generic [ref=e50]: Password
+        - textbox [ref=e51]
+      - button "Sign In" [ref=e52] [cursor=pointer]
+    - link "Don't have an account? Register" [ref=e53] [cursor=pointer]:
+      - /url: /register
+  - alert [ref=e32]
+  - generic [ref=e35] [cursor=pointer]:
+    - img [ref=e36]
+    - generic [ref=e38]: 1 error
+    - button "Hide Errors" [ref=e39]:
+      - img [ref=e40]

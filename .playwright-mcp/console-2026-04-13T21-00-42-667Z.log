@@ -1,0 +1,177 @@
+[     398ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/sign-in:0
+[     948ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[    1010ms] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "DATABASE_URL"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "AUTH_SECRET"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "NEXTAUTH_URL"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:209:22)
+    at eval (webpack-internal:///(app-pages-browser)/./env.mjs:17:23)
+    at (app-pages-browser)/./env.mjs (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:203:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)
+    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:37:33)
+    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:371:21)
+    at eval (webpack-internal:///(app-pages-browser)/./app/(auth)/sign-in/page.tsx:10:66)
+    at (app-pages-browser)/./app/(auth)/sign-in/page.tsx (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:60:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)
+[    1014ms] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "DATABASE_URL"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "AUTH_SECRET"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "NEXTAUTH_URL"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:209:22)
+    at eval (webpack-internal:///(app-pages-browser)/./env.mjs:17:23)
+    at (app-pages-browser)/./env.mjs (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:203:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)
+    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:37:33)
+    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:371:21)
+    at eval (webpack-internal:///(app-pages-browser)/./app/(auth)/sign-in/page.tsx:10:66)
+    at (app-pages-browser)/./app/(auth)/sign-in/page.tsx (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:60:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)
+[    1015ms] [ERROR] Warning: An error occurred during hydration. The server HTML was replaced with client content in <%s>. #document @ webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/app-index.js:32
+[    1029ms] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "DATABASE_URL"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "AUTH_SECRET"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "NEXTAUTH_URL"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:209:22)
+    at eval (webpack-internal:///(app-pages-browser)/./env.mjs:17:23)
+    at (app-pages-browser)/./env.mjs (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:203:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)
+    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:37:33)
+    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:371:21)
+    at eval (webpack-internal:///(app-pages-browser)/./app/(auth)/sign-in/page.tsx:10:66)
+    at (app-pages-browser)/./app/(auth)/sign-in/page.tsx (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:60:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)
+[    1027ms] [ERROR] The above error occurred in the <ServerRoot> component:
+
+    at ServerRoot (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/app-index.js:112:27)
+    at Root (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/app-index.js:117:11)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. @ webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/client/app-index.js:32
+[    1033ms] Error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.
+    at updateHostRoot (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:16571:57)
+    at beginWork$1 (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:18486:14)
+    at beginWork (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:26927:14)
+    at performUnitOfWork (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:25748:12)
+    at workLoopSync (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:25464:5)
+    at renderRootSync (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:25419:7)
+    at recoverFromConcurrentError (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:24597:20)
+    at performConcurrentWorkOnRoot (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:24542:26)
+    at workLoop (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:256:34)
+    at flushWork (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.2.21_@playwright+test@1.59.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:225:14)
+[    1037ms] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "DATABASE_URL"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "AUTH_SECRET"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "NEXTAUTH_URL"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:209:22)
+    at eval (webpack-internal:///(app-pages-browser)/./env.mjs:17:23)
+    at (app-pages-browser)/./env.mjs (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:203:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)
+    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:37:33)
+    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:371:21)
+    at eval (webpack-internal:///(app-pages-browser)/./app/(auth)/sign-in/page.tsx:10:66)
+    at (app-pages-browser)/./app/(auth)/sign-in/page.tsx (http://localhost:3000/_next/static/chunks/app/(auth)/sign-in/page.js:60:1)
+    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1776114042940:715:31)

@@ -1,0 +1,16 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - heading "Sign In" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: Email
+        - textbox "Email" [disabled] [ref=e8]: test@postforge.dev
+      - generic [ref=e9]:
+        - generic [ref=e10]: Password
+        - textbox "Password" [disabled] [ref=e11]: testpassword123
+      - button "Signing in..." [disabled] [ref=e18]
+    - paragraph [ref=e13]:
+      - text: Don't have an account?
+      - link "Register" [ref=e14] [cursor=pointer]:
+        - /url: /register
+  - alert [ref=e15]

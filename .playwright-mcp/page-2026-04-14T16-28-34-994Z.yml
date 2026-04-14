@@ -1,0 +1,81 @@
+- generic [ref=e1]:
+  - alert [ref=e15]
+  - complementary [ref=e19]:
+    - generic [ref=e20]: PostForge
+    - navigation [ref=e21]:
+      - link "Today" [ref=e22] [cursor=pointer]:
+        - /url: /
+        - img [ref=e23]
+        - generic [ref=e26]: Today
+      - link "Research" [ref=e27] [cursor=pointer]:
+        - /url: /research
+        - img [ref=e28]
+        - generic [ref=e31]: Research
+      - link "Discover" [ref=e32] [cursor=pointer]:
+        - /url: /discover
+        - img [ref=e33]
+        - generic [ref=e35]: Discover
+      - link "Content" [ref=e36] [cursor=pointer]:
+        - /url: /content
+        - img [ref=e37]
+        - generic [ref=e40]: Content
+      - link "Promote" [ref=e41] [cursor=pointer]:
+        - /url: /promote
+        - img [ref=e42]
+        - generic [ref=e45]: Promote
+      - link "Services" [ref=e46] [cursor=pointer]:
+        - /url: /services
+        - img [ref=e47]
+        - generic [ref=e50]: Services
+      - link "Templates" [active] [ref=e51] [cursor=pointer]:
+        - /url: /templates
+        - img [ref=e52]
+        - generic [ref=e54]: Templates
+      - link "Settings" [ref=e55] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=e56]
+        - generic [ref=e59]: Settings
+    - button "Sign Out" [ref=e61] [cursor=pointer]
+  - main [ref=e62]:
+    - generic [ref=e166]:
+      - generic [ref=e168]:
+        - heading "Platforms" [level=3] [ref=e169]
+        - generic [ref=e170]:
+          - button "Twitter" [ref=e171] [cursor=pointer]:
+            - img [ref=e172]
+            - generic [ref=e174]: Twitter
+          - button "LinkedIn" [ref=e175] [cursor=pointer]:
+            - img [ref=e176]
+            - generic [ref=e180]: LinkedIn
+          - button "Reddit" [ref=e181] [cursor=pointer]:
+            - generic [ref=e182]: Reddit
+          - button "Instagram" [ref=e183] [cursor=pointer]:
+            - img [ref=e184]
+            - generic [ref=e187]: Instagram
+          - button "TikTok" [ref=e188] [cursor=pointer]:
+            - img [ref=e189]
+            - generic [ref=e193]: TikTok
+          - button "Email Subject" [ref=e194] [cursor=pointer]:
+            - img [ref=e195]
+            - generic [ref=e198]: Email Subject
+          - button "Email Body" [ref=e199] [cursor=pointer]:
+            - img [ref=e200]
+            - generic [ref=e203]: Email Body
+          - button "Image Prompts" [ref=e204] [cursor=pointer]:
+            - img [ref=e205]
+            - generic [ref=e209]: Image Prompts
+          - button "Video Prompts" [ref=e210] [cursor=pointer]:
+            - img [ref=e211]
+            - generic [ref=e214]: Video Prompts
+      - generic [ref=e215]:
+        - generic [ref=e216]:
+          - heading "Templates" [level=1] [ref=e217]
+          - paragraph [ref=e218]: Viral templates for high-performing content
+        - generic [ref=e219]:
+          - textbox "Search templates..." [ref=e220]
+          - generic [ref=e221]:
+            - button "All" [ref=e222] [cursor=pointer]
+            - button "Pre-built" [ref=e223] [cursor=pointer]
+            - button "Custom" [ref=e224] [cursor=pointer]
+            - button "⭐ Favorites" [ref=e225] [cursor=pointer]
+        - paragraph [ref=e228]: Loading templates...

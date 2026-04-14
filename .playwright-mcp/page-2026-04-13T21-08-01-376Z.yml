@@ -1,0 +1,71 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e3]: PostForge
+    - navigation [ref=e4]:
+      - link "Today" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e9]: Today
+      - link "Research" [ref=e10] [cursor=pointer]:
+        - /url: /research
+        - img [ref=e11]
+        - generic [ref=e14]: Research
+      - link "Discover" [ref=e15] [cursor=pointer]:
+        - /url: /discover
+        - img [ref=e16]
+        - generic [ref=e18]: Discover
+      - link "Content" [ref=e19] [cursor=pointer]:
+        - /url: /content
+        - img [ref=e20]
+        - generic [ref=e23]: Content
+      - link "Promote" [ref=e24] [cursor=pointer]:
+        - /url: /promote
+        - img [ref=e25]
+        - generic [ref=e28]: Promote
+      - link "Settings" [ref=e29] [cursor=pointer]:
+        - /url: /settings
+        - img [ref=e30]
+        - generic [ref=e33]: Settings
+    - button "Sign Out" [ref=e35] [cursor=pointer]
+  - main [ref=e36]:
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - heading "Today" [level=1] [ref=e39]
+        - paragraph [ref=e40]: April 13, 2026
+      - generic [ref=e41]:
+        - generic [ref=e44]: Engine ready
+        - button "▶ Run Now" [ref=e45] [cursor=pointer]
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - heading "Today's Queue" [level=2] [ref=e48]
+          - generic [ref=e49]:
+            - img [ref=e51]
+            - generic [ref=e54]: Twitter
+            - generic [ref=e55]: Not scheduled
+          - generic [ref=e56]:
+            - img [ref=e58]
+            - generic [ref=e62]: Linkedin
+            - generic [ref=e63]: Not scheduled
+          - generic [ref=e64]:
+            - img [ref=e66]
+            - generic [ref=e69]: Reddit
+            - generic [ref=e70]: Not scheduled
+          - generic [ref=e71]:
+            - img [ref=e73]
+            - generic [ref=e76]: Instagram
+            - generic [ref=e77]: Not scheduled
+          - generic [ref=e78]:
+            - img [ref=e80]
+            - generic [ref=e83]: Tiktok
+            - generic [ref=e84]: Not scheduled
+          - generic [ref=e85]:
+            - img [ref=e87]
+            - generic [ref=e90]: Email
+            - generic [ref=e91]: Not scheduled
+          - generic [ref=e92]: No content scheduled for today
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - heading "Top Research Today" [level=2] [ref=e96]
+            - link "View all →" [ref=e97] [cursor=pointer]:
+              - /url: /research
+          - generic [ref=e98]: No research topics yet
