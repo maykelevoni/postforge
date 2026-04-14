@@ -1,15 +1,15 @@
 {
   "project": "ship",
-  "feature": "templates-responsive-nav",
-  "phase": "complete",
-  "current_task": 1,
-  "total_tasks": 1,
-  "completed_tasks": [1],
+  "feature": "pdf-document-generator",
+  "phase": "requirements",
+  "current_task": 0,
+  "total_tasks": 0,
+  "completed_tasks": [],
   "skipped_tasks": [],
   "failed_tasks": [],
   "playwright_cmd": "npx playwright test",
   "tests_written": false,
   "verified": false,
-  "created_at": "2026-04-14T10:00:00Z",
-  "updated_at": "2026-04-14T10:00:00Z"
+  "created_at": "2026-04-14T21:30:00Z",
+  "updated_at": "2026-04-14T21:30:00Z"
 }
