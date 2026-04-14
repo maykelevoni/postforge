@@ -1,622 +1,253 @@
-# PostForge MVP — Technical Plan
+# PostForge Services — Technical Plan
 
-## Section 1: Architecture
+## Section 1: Architecture Integration
 
-### Project Structure
-Clean Next.js 14 App Router project. Worker runs as a separate process via `concurrently`. Patterns taken from launch/ reference but no code copied directly.
+This feature adds two new first-class entities (`Service` + `ServiceTicket`) alongside the existing `Promotion` / `ContentPiece` / `Newsletter` system. It does NOT replace anything — services are an additional monetization track.
 
-```
-postforge/
-├── app/
-│   ├── (auth)/
-│   │   ├── sign-in/page.tsx
-│   │   └── register/page.tsx
-│   ├── (dashboard)/
-│   │   ├── layout.tsx              # sidebar nav + auth guard
-│   │   ├── page.tsx                # Today — command center
-│   │   ├── research/page.tsx
-│   │   ├── discover/page.tsx
-│   │   ├── content/page.tsx
-│   │   ├── promote/page.tsx
-│   │   └── settings/page.tsx
-│   └── api/
-│       ├── auth/[...nextauth]/route.ts
-│       ├── auth/register/route.ts
-│       ├── sse/route.ts
-│       ├── engine/run/route.ts
-│       ├── research/route.ts
-│       ├── research/[id]/route.ts
-│       ├── discover/route.ts
-│       ├── discover/[id]/approve/route.ts
-│       ├── discover/[id]/dismiss/route.ts
-│       ├── promote/route.ts
-│       ├── promote/[id]/route.ts
-│       ├── content/route.ts
-│       ├── content/[id]/route.ts
-│       ├── content/[id]/approve/route.ts
-│       ├── content/[id]/publish/route.ts
-│       └── settings/route.ts
-├── worker/
-│   ├── index.ts                    # cron registrations
-│   ├── research/
-│   │   ├── index.ts                # orchestrator
-│   │   ├── youtube.ts
-│   │   ├── reddit.ts
-│   │   └── newsapi.ts
-│   ├── discover/
-│   │   ├── index.ts                # orchestrator
-│   │   ├── app-ideas.ts            # AI generates full briefs + landing pages
-│   │   └── clickbank.ts            # ClickBank product search + profiles
-│   ├── content/
-│   │   ├── index.ts                # orchestrator
-│   │   ├── generate.ts             # OpenRouter → social posts + newsletter
-│   │   └── media.ts                # fal.ai image + video generation
-│   └── posting/
-│       ├── scheduler.ts            # fires due ContentPiece + Newsletter records
-│       ├── post-bridge.ts          # post-bridge API client
-│       └── systeme.ts              # Systeme.io broadcast + funnel API client
-├── lib/
-│   ├── db.ts                       # Prisma singleton
-│   ├── ai.ts                       # OpenRouter text generation
-│   ├── falai.ts                    # fal.ai image + video generation
-│   ├── settings.ts                 # getSetting / setSetting / getSettings
-│   ├── utm.ts                      # UTM URL builder
-│   └── seeds.ts                    # default schedule entries
-├── components/
-│   ├── layout/
-│   │   ├── sidebar.tsx
-│   │   └── nav-item.tsx
-│   └── dashboard/
-│       ├── today/
-│       │   ├── queue-card.tsx
-│       │   ├── promotion-card.tsx
-│       │   └── research-feed.tsx
-│       ├── research/
-│       │   └── topic-card.tsx
-│       ├── discover/
-│       │   ├── app-idea-card.tsx
-│       │   └── affiliate-card.tsx
-│       ├── content/
-│       │   ├── content-piece-card.tsx
-│       │   └── newsletter-card.tsx
-│       ├── promote/
-│       │   └── promotion-card.tsx
-│       └── settings/
-│           ├── api-keys-section.tsx
-│           └── schedule-section.tsx
-├── prisma/
-│   └── schema.prisma
-├── tests/                          # Playwright E2E (always here, never root)
-├── auth.ts
-├── auth.config.ts
-├── middleware.ts
-├── env.mjs                         # zod env validation
-├── next.config.js
-├── tsconfig.json
-└── package.json
-```
+### How it fits
+
+- **Services** live on a new `/services` page (sidebar nav item added)
+- **Tickets** are managed entirely within `/services` (no separate route)
+- **Webhook** receives Systeme.io form submissions at `/api/webhooks/systeme` (no auth required — uses a secret token check instead)
+- **Promotion integration**: `Service` can link to the `Promotion` model — when a service is active, PostForge creates a Promotion record (type: `"service"`) which feeds into the existing content generation engine
+- **Deliverable generation**: reuses `lib/ai.ts` `generateText()` — same pattern as `worker/content/generate.ts` but driven by the service's custom template + client niche
+
+### Existing patterns to follow
+
+- API routes: `auth()` → 401 check → Prisma query → `NextResponse.json()`
+- Client pages: `"use client"` + `useEffect` fetch + `useState` — no server components
+- Inline styles everywhere — no Tailwind
+- All keys from DB `Setting` table via `getSetting()`
 
 ---
 
-## Section 2: Database Schema
+## Section 2: Database Changes
+
+### New models added to `prisma/schema.prisma`
 
 ```prisma
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-// --- Auth.js required models ---
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-  @@map("accounts")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@index([userId])
-  @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
-// --- App models ---
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts        Account[]
-  sessions        Session[]
-  researchTopics  ResearchTopic[]
-  discoverItems   DiscoverItem[]
-  promotions      Promotion[]
-  contentPieces   ContentPiece[]
-  newsletters     Newsletter[]
-  scheduleEntries ScheduleEntry[]
-  engineRuns      EngineRun[]
-  settings        Setting[]
-
-  @@map("users")
-}
-
-model ResearchTopic {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date      DateTime
-  source    String   // "youtube" | "reddit" | "newsapi"
-  title     String
-  url       String?
-  summary   String?
-  score     Int      @default(5)
-  status    String   @default("new") // "new" | "used" | "dismissed"
-  createdAt DateTime @default(now())
-
-  discoverItems DiscoverItem[]
-
-  @@index([userId])
-  @@map("research_topics")
-}
-
-model DiscoverItem {
-  id       String   @id @default(cuid())
-  userId   String
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type     String   // "app_idea" | "affiliate"
-  status   String   @default("pending") // "pending" | "approved" | "dismissed"
-  topicId  String?
-  topic    ResearchTopic? @relation(fields: [topicId], references: [id])
-  createdAt DateTime @default(now())
-
-  appIdea   AppIdea?
-  affiliate AffiliateProduct?
-  promotion Promotion?
-
-  @@index([userId])
-  @@map("discover_items")
-}
-
-model AppIdea {
-  id               String       @id @default(cuid())
-  discoverItemId   String       @unique
-  discoverItem     DiscoverItem @relation(fields: [discoverItemId], references: [id], onDelete: Cascade)
-  title            String
-  problem          String       @db.Text
-  targetAudience   String
-  coreFeatures     String       @db.Text  // JSON array
-  monetization     String
-  competition      String       @db.Text
-  whyNow           String       @db.Text
-  landingPageHtml  String       @db.Text
-  systemeFunnelUrl String?
-  createdAt        DateTime     @default(now())
-
-  @@map("app_ideas")
-}
-
-model AffiliateProduct {
-  id             String       @id @default(cuid())
-  discoverItemId String       @unique
-  discoverItem   DiscoverItem @relation(fields: [discoverItemId], references: [id], onDelete: Cascade)
-  name           String
-  vendor         String
-  affiliateLink  String
-  description    String       @db.Text
-  commissionRate Float
-  avgPayout      Float?
-  gravityScore   Float?
-  imageUrl       String?
-  promoRules     String       @db.Text  // full text rules
-  contentAngles  String       @db.Text  // JSON array of suggested angles
-  createdAt      DateTime     @default(now())
-
-  @@map("affiliate_products")
-}
-
-model Promotion {
-  id             String        @id @default(cuid())
+model Service {
+  id             String    @id @default(cuid())
   userId         String
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  discoverItemId String?       @unique
-  discoverItem   DiscoverItem? @relation(fields: [discoverItemId], references: [id])
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name           String
-  type           String        // "app_idea" | "affiliate"
-  description    String        @db.Text
-  url            String        // landing page or affiliate link
-  funnelUrl      String?       // Systeme.io funnel URL
-  priority       Int           @default(5) // 1-10 rotation weight
-  status         String        @default("active") // "active" | "paused" | "archived"
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  description    String    @db.Text
+  deliverablesTemplate String @db.Text  // user's custom AI prompt with [niche] placeholder
+  priceMin       Float
+  priceMax       Float
+  turnaroundDays Int       @default(3)
+  funnelUrl      String?   // Systeme.io landing page URL for this service
+  status         String    @default("active") // "active" | "paused"
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  contentPieces ContentPiece[]
-  newsletters   Newsletter[]
-
-  @@index([userId])
-  @@map("promotions")
-}
-
-model ContentPiece {
-  id           String     @id @default(cuid())
-  userId       String
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  promotionId  String?
-  promotion    Promotion? @relation(fields: [promotionId], references: [id])
-  date         DateTime
-  platform     String     // "twitter" | "linkedin" | "reddit" | "instagram" | "tiktok"
-  content      String     @db.Text
-  imageUrl     String?    // fal.ai Flux image URL
-  videoUrl     String?    // fal.ai Kling video URL (instagram + tiktok)
-  status       String     @default("draft") // "draft" | "scheduled" | "published" | "failed"
-  approved     Boolean    @default(false)
-  postBridgeId String?
-  postedAt     DateTime?
-  scheduledAt  DateTime?
-  error        String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  tickets   ServiceTicket[]
+  promotion Promotion?      @relation(fields: [promotionId], references: [id])
+  promotionId String?       @unique
 
   @@index([userId])
-  @@map("content_pieces")
+  @@map("services")
 }
 
-model Newsletter {
-  id          String     @id @default(cuid())
+model ServiceTicket {
+  id          String    @id @default(cuid())
   userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  promotionId String?
-  promotion   Promotion? @relation(fields: [promotionId], references: [id])
-  date        DateTime
-  subject     String
-  body        String     @db.Text
-  status      String     @default("draft") // "draft" | "scheduled" | "sent" | "failed"
-  approved    Boolean    @default(false)
-  sentAt      DateTime?
-  scheduledAt DateTime?
-  error       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId   String
+  service     Service   @relation(fields: [serviceId], references: [id])
+  clientName  String
+  clientEmail String
+  niche       String
+  message     String    @db.Text
+  source      String?
+  status      String    @default("new") // "new" | "quoted" | "in_progress" | "delivered" | "closed"
+  quote       String?   @db.Text
+  quoteSentAt DateTime?
+  notes       String?   @db.Text
+  deliverables String?  @db.Text  // JSON string — generated output
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([userId])
-  @@map("newsletters")
-}
-
-model ScheduleEntry {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platform   String   // "twitter" | "linkedin" | "reddit" | "instagram" | "tiktok" | "email"
-  time       String   // "HH:MM" 24h
-  daysOfWeek String   @default("[1,2,3,4,5]") // JSON int[] 0=Sun..6=Sat
-  active     Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([userId])
-  @@map("schedule_entries")
-}
-
-model EngineRun {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date      DateTime
-  type      String   // "research" | "discover" | "content" | "posting" | "full"
-  status    String   // "running" | "completed" | "failed"
-  log       String   @db.Text
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@map("engine_runs")
-}
-
-model Setting {
-  id        String   @id @default(cuid())
-  userId    String
-  key       String
-  value     String
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, key])
-  @@index([userId])
-  @@map("settings")
+  @@index([serviceId])
+  @@map("service_tickets")
 }
 ```
+
+### Changes to existing models
+
+- `User` — add `services Service[]` and `serviceTickets ServiceTicket[]` relations
+- `Promotion` — add `type` value `"service"` (already a string field, no migration needed) + optional back-relation from `Service`
+
+### Migration
+
+Run `prisma migrate dev --name add_services` after schema update.
 
 ---
 
 ## Section 3: API Design
 
-All routes require authentication via Auth.js session. `userId` always comes from the session, never from the request body.
+All routes except the webhook require `auth()` session. `userId` always from session.
 
-### SSE
+### Services CRUD
+
+| Method | Path | Body / Query | Description |
+|---|---|---|---|
+| GET | `/api/services` | — | List user's services with ticket counts |
+| POST | `/api/services` | `{ name, description, deliverablesTemplate, priceMin, priceMax, turnaroundDays, funnelUrl }` | Create service + auto-create Promotion |
+| PATCH | `/api/services/[id]` | any fields | Update service |
+| DELETE | `/api/services/[id]` | — | Delete service (cascade tickets) |
+
+### Ticket Management
+
+| Method | Path | Body / Query | Description |
+|---|---|---|---|
+| GET | `/api/tickets` | `?status=&serviceId=` | List tickets |
+| GET | `/api/tickets/[id]` | — | Get ticket detail |
+| PATCH | `/api/tickets/[id]` | `{ status?, notes?, quote? }` | Update ticket |
+| POST | `/api/tickets/[id]/quote` | — | Generate AI quote → save to ticket |
+| POST | `/api/tickets/[id]/send-quote` | — | Send quote email via Systeme.io → set quoteSentAt, move to "quoted" |
+| POST | `/api/tickets/[id]/deliver` | — | Generate AI deliverables → save to ticket |
+| POST | `/api/tickets/[id]/send-delivery` | — | Send delivery email via Systeme.io → set deliveredAt, move to "delivered" |
+
+### Webhook (no auth — token check)
+
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/sse` | SSE stream — emits `engine_update`, `post_published`, `discover_new` events |
+| POST | `/api/webhooks/systeme` | Receive Systeme.io form payload → create ServiceTicket → send confirmation email |
 
-### Engine
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/engine/run` | Trigger full pipeline manually. Returns `{ runId }` |
+Webhook payload expected shape (Systeme.io form):
+```json
+{
+  "contact": { "first_name": "...", "email": "..." },
+  "fields": {
+    "niche": "...",
+    "service": "...",
+    "message": "..."
+  },
+  "funnel_url": "..."
+}
+```
 
-### Research
-| Method | Path | Body / Query | Description |
-|---|---|---|---|
-| GET | `/api/research` | `?source=&status=&page=` | List topics paginated |
-| PATCH | `/api/research/[id]` | `{ status: "used" \| "dismissed" }` | Update topic status |
-
-### Discover
-| Method | Path | Body / Query | Description |
-|---|---|---|---|
-| GET | `/api/discover` | `?type=&status=&page=` | List discover items with nested appIdea or affiliate |
-| POST | `/api/discover/[id]/approve` | — | Approve → creates Promotion, marks topic as used |
-| POST | `/api/discover/[id]/dismiss` | — | Dismiss item |
-
-### Promote
-| Method | Path | Body / Query | Description |
-|---|---|---|---|
-| GET | `/api/promote` | `?status=` | List promotions |
-| PATCH | `/api/promote/[id]` | `{ status?, priority?, funnelUrl? }` | Update promotion |
-| DELETE | `/api/promote/[id]` | — | Archive promotion |
-
-### Content
-| Method | Path | Body / Query | Description |
-|---|---|---|---|
-| GET | `/api/content` | `?platform=&status=&type=posts\|newsletters&page=` | List content pieces + newsletters |
-| PATCH | `/api/content/[id]` | `{ content?, subject?, body? }` | Edit draft |
-| POST | `/api/content/[id]/approve` | — | Approve for posting (gate mode) |
-| POST | `/api/content/[id]/publish` | — | Manual publish now via post-bridge or Systeme.io |
-
-### Settings
-| Method | Path | Body | Description |
-|---|---|---|---|
-| GET | `/api/settings` | — | Get all settings as `{ key: value }` map |
-| POST | `/api/settings` | `{ settings: { key: value }[] }` | Bulk upsert settings |
+Token check: compare `x-systeme-token` header against `systeme_webhook_token` in DB Setting.
 
 ---
 
-## Section 4: Frontend Pages & Components
+## Section 4: Frontend
 
-### State Management
-- Server components fetch data directly via Prisma where possible
-- Client components use `fetch` + `useState` for interactions
-- SSE connection on Today page via `useEffect` + `EventSource`
-- No external state library (Redux, Zustand) — keep it simple
+### Sidebar update
+Add "Services" nav item to `components/layout/sidebar.tsx` between Promote and Settings.
 
-### Pages
+### `/services` page — two-section layout
 
-#### `/` — Today
-- SSE connection for live updates
-- `QueueCard` — today's posts by platform with status badges
-- `PromotionCard` — active promotion name + funnel URL
-- `ResearchFeed` — top 3 research topics from today
-- `DiscoverBadge` — pending discover items count
-- `[Run Now]` button → POST `/api/engine/run`
+**Top: Service Catalog**
+- List of service cards (name, price range, turnaround, status toggle, ticket count badge)
+- [+ Add Service] → opens a modal/drawer with form:
+  - Name, Description (textarea)
+  - Deliverables Template (large textarea with `[niche]` hint)
+  - Price Min / Max, Turnaround Days
+  - Funnel URL
+- [Edit] on each card → same form pre-filled
+- Active/Paused toggle per service
 
-#### `/research`
-- `TopicCard` list — title, source icon, score, summary, date
-- Filter bar: source (YouTube/Reddit/News), status (new/used/dismissed)
-- Actions: mark used, dismiss
+**Bottom: Ticket Pipeline**
+- 5 columns: New | Quoted | In Progress | Delivered | Closed
+- Ticket cards: client name, niche tag, service name, days in stage
+- Click card → Ticket Drawer opens (right side, fixed panel)
 
-#### `/discover`
-- Two tabs: **App Ideas** | **Affiliate Products**
-- `AppIdeaCard` — title, problem, audience, why now, [View Brief] → modal with full brief + landing page preview, [Approve] [Dismiss]
-- `AffiliateCard` — product image, name, vendor, commission %, gravity, [View Details] → modal with promo rules + angles, [Approve] [Dismiss]
+**Ticket Drawer:**
+- Header: client name, email (mailto link), niche, service, source, created date
+- Status dropdown → moves pipeline stage
+- Internal Notes — auto-saves on blur
+- **Quote section:**
+  - [Generate Quote] button → POST `/api/tickets/[id]/quote` → populates textarea
+  - Editable textarea
+  - [Send Quote] → POST `/api/tickets/[id]/send-quote`
+  - Shows quoteSentAt timestamp if sent
+- **Deliverables section** (visible when status = in_progress):
+  - [Generate Deliverables] → POST `/api/tickets/[id]/deliver` → shows preview
+  - Scrollable preview area
+  - [Send Delivery] → POST `/api/tickets/[id]/send-delivery`
 
-#### `/content`
-- Two tabs: **Posts** | **Newsletters**
-- `ContentPieceCard` — platform icon, content preview, status badge, scheduled time, [Edit] [Approve] [Publish Now]
-- `NewsletterCard` — subject, body preview, status, [Edit] [Approve] [Send Now]
-- Filter by platform, status
+### New component files
 
-#### `/promote`
-- `PromotionCard` list — name, type badge, priority, status, funnel URL, [Pause] [Resume] [Archive]
-- Priority drag-to-reorder (or number input)
-
-#### `/settings`
-- **API Keys** section — OpenRouter key + model, fal.ai key, post-bridge key, ClickBank key + account, Systeme.io domain + funnel URL + API key, YouTube key, NewsAPI key, subreddits
-- **Schedule** section — per-platform time + days of week
-- **General** section — timezone, gate mode toggle, daily run hour
+```
+app/(dashboard)/services/page.tsx          ← main page
+components/dashboard/services/
+  service-card.tsx                         ← catalog card
+  service-form.tsx                         ← create/edit modal form
+  ticket-pipeline.tsx                      ← 5-column pipeline
+  ticket-card.tsx                          ← pipeline card
+  ticket-drawer.tsx                        ← detail panel
+```
 
 ---
 
 ## Section 5: Service Integrations
 
-### OpenRouter (`lib/ai.ts`)
-```
-POST https://openrouter.ai/api/v1/chat/completions
-Auth: Bearer {openrouter_api_key}
-Model: {openrouter_model} (user-configured, default: "deepseek/deepseek-r1")
-```
-Used for: social post generation, newsletter generation, app idea briefs, landing page HTML, ClickBank product analysis
+### Systeme.io (existing `worker/posting/systeme.ts`)
+Extend with two new functions:
+- `sendConfirmationEmail(ticket)` — "Got your request, quote within 24h"
+- `sendQuoteEmail(ticket, quote)` — full proposal email
+- `sendDeliveryEmail(ticket, deliverables)` — deliverables packaged as email body
 
-### fal.ai (`lib/falai.ts`)
+### OpenRouter (`lib/ai.ts` `generateText()`)
+Two new prompt builders:
+
+**Quote generation:**
 ```
-Image: fal-ai/flux/schnell
-  Input: { prompt: string }
-  Output: { images: [{ url: string }] }
+System: You are a professional freelance services consultant.
+User: Generate a professional quote for:
+  Service: {service.name}
+  Client: {ticket.clientName}
+  Their niche: {ticket.niche}
+  Their message: {ticket.message}
+  Template of what you'll deliver: {service.deliverablesTemplate}
+  Price range: ${service.priceMin}–${service.priceMax}
+  Turnaround: {service.turnaroundDays} days
 
-Video: fal-ai/kling-video/v1/standard/image-to-video
-  Input: { image_url: string, prompt: string, duration: "5" }
-  Output: { video: { url: string } }
-```
-Auth: `FAL_KEY` env var or `falai_api_key` setting
-Used for: Instagram + TikTok — image first, then animate to video
-
-### post-bridge (`worker/posting/post-bridge.ts`)
-Same pattern as launch/ reference. Key endpoints:
-- `GET /v1/social-accounts` — get connected accounts
-- `POST /v1/media` — upload video file
-- `POST /v1/posts` — create post with media + schedule
-
-### Systeme.io (`worker/posting/systeme.ts`)
-```
-Broadcast API:
-  POST https://api.systeme.io/api/email_campaigns
-  Header: X-API-Key: {systeme_api_key}
-
-Funnel publish (AppIdea landing pages):
-  POST https://api.systeme.io/api/funnels
+Write a professional proposal with: intro, scope, deliverables, timeline, investment, next steps.
 ```
 
-### ClickBank (`worker/discover/clickbank.ts`)
+**Deliverable generation:**
 ```
-Marketplace API:
-  GET https://api.clickbank.com/rest/1.3/products/list
-  Auth: API key in header
-  Params: site (account), keywords, category
+System: You are an expert content creator.
+User: {service.deliverablesTemplate with [niche] replaced by ticket.niche}
 ```
 
-### Research APIs
-- YouTube Data API v3: `GET https://www.googleapis.com/youtube/v3/search`
-- Reddit JSON: `GET https://www.reddit.com/r/{sub}/hot.json`
-- NewsAPI: `GET https://newsapi.org/v2/top-headlines`
+### Promotion integration
+When a `Service` is created with `status: active`, auto-create a `Promotion` record:
+- `type: "service"`
+- `name`: service name
+- `description`: service description
+- `url`: service funnelUrl
+- This makes the service appear in content generation as a promotion target
 
 ---
 
-## Section 6: Worker Cron Schedule
+## Section 6: File Map
 
-```
-06:00 UTC  Research    → fetch YouTube + Reddit + NewsAPI → ResearchTopic records
-07:00 UTC  Discover    → AI analyzes topics → AppIdea briefs + ClickBank products → DiscoverItem records
-{daily_run_hour} UTC  Content → active promotions → social posts + newsletter + image + video
-*/5 min    Posting     → fire due ContentPiece records via post-bridge
-*/5 min    Email       → fire due Newsletter records via Systeme.io broadcast API
-```
+### New files
+- `prisma/migrations/[timestamp]_add_services/` (auto-generated)
+- `app/(dashboard)/services/page.tsx`
+- `app/api/services/route.ts`
+- `app/api/services/[id]/route.ts`
+- `app/api/tickets/route.ts`
+- `app/api/tickets/[id]/route.ts`
+- `app/api/tickets/[id]/quote/route.ts`
+- `app/api/tickets/[id]/send-quote/route.ts`
+- `app/api/tickets/[id]/deliver/route.ts`
+- `app/api/tickets/[id]/send-delivery/route.ts`
+- `app/api/webhooks/systeme/route.ts`
+- `components/dashboard/services/service-card.tsx`
+- `components/dashboard/services/service-form.tsx`
+- `components/dashboard/services/ticket-pipeline.tsx`
+- `components/dashboard/services/ticket-card.tsx`
+- `components/dashboard/services/ticket-drawer.tsx`
 
----
-
-## Section 7: File Map (all files to create)
-
-### Config / Root
-- `package.json`
-- `tsconfig.json`
-- `next.config.js`
-- `postcss.config.js`
-- `env.mjs`
-- `middleware.ts`
-- `auth.ts`
-- `auth.config.ts`
-- `.env.example`
-- `components.json` (shadcn)
-
-### Prisma
-- `prisma/schema.prisma`
-
-### Lib
-- `lib/db.ts`
-- `lib/ai.ts`
-- `lib/falai.ts`
-- `lib/settings.ts`
-- `lib/utm.ts`
-- `lib/seeds.ts`
-
-### App — Auth
-- `app/(auth)/sign-in/page.tsx`
-- `app/(auth)/register/page.tsx`
-
-### App — Dashboard
-- `app/(dashboard)/layout.tsx`
-- `app/(dashboard)/page.tsx`
-- `app/(dashboard)/research/page.tsx`
-- `app/(dashboard)/discover/page.tsx`
-- `app/(dashboard)/content/page.tsx`
-- `app/(dashboard)/promote/page.tsx`
-- `app/(dashboard)/settings/page.tsx`
-
-### App — API Routes
-- `app/api/auth/[...nextauth]/route.ts`
-- `app/api/auth/register/route.ts`
-- `app/api/sse/route.ts`
-- `app/api/engine/run/route.ts`
-- `app/api/research/route.ts`
-- `app/api/research/[id]/route.ts`
-- `app/api/discover/route.ts`
-- `app/api/discover/[id]/approve/route.ts`
-- `app/api/discover/[id]/dismiss/route.ts`
-- `app/api/promote/route.ts`
-- `app/api/promote/[id]/route.ts`
-- `app/api/content/route.ts`
-- `app/api/content/[id]/route.ts`
-- `app/api/content/[id]/approve/route.ts`
-- `app/api/content/[id]/publish/route.ts`
-- `app/api/settings/route.ts`
-
-### Components
-- `components/layout/sidebar.tsx`
-- `components/layout/nav-item.tsx`
-- `components/dashboard/today/queue-card.tsx`
-- `components/dashboard/today/promotion-card.tsx`
-- `components/dashboard/today/research-feed.tsx`
-- `components/dashboard/research/topic-card.tsx`
-- `components/dashboard/discover/app-idea-card.tsx`
-- `components/dashboard/discover/affiliate-card.tsx`
-- `components/dashboard/content/content-piece-card.tsx`
-- `components/dashboard/content/newsletter-card.tsx`
-- `components/dashboard/promote/promotion-card.tsx`
-- `components/dashboard/settings/api-keys-section.tsx`
-- `components/dashboard/settings/schedule-section.tsx`
-
-### Worker
-- `worker/index.ts`
-- `worker/research/index.ts`
-- `worker/research/youtube.ts`
-- `worker/research/reddit.ts`
-- `worker/research/newsapi.ts`
-- `worker/discover/index.ts`
-- `worker/discover/app-ideas.ts`
-- `worker/discover/clickbank.ts`
-- `worker/content/index.ts`
-- `worker/content/generate.ts`
-- `worker/content/media.ts`
-- `worker/posting/scheduler.ts`
-- `worker/posting/post-bridge.ts`
-- `worker/posting/systeme.ts`
-
-### Tests
-- `tests/auth.spec.ts`
-- `tests/research.spec.ts`
-- `tests/discover.spec.ts`
-- `tests/content.spec.ts`
-- `tests/settings.spec.ts`
-
-**Total: ~65 files**
+### Modified files
+- `prisma/schema.prisma` — add Service, ServiceTicket models + User relations
+- `components/layout/sidebar.tsx` — add Services nav item
+- `worker/posting/systeme.ts` — add email helper functions
+- `app/(dashboard)/promote/page.tsx` — minor: exclude "service" type from promote page (optional, services managed on /services)

@@ -1,28 +1,47 @@
-# Task 002: Prisma Schema & Database Setup
+# Task 002: Services CRUD API
 
 ## Description
-Define the full database schema and generate the Prisma client. All 11 models from plan.md.
+API routes for creating, listing, updating, and deleting services.
 
 ## Files
-- `prisma/schema.prisma` (create)
-- `lib/db.ts` (create)
+- `app/api/services/route.ts` (create)
+- `app/api/services/[id]/route.ts` (create)
 
 ## Requirements
-1. Implement all models exactly as defined in plan.md Section 2:
-   - Auth.js models: `Account`, `Session`, `VerificationToken`
-   - App models: `User`, `ResearchTopic`, `DiscoverItem`, `AppIdea`, `AffiliateProduct`, `Promotion`, `ContentPiece`, `Newsletter`, `ScheduleEntry`, `EngineRun`, `Setting`
-2. All `@db.Text` annotations on long string fields (content, body, html, description, rules)
-3. All `@@index([userId])` on user-scoped models
-4. `lib/db.ts` exports `db` (PrismaClient singleton, safe for Next.js hot reload)
-5. Provider: `postgresql`, URL from `env("DATABASE_URL")`
+
+### GET /api/services
+- Auth check (401 if no session)
+- Return all services for userId, include `_count: { tickets: true }` for each
+- Order by createdAt desc
+
+### POST /api/services
+- Body: `{ name, description, deliverablesTemplate, priceMin, priceMax, turnaroundDays, funnelUrl? }`
+- Create Service with userId from session, status "active"
+- Return created service
+
+### PATCH /api/services/[id]
+- Verify service belongs to userId (404 if not found/wrong user)
+- Update any provided fields
+- Return updated service
+
+### DELETE /api/services/[id]
+- Verify ownership
+- Delete service (cascades to tickets via Prisma)
+- Return `{ success: true }`
+
+## Existing Code to Reference
+- `app/api/promote/route.ts` — GET pattern
+- `app/api/promote/[id]/route.ts` — PATCH/DELETE pattern
 
 ## Acceptance Criteria
-- [ ] `pnpm prisma generate` runs without errors
-- [ ] `pnpm prisma migrate dev --name init` creates migration successfully
-- [ ] `lib/db.ts` exports singleton `db`
+- [ ] GET returns services with ticket counts
+- [ ] POST creates a service
+- [ ] PATCH updates fields
+- [ ] DELETE removes service
+- [ ] All routes return 401 for unauthenticated requests
 
 ## Dependencies
 - Task 001
 
 ## Commit Message
-feat: add Prisma schema with all 11 models
+feat: add services CRUD API routes

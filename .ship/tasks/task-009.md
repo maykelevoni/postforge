@@ -1,52 +1,69 @@
-# Task 009: Discover Worker (App Ideas + ClickBank)
+# Task 009: Ticket Drawer UI Component
+
+## Type
+ui
 
 ## Description
-Build the discover cron worker that analyzes research topics with AI to generate app idea briefs and find ClickBank affiliate products.
+Right-side sliding drawer that opens when a ticket is clicked. Shows full ticket detail, quote editor, and deliverables section.
 
 ## Files
-- `worker/discover/app-ideas.ts` (create)
-- `worker/discover/clickbank.ts` (create)
-- `worker/discover/index.ts` (create)
+- `components/dashboard/services/ticket-drawer.tsx` (create)
 
 ## Requirements
+Props: `ticket` (with service), `onClose`, `onUpdate(updatedTicket)`
 
-### worker/discover/app-ideas.ts
-- `generateAppIdeas(userId: string): Promise<void>`
-- Fetches today's top 3 ResearchTopics (by score, status = 'new')
-- For each topic, calls OpenRouter via `generateText()` with a prompt asking for:
-  - Title, problem, targetAudience, coreFeatures (JSON array), monetization, competition, whyNow
-  - Landing page HTML (complete self-contained HTML: headline, subheadline, features, email capture form, CTA)
-- Parses JSON response
-- Creates `DiscoverItem` (type: 'app_idea') + `AppIdea` record
-- Skips if a DiscoverItem already exists for this topic today
+### Layout
+- Fixed panel on right side (width 480px, full viewport height, bg #111, border-left #222)
+- Overlays the page (z-index above pipeline)
+- Close button (X) top right
 
-### worker/discover/clickbank.ts
-- `findClickBankProducts(userId: string): Promise<void>`
-- Reads ClickBank API key + account from settings
-- Uses top research topic keywords to search ClickBank marketplace
-- ClickBank API: `GET https://api.clickbank.com/rest/1.3/products/list?site={account}&keywords={kw}`
-- For each product found, calls OpenRouter to generate:
-  - contentAngles (3-5 suggested post angles based on product + recent topics)
-  - promoRules summary
-- Creates `DiscoverItem` (type: 'affiliate') + `AffiliateProduct` record
-- Limits to 3 products per run
-- If no ClickBank key configured, skip gracefully
+### Header section
+- Client name (large, white)
+- Email (gray, mailto: link)
+- Niche badge (indigo)
+- Service name (gray)
+- Source (gray, small, if present)
+- Created date (gray, small)
 
-### worker/discover/index.ts — orchestrator
-- `runDiscover(userId: string): Promise<void>`
-- Runs `generateAppIdeas` then `findClickBankProducts` sequentially
-- Logs counts of new items created
+### Status section
+- Status dropdown (`<select>`) — options: New / Quoted / In Progress / Delivered / Closed
+- On change: PATCH /api/tickets/[id] with new status, call onUpdate
+
+### Notes section
+- Label "Internal Notes"
+- Textarea (auto-save on blur via PATCH /api/tickets/[id])
+
+### Quote section
+- Label "Quote / Proposal"
+- [Generate Quote] button (indigo) → POST /api/tickets/[id]/quote → populates textarea below
+- Loading state on button ("Generating...")
+- Editable textarea (save on blur via PATCH)
+- [Send Quote] button (green) — disabled if no quote text
+  - POST /api/tickets/[id]/send-quote
+  - Shows "Sent on {date}" after send
+- If quoteSentAt: show timestamp
+
+### Deliverables section (only when status = "in_progress" or "delivered")
+- Label "Deliverables"
+- [Generate Deliverables] button (indigo) → POST /api/tickets/[id]/deliver → shows preview
+- Scrollable pre/textarea for preview
+- [Send Delivery] button (green) — POST /api/tickets/[id]/send-delivery
+- If deliveredAt: show timestamp
+
+## Existing Code to Reference
+- `app/(dashboard)/settings/page.tsx` — inline style patterns
+- `components/dashboard/discover/app-idea-card.tsx` — modal pattern reference
 
 ## Acceptance Criteria
-- [ ] App ideas created with full brief fields populated
-- [ ] Landing page HTML included in AppIdea record
-- [ ] ClickBank products created with affiliate link + promo rules
-- [ ] No crash when ClickBank key missing
-- [ ] No duplicate DiscoverItems created for same topic on same day
+- [ ] Drawer opens/closes correctly
+- [ ] Status change calls API and updates parent
+- [ ] Notes auto-save on blur
+- [ ] Generate Quote populates textarea
+- [ ] Send Quote/Send Delivery show sent timestamps
+- [ ] Deliverables section only visible for in_progress/delivered
 
 ## Dependencies
-- Task 008
-- Task 004
+- Task 003, Task 004, Task 005
 
 ## Commit Message
-feat: add discover worker (app ideas + ClickBank products)
+feat: add ticket drawer component with quote and deliverables sections

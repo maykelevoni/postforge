@@ -62,19 +62,12 @@ export const {
       return session;
     },
 
-    async jwt({ token }) {
-      if (!token.sub) return token;
-
-      const dbUser = await db.user.findUnique({
-        where: { id: token.sub },
-      });
-
-      if (!dbUser) return token;
-
-      token.name = dbUser.name;
-      token.email = dbUser.email;
-      token.picture = dbUser.image;
-
+    async jwt({ token, user }) {
+      if (user) {
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = user.image;
+      }
       return token;
     },
   },

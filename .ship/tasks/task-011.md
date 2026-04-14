@@ -1,71 +1,47 @@
-# Task 011: Discover API + Discover Page
-
-## Type
-ui
+# Task 011: Promotion Auto-Create for Active Services
 
 ## Description
-API routes for discover items and the Discover page where users approve or dismiss app ideas and affiliate products.
+When a Service is created or activated, automatically create/update a corresponding Promotion record so PostForge starts generating promotional content for it. When paused, pause the Promotion.
 
 ## Files
-- `app/api/discover/route.ts` (create)
-- `app/api/discover/[id]/approve/route.ts` (create)
-- `app/api/discover/[id]/dismiss/route.ts` (create)
-- `app/(dashboard)/discover/page.tsx` (create)
-- `components/dashboard/discover/app-idea-card.tsx` (create)
-- `components/dashboard/discover/affiliate-card.tsx` (create)
+- `app/api/services/route.ts` (modify — POST handler)
+- `app/api/services/[id]/route.ts` (modify — PATCH handler)
 
 ## Requirements
 
-### API
-- `GET /api/discover?type=&status=&page=` — paginated DiscoverItems with nested `appIdea` or `affiliate` included
-- `POST /api/discover/[id]/approve`:
-  - Sets DiscoverItem status to 'approved'
-  - Creates `Promotion` record from the item data
-  - Sets linked ResearchTopic status to 'used'
-  - Returns `{ promotionId }`
-- `POST /api/discover/[id]/dismiss` — sets status to 'dismissed'
+### On POST /api/services (create)
+After creating the service, if `funnelUrl` is provided:
+- Create a `Promotion` record:
+  - userId: session.user.id
+  - name: service.name
+  - type: "service"
+  - description: service.description
+  - url: service.funnelUrl
+  - priority: 5
+  - status: "active"
+- Update service: set `promotionId = promotion.id`
 
-### Discover page (dark theme, inline styles)
-- Page title "Discover" + subtitle "AI-surfaced opportunities"
-- Two tabs: **App Ideas** | **Affiliate Products** (pending count badge on each)
-- Grid of cards per tab
+### On PATCH /api/services/[id]
+If `status` is being changed:
+- If changed to "paused" and service has promotionId: PATCH promotion status to "paused"
+- If changed to "active" and service has promotionId: PATCH promotion status to "active"
+If `funnelUrl` is changed and service has promotionId: update promotion url
 
-### AppIdeaCard
-- Title (bold, large)
-- "App Idea" badge (indigo)
-- Problem statement (2 lines)
-- Target audience chip
-- "Why now" text (italic, muted)
-- [View Full Brief] button → opens Dialog with:
-  - Full brief (all fields)
-  - Landing page HTML preview (iframe or sanitized render)
-- [Approve] button (green) → POST approve → card moves to approved state
-- [Dismiss] button (ghost) → POST dismiss → card fades out
+### Content generation note
+No changes to the content engine needed — the existing engine already generates content for any Promotion regardless of type. Setting type = "service" is enough for future filtering.
 
-### AffiliateCard
-- Product image (if imageUrl, else placeholder)
-- Product name + vendor
-- "Affiliate" badge (orange)
-- Commission % (green, bold)
-- Gravity score
-- [View Details] button → opens Dialog with:
-  - Full description
-  - Promo rules
-  - Content angles (bulleted list)
-  - Affiliate link (copyable)
-- [Approve] and [Dismiss] buttons
+## Existing Code to Reference
+- `app/api/discover/[id]/approve/route.ts` — pattern of creating a Promotion after approving an item
+- `app/api/services/route.ts` — from Task 002
 
 ## Acceptance Criteria
-- [ ] App Ideas tab shows pending items
-- [ ] Affiliate tab shows pending items
-- [ ] Approve creates Promotion and removes item from pending
-- [ ] Dismiss removes from view
-- [ ] Full brief dialog shows all fields
-- [ ] Affiliate dialog shows promo rules and copy link
+- [ ] Creating a service with funnelUrl creates a Promotion automatically
+- [ ] Pausing service pauses its Promotion
+- [ ] Activating service re-activates its Promotion
+- [ ] Service without funnelUrl skips Promotion creation gracefully
 
 ## Dependencies
-- Task 006
-- Task 009
+- Task 002
 
 ## Commit Message
-feat: add discover API and discover page
+feat: auto-create and sync Promotion when service is created or toggled

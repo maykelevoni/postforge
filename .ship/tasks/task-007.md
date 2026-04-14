@@ -1,60 +1,52 @@
-# Task 007: Settings API + Page
-
-## Description
-Settings API routes and the Settings page — the first thing a user configures after sign-up.
-
-## Files
-- `app/api/settings/route.ts` (create)
-- `app/(dashboard)/settings/page.tsx` (create)
-- `components/dashboard/settings/api-keys-section.tsx` (create)
-- `components/dashboard/settings/schedule-section.tsx` (create)
+# Task 007: Service Catalog UI Components
 
 ## Type
 ui
 
+## Description
+Service card and form components for the catalog section of the /services page.
+
+## Files
+- `components/dashboard/services/service-card.tsx` (create)
+- `components/dashboard/services/service-form.tsx` (create)
+
 ## Requirements
 
-### API routes
-- `GET /api/settings` — returns all settings for session user as `{ [key]: value }`
-- `POST /api/settings` — accepts `{ settings: { key: string, value: string }[] }`, bulk upserts via `setSetting`
-- Auth required on both routes
+### service-card.tsx
+Props: `service` (with _count.tickets), `onEdit`, `onDelete`, `onToggleStatus`
+- Dark card (background #111, border #222)
+- Header row: service name (bold, white) + status badge ("active" green / "paused" gray)
+- Body: description (truncated 2 lines), price range ($priceMin–$priceMax), turnaround (X days)
+- Footer: ticket count badge + [Edit] button + [Pause/Activate] toggle + [Delete] button
+- Inline styles only
 
-### Settings page (dark theme, inline styles)
-Three sections:
+### service-form.tsx
+Props: `service?` (null = create mode), `onSave(data)`, `onCancel`
+- Modal overlay (fixed, dark semi-transparent background)
+- Form card (centered, max-width 560px, dark theme)
+- Fields:
+  - Name (text input, required)
+  - Description (textarea, 3 rows)
+  - Deliverables Template (textarea, 6 rows, placeholder: "Generate 10 video scripts about [niche]...")
+  - Price Min / Max (side by side number inputs)
+  - Turnaround Days (number input)
+  - Funnel URL (text input, optional)
+- [Cancel] + [Save Service] buttons
+- Pre-fills fields when editing (service prop passed)
+- Calls onSave with form data on submit
 
-**API Keys**
-- OpenRouter API Key (password input) + Model (text input, default `deepseek/deepseek-r1`)
-- fal.ai API Key (password input)
-- post-bridge API Key (password input)
-- ClickBank API Key (password input) + Account Nickname (text input)
-- Systeme.io Domain + Default Funnel URL + API Key
-- YouTube API Key
-- NewsAPI Key
-- Research Subreddits (comma-separated text input)
-
-**Schedule** (per platform)
-- 6 rows: Twitter, LinkedIn, Reddit, Instagram, TikTok, Email
-- Each row: time picker (HH:MM) + days of week checkboxes (Mon-Sun) + active toggle
-
-**General**
-- Timezone (select, common timezones list)
-- Gate Mode (toggle — when ON, all content holds for approval)
-- Daily Run Hour (0-23 number input)
-
-- [Save] button → POST `/api/settings`
-- Show success/error toast on save
-- Password fields masked, show/hide toggle
+## Existing Code to Reference
+- `components/dashboard/discover/app-idea-card.tsx` — card pattern
+- `app/(dashboard)/settings/page.tsx` — modal/form inline style patterns
 
 ## Acceptance Criteria
-- [ ] GET returns current settings
-- [ ] POST saves all settings
-- [ ] All 3 sections render and save correctly
-- [ ] Gate mode toggle works
-- [ ] Schedule rows save time + days per platform
+- [ ] ServiceCard renders service data correctly
+- [ ] ServiceForm opens in create and edit mode
+- [ ] Template textarea has [niche] placeholder hint
+- [ ] Form validates required fields before calling onSave
 
 ## Dependencies
-- Task 006
-- Task 004
+- Task 002 (API shape reference)
 
 ## Commit Message
-feat: add settings API and settings page
+feat: add service catalog card and form components

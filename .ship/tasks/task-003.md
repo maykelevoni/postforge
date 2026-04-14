@@ -1,38 +1,41 @@
-# Task 003: Auth.js Setup (Credentials + Google OAuth)
+# Task 003: Tickets CRUD API
 
 ## Description
-Configure Auth.js v5 with credentials (email/password) and Google OAuth. Includes middleware to protect dashboard routes and a register API route.
+API routes for listing, getting detail, and updating service tickets.
 
 ## Files
-- `auth.config.ts` (create)
-- `auth.ts` (create)
-- `middleware.ts` (create)
-- `app/api/auth/[...nextauth]/route.ts` (create)
-- `app/api/auth/register/route.ts` (create)
+- `app/api/tickets/route.ts` (create)
+- `app/api/tickets/[id]/route.ts` (create)
 
 ## Requirements
-1. Auth.js v5 (`next-auth@5.0.0-beta.19`) pattern — same as launch/ reference
-2. `auth.config.ts` — Google provider (optional, only if env vars set)
-3. `auth.ts` — credentials provider with bcryptjs password check, Prisma adapter
-4. `middleware.ts` — protects all `/(dashboard)` routes, redirects to `/sign-in`
-5. Register route: `POST /api/auth/register` — validates email/password, hashes with bcryptjs, creates User
-6. Session strategy: JWT
-7. Callbacks: include `user.id` in session token
+
+### GET /api/tickets
+- Auth check
+- Query params: `?status=&serviceId=`
+- Return tickets for userId with service included (name, type)
+- Order by createdAt desc
+
+### GET /api/tickets/[id]
+- Auth + ownership check
+- Return full ticket with service included
+
+### PATCH /api/tickets/[id]
+- Auth + ownership check
+- Updatable fields: `status`, `notes`, `quote`
+- Return updated ticket
 
 ## Existing Code to Reference
-- `/mnt/c/Users/mayke/OneDrive/Desktop/App_Projects/launch/auth.ts`
-- `/mnt/c/Users/mayke/OneDrive/Desktop/App_Projects/launch/auth.config.ts`
-- `/mnt/c/Users/mayke/OneDrive/Desktop/App_Projects/launch/middleware.ts`
-- `/mnt/c/Users/mayke/OneDrive/Desktop/App_Projects/launch/app/api/auth/register/route.ts`
+- `app/api/research/route.ts` — GET with query params pattern
+- `app/api/research/[id]/route.ts` — PATCH pattern
 
 ## Acceptance Criteria
-- [ ] `/api/auth/register` creates a user with hashed password
-- [ ] Credentials sign-in works
-- [ ] Unauthenticated requests to `/` redirect to `/sign-in`
-- [ ] Session contains `user.id`
+- [ ] GET lists tickets, filterable by status and serviceId
+- [ ] GET [id] returns full detail
+- [ ] PATCH updates status, notes, or quote
+- [ ] All routes return 401 / 404 correctly
 
 ## Dependencies
-- Task 002
+- Task 001
 
 ## Commit Message
-feat: add Auth.js v5 with credentials and Google OAuth
+feat: add tickets CRUD API routes

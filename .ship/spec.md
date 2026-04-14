@@ -1,264 +1,240 @@
-# PostForge MVP — Spec
+# PostForge Services — Spec
 
 ## Feature Summary
-PostForge is a single-user autonomous content platform. It researches trending topics daily, auto-discovers app ideas and ClickBank affiliate products to promote, generates platform-specific social content with AI (text + images), auto-posts on schedule via post-bridge, writes nurture email newsletters sent via Systeme.io, and routes all traffic to funnels — building an email list and driving sales. The user's only job is to approve or dismiss suggestions.
+Add a **Services** monetization track to PostForge. The user defines AI-deliverable service templates (video content, social media packages, newsletters, etc.). PostForge promotes those services via generated content, captures leads via Systeme.io webhook, manages the client pipeline, generates AI quotes and deliverables, and communicates entirely by email. No calls, no manual content creation.
 
 ## Problem Statement
-Growing an audience and monetizing it requires daily trend research, product discovery, content creation, and consistent posting — all time-consuming when done manually. PostForge automates the entire loop: discover → create → post → capture → monetize. Manual input should be near zero.
+PostForge currently promotes affiliate products and app ideas. Services are the fastest monetization track — no inventory, no build risk, and PostForge can produce the deliverables itself using its existing AI engine. A Minecraft creator pays for "30 video scripts" → PostForge generates them in minutes.
 
 ---
 
-## The Flywheel
+## The Flywheel Extension
 
 ```
-Research (YouTube / Reddit / NewsAPI)
+Research finds trending niche (e.g., "Minecraft tutorials")
     ↓
-AI analyzes trends → Discover inbox
-    ├── App ideas   → full brief + landing page → validate with real traffic
-    └── ClickBank products → complete profile → promote immediately
+PostForge generates content promoting the service for that niche:
+  "I create Minecraft video scripts + thumbnails for creators"
     ↓
-User approves → becomes active Promotion
+CTA links to Systeme.io landing page (user-built manually)
     ↓
-OpenRouter AI generates daily outputs:
-    ├── Social posts (Twitter/X, LinkedIn, Reddit) — text
-    ├── Visual posts (Instagram, TikTok) — image via fal.ai + caption
-    └── Nurture newsletter — hook + value + soft sell + CTA
+Lead submits form → Systeme.io webhook → ServiceTicket created in PostForge
     ↓
-post-bridge fires social on schedule
-Systeme.io broadcast API sends newsletter to list
+Auto-reply email sent to lead (confirmation + what to expect)
     ↓
-Audience grows on social → funnels capture emails → list grows
+User generates AI quote (scope, timeline, price) → sends via email
     ↓
-Newsletter nurtures list → trust builds → sales happen
+Deal closed externally (email negotiation + payment)
+    ↓
+User triggers delivery: PostForge generates deliverables for their niche
+    ↓
+Review + send via email → ticket marked Delivered → Closed
 ```
 
 ---
 
 ## User Stories
 
-### 1. Research
-**As a user**, I want PostForge to pull trending topics from YouTube, Reddit, and NewsAPI daily so I always have fresh signals without manual searching.
+### 1. Service Catalog
+**As a user**, I want to define my service offerings once so PostForge can promote and deliver them automatically.
 
 Acceptance criteria:
-- [ ] Daily cron fetches YouTube, Reddit, NewsAPI
-- [ ] Topics deduplicated and scored by engagement/relevance
-- [ ] Topics visible in Research page: source, score, headline, summary
-- [ ] User can mark topics as used or dismissed
+- [ ] User can create a service with: name, description, deliverables template, price range (min/max), estimated turnaround (days), active/paused status
+- [ ] Service has a `type` that maps to a content generation mode: `video_content` | `social_package` | `newsletter_package` | `landing_page` | `content_strategy`
+- [ ] Service can be paused (stops being promoted, tickets still managed)
+- [ ] Services page shows catalog + quick stats (active tickets per service)
 
-### 2. Discover — App Ideas
-**As a user**, I want the AI to analyze research trends and surface app/tool ideas I could build, with a full brief and a ready-to-publish landing page.
-
-Acceptance criteria:
-- [ ] AI identifies market gaps and recurring problems from research topics
-- [ ] Each app idea includes a full brief:
-  - Problem being solved
-  - Target audience
-  - Core features (MVP scope)
-  - Monetization strategy (pricing model)
-  - Competition overview
-  - Why now (tied to the trend)
-- [ ] AI generates a landing page for the idea (headline, subheadline, features list, CTA, email capture)
-- [ ] Landing page publishable to Systeme.io funnel via API
-- [ ] Idea can be approved → becomes active Promotion
-- [ ] Idea can be dismissed
-
-### 3. Discover — ClickBank Products
-**As a user**, I want the AI to find relevant ClickBank affiliate products I can promote immediately, with everything I need in one place.
+### 2. Lead Capture via Systeme.io Webhook
+**As a user**, I want Systeme.io to fire a webhook when a lead submits the form so a ticket is created automatically.
 
 Acceptance criteria:
-- [ ] AI searches ClickBank catalog based on research topics/niche
-- [ ] Each product profile includes:
-  - Product name + vendor
-  - Affiliate link (with ClickBank account nickname)
-  - Description
-  - Commission rate + average payout
-  - Gravity score
-  - Product image / cover
-  - Promotion rules (what you can/can't say, restrictions)
-  - Suggested content angles
-- [ ] Product can be approved → becomes active Promotion
-- [ ] Product can be dismissed
+- [ ] `POST /api/webhooks/systeme` receives Systeme.io form submission payload
+- [ ] Creates a `ServiceTicket` with: name, email, niche/topic, service type, message, source
+- [ ] Auto-reply email sent to lead via Systeme.io broadcast API (confirmation + "we'll be in touch within 24h")
+- [ ] Ticket appears in pipeline under "New"
 
-### 4. Content Generation
-**As a user**, I want AI to write platform-specific posts and a nurture newsletter for each active promotion automatically.
+### 3. Pipeline View
+**As a user**, I want to see all active service tickets in a pipeline so I know where each client is.
 
 Acceptance criteria:
-- [ ] Generates posts for: Twitter/X, LinkedIn, Reddit, Instagram, TikTok
-- [ ] Each post respects platform character limits and tone
-- [ ] Instagram + TikTok: fal.ai Flux Schnell generates image → fal.ai Kling animates it into a short video (5-10 sec)
-- [ ] Same video posted to both Instagram Reels and TikTok
-- [ ] Twitter/X, LinkedIn, Reddit: text only
-- [ ] Generates one nurture email newsletter per active promotion per day:
-  - Subject line
-  - Hook paragraph (tied to trending topic)
-  - Value section (teaches something useful)
-  - Bridge (connects to the product naturally)
-  - Single CTA with UTM-tracked link
-- [ ] OpenRouter used for all text generation (model + API key in Settings)
-- [ ] fal.ai API key stored in Settings
-- [ ] All posts saved with status: `draft` | `scheduled` | `published` | `failed`
-- [ ] Newsletter saved with status: `draft` | `scheduled` | `sent` | `failed`
-- [ ] User can edit any draft before it goes out
-- [ ] UTM params auto-appended to all links
+- [ ] Pipeline shows 5 columns: New → Quoted → In Progress → Delivered → Closed
+- [ ] Each ticket card shows: client name, service type, niche, days in current stage
+- [ ] Clicking a ticket opens a detail panel (right side or modal): full info, quote, notes, history, actions
+- [ ] User can drag ticket or use a status dropdown to move between stages
+- [ ] Filter by service type
 
-### 5. Scheduling & Auto-posting + Email Sending
-**As a user**, I want posts to fire automatically on my configured schedule via post-bridge, and newsletters to send via Systeme.io broadcast API.
+### 4. AI Quote Generation
+**As a user**, I want PostForge to generate a professional quote/proposal for a lead so I can send it without writing from scratch.
 
 Acceptance criteria:
-- [ ] Per-platform posting time configurable (hour + days of week)
-- [ ] Worker checks every 5 min for due posts and fires via post-bridge
-- [ ] Newsletter send time configurable (daily hour in Settings)
-- [ ] Newsletter broadcast sent via Systeme.io broadcast API
-- [ ] Gate mode: when ON, both posts AND newsletters hold for manual approval
-- [ ] Failed posts retry once after 30 minutes
-- [ ] Failed newsletter send retries once after 30 minutes
-- [ ] Today page shows live queue: platform, scheduled time, status (including email)
+- [ ] "Generate Quote" button on ticket detail
+- [ ] AI generates a proposal including:
+  - Personalized intro (references their niche and goal)
+  - Scope of work (specific to their niche: e.g., "10 Minecraft video scripts targeting beginners")
+  - Deliverables list
+  - Timeline
+  - Investment (price within service's range)
+  - Next steps (reply to accept, payment details)
+- [ ] User can edit the quote in a text area
+- [ ] "Send Quote" → sends via Systeme.io broadcast API to the lead's email
+- [ ] Ticket moves to "Quoted" automatically after send
 
-### 6. Promotions
-**As a user**, I want to manage what's actively being promoted and how it rotates.
-
-Acceptance criteria:
-- [ ] Promotions sourced from Discover (approved app ideas or ClickBank products)
-- [ ] Each promotion shows: name, type (app_idea | affiliate), funnel URL, UTM config, priority, status
-- [ ] Multiple promotions rotate by priority weight
-- [ ] User can pause, resume, or archive promotions
-- [ ] Content pieces linked back to their source promotion
-
-### 7. Today — Command Center
-**As a user**, I want a single page showing exactly what's happening right now.
+### 5. AI Deliverable Generation
+**As a user**, I want PostForge to generate the actual service deliverables for a client's niche so I can review and send them.
 
 Acceptance criteria:
-- [ ] Today's post queue by platform with status (published / scheduled / failed / pending approval)
-- [ ] Active promotion in rotation
-- [ ] Top research topics from today
-- [ ] Discover inbox badge (new items count)
-- [ ] [Run Now] button triggers manual engine run
-- [ ] SSE-powered live updates (no page refresh)
+- [ ] "Generate Deliverables" button on ticket (available when status = In Progress)
+- [ ] PostForge runs content generation engine targeting the client's niche:
+  - `video_content`: X video scripts + thumbnail prompts + captions (niche-specific)
+  - `social_package`: N posts per platform for their niche
+  - `newsletter_package`: N newsletter drafts for their niche
+  - `landing_page`: sales page HTML for their product/offer
+  - `content_strategy`: content calendar + angle list for their niche
+- [ ] Generated content shown in ticket detail for review/edit
+- [ ] "Send Deliverables" → packages content and sends via Systeme.io email to client
+- [ ] Ticket moves to "Delivered" after send
 
-### 8. Settings
-**As a user**, I want to configure all integrations and behavior from one page.
+### 6. Service Promotion Integration
+**As a user**, I want PostForge to promote my services in generated content when a relevant niche is trending.
 
 Acceptance criteria:
-- [ ] OpenRouter API key + model selection
-- [ ] fal.ai API key
-- [ ] post-bridge API key
-- [ ] ClickBank API key + account nickname
-- [ ] Systeme.io domain + default funnel URL + API key
-- [ ] YouTube API key, NewsAPI key, research subreddits
-- [ ] Posting timezone
-- [ ] Gate mode toggle
-- [ ] Per-platform schedule (time + days of week)
-- [ ] All keys stored in DB Setting table (never in .env)
+- [ ] Active services are included as promotion targets alongside affiliate products and app ideas
+- [ ] When a ResearchTopic matches a service's niche scope, PostForge generates a post promoting the service
+- [ ] Post content is tailored to the trending niche: "Minecraft content is booming — I create scripts for creators"
+- [ ] CTA links to the service's Systeme.io funnel URL (set per service)
 
 ---
 
 ## Technical Requirements
 
-### Stack
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Inline styles + shadcn/ui primitives (no Tailwind in JSX) |
-| Auth | Auth.js — credentials + Google OAuth |
-| Database | PostgreSQL via Prisma ORM (Neon in prod) |
-| AI — text | OpenRouter (user-supplied key + model) |
-| AI — images | fal.ai Flux Schnell |
-| Social posting | post-bridge API |
-| Funnels | Systeme.io (UTM links + funnel publish API) |
-| Background jobs | node-cron (worker process) |
-| Real-time | Server-Sent Events (SSE) |
-| Package manager | pnpm |
-| Testing | Playwright E2E |
+### New Database Models
 
-### Database Models (MVP)
-| Model | Description |
-|---|---|
-| `User` | Auth user |
-| `ResearchTopic` | Daily research hit with score + source |
-| `DiscoverItem` | AI-surfaced opportunity: app_idea or affiliate |
-| `AppIdea` | Full brief + generated landing page HTML |
-| `AffiliateProduct` | ClickBank product profile with promo rules |
-| `Promotion` | Active promotion linked to AppIdea or AffiliateProduct |
-| `ContentPiece` | Generated post for a platform (text + optional image URL) |
-| `Newsletter` | Generated nurture email (subject, body, CTA) tied to a promotion |
-| `ScheduleEntry` | Per-platform posting time + days of week |
-| `EngineRun` | Log of each engine execution |
-| `Setting` | Key-value app config |
+```prisma
+model Service {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  description    String    @db.Text
+  type           String    // "video_content" | "social_package" | "newsletter_package" | "landing_page" | "content_strategy"
+  deliverables   String    @db.Text  // template description (what AI generates)
+  priceMin       Float
+  priceMax       Float
+  turnaroundDays Int
+  funnelUrl      String?   // Systeme.io landing page URL
+  status         String    @default("active") // "active" | "paused"
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-### Settings Keys
-`openrouter_api_key`, `openrouter_model`, `falai_api_key`, `postbridge_api_key`, `clickbank_api_key`, `clickbank_account`, `systeme_domain`, `systeme_default_funnel_url`, `systeme_api_key`, `youtube_api_key`, `newsapi_key`, `research_subreddits`, `timezone`, `gate_mode`, `daily_run_hour`
+  tickets ServiceTicket[]
 
-### Worker Processes
-| Cron | Schedule | What it does |
+  @@index([userId])
+  @@map("services")
+}
+
+model ServiceTicket {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId   String
+  service     Service   @relation(fields: [serviceId], references: [id])
+  clientName  String
+  clientEmail String
+  niche       String    // e.g., "Minecraft", "fitness", "crypto"
+  message     String    @db.Text
+  source      String?   // which funnel/page they came from
+  status      String    @default("new") // "new" | "quoted" | "in_progress" | "delivered" | "closed"
+  quote       String?   @db.Text  // AI-generated proposal (editable)
+  quoteSentAt DateTime?
+  notes       String?   @db.Text  // internal notes
+  deliverables String?  @db.Text  // JSON — generated content per type
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([serviceId])
+  @@map("service_tickets")
+}
+```
+
+### New API Routes
+
+| Method | Path | Description |
 |---|---|---|
-| Research | Daily | Fetches YouTube + Reddit + NewsAPI, scores + dedupes topics |
-| Discover | Daily (after research) | AI generates app idea briefs + finds ClickBank products from topics |
-| Content | Configurable daily hour | Generates posts + images for active promotions |
-| Posting | Every 5 min | Fires due posts via post-bridge, retries failed |
+| GET | `/api/services` | List user's services |
+| POST | `/api/services` | Create service |
+| PATCH | `/api/services/[id]` | Update service (name, price, status, etc.) |
+| DELETE | `/api/services/[id]` | Delete service |
+| GET | `/api/tickets` | List tickets with `?status=&serviceId=` filter |
+| GET | `/api/tickets/[id]` | Get ticket detail |
+| PATCH | `/api/tickets/[id]` | Update ticket (status, notes, quote) |
+| POST | `/api/tickets/[id]/quote` | Generate + save AI quote |
+| POST | `/api/tickets/[id]/send-quote` | Send quote email via Systeme.io |
+| POST | `/api/tickets/[id]/deliver` | Generate deliverables for client's niche |
+| POST | `/api/tickets/[id]/send-delivery` | Send deliverables email via Systeme.io |
+| POST | `/api/webhooks/systeme` | Receive Systeme.io form webhook → create ticket |
+
+### Email Templates (sent via Systeme.io broadcast API)
+
+1. **Confirmation** — on ticket creation: "Thanks, got your request, we'll send a quote within 24h"
+2. **Quote** — full AI proposal
+3. **Delivery** — deliverables attached/inline + "please review and let me know"
 
 ---
 
 ## UI/UX Requirements
 
-### Navigation (6 pages)
-| Page | Route | Purpose |
-|---|---|---|
-| Today | `/` | Command center: live queue, top research, active promotion, run button |
-| Research | `/research` | Trending topics: source, score, dismiss/use |
-| Discover | `/discover` | Opportunities inbox: app ideas + ClickBank products, approve/dismiss |
-| Content | `/content` | All posts: filter by platform/status, preview + edit + manual publish |
-| Promote | `/promote` | Active promotions: manage, pause, rotate priority |
-| Settings | `/settings` | API keys, schedule, gate mode, timezone |
+### New Page: `/services`
 
-### Design
-- Dark theme, minimal chrome
-- Inline styles (no Tailwind in JSX)
-- shadcn/ui for dialogs, dropdowns, toasts
-- Platform icons on all post cards
-- SSE live updates on Today page
+**Two-panel layout:**
+
+**Left panel — Service Catalog** (top half)
+- List of services: name, type badge, price range, turnaround, active/paused toggle
+- [+ Add Service] button → inline form or modal
+
+**Right panel (or full width below) — Pipeline**
+- 5-column kanban: New | Quoted | In Progress | Delivered | Closed
+- Ticket cards: client name, niche tag, service type, days in stage
+- Click → opens ticket detail drawer (right side)
+
+**Ticket Detail Drawer:**
+- Header: client name, email, niche, service name, source
+- Status dropdown (move pipeline)
+- Internal notes (textarea, auto-saves)
+- Quote section: [Generate Quote] → editable textarea → [Send Quote]
+- Deliverables section: [Generate Deliverables] (visible when In Progress) → preview → [Send Delivery]
+- Timeline: when ticket was created, when quoted, when delivered
 
 ---
 
 ## Integration Points
+
 | Service | Usage |
 |---|---|
-| OpenRouter | All text content generation |
-| fal.ai (Flux Schnell) | Image generation for Instagram + TikTok |
-| fal.ai (Kling image-to-video) | Animates image into short video (5-10 sec) for Instagram Reels + TikTok |
-| post-bridge | Social publishing: Twitter/X, LinkedIn, Reddit, Instagram, TikTok |
-| Systeme.io | Funnel URLs + UTM tracking + landing page publishing + email broadcasts |
-| ClickBank API | Affiliate product search + full product profiles |
-| YouTube Data API v3 | Research trending videos |
-| Reddit JSON API | Research trending posts (no auth required) |
-| NewsAPI | Research trending headlines |
+| Systeme.io webhook | `POST /api/webhooks/systeme` → creates ServiceTicket |
+| Systeme.io broadcast API | Sends confirmation, quote, and delivery emails |
+| OpenRouter | Generates quote proposal + service deliverables |
+| fal.ai | Image generation if service type = `video_content` (thumbnail prompts → images) |
+| Existing content engine | Powers deliverable generation (reuses `worker/content/generate.ts` logic) |
 
 ---
 
 ## Out of Scope (MVP)
-- Blog generation / Ghost publishing
-- Brevo/SMTP direct sending (Systeme.io handles all email)
-- Email sequences / drip campaigns (v2)
-- Audio generation (ElevenLabs)
-- Video generation
-- Media Studio / asset library
-- Autopilot rules engine
-- Amazon / AppSumo / other affiliate networks
-- Multiple users / teams
+- In-app payment processing (Stripe) — payment handled externally
+- Client portal (clients don't log in)
+- Revision tracking / feedback loop
+- Multiple deliverable generations per ticket
+- Calls / scheduling (fully async email)
+- Service packages / upsells
 
 ---
 
 ## Success Criteria
-- [ ] Research runs daily and surfaces real trending topics
-- [ ] Discover inbox auto-populates with app ideas and ClickBank products — no manual input needed
-- [ ] App idea → full brief + landing page generated and publishable to Systeme.io
-- [ ] ClickBank product → complete profile with promo rules and affiliate link
-- [ ] Approved item → active promotion → AI-generated posts for all 5 platforms in < 60s
-- [ ] Instagram + TikTok posts include AI-generated images (fal.ai)
-- [ ] Posts fire via post-bridge on schedule without manual intervention
-- [ ] Gate mode works: posts hold until approved
-- [ ] All API keys configurable from Settings (never in .env)
-- [ ] Newsletter generated daily per active promotion with hook + value + CTA
-- [ ] Newsletter broadcasts via Systeme.io API to contact list
-- [ ] Gate mode holds newsletters for approval before sending
-- [ ] Playwright tests cover core flows
+- [ ] User can define 1+ service with deliverable template + funnel URL
+- [ ] Systeme.io webhook creates a ticket automatically
+- [ ] Confirmation email auto-sent to lead on ticket creation
+- [ ] AI quote generated in < 10s and sendable via one click
+- [ ] AI deliverables generated for client's niche and sendable via one click
+- [ ] Pipeline view shows all tickets across 5 stages
+- [ ] Services promoted in PostForge content when relevant niche is trending
