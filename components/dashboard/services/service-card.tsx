@@ -1,21 +1,10 @@
 "use client";
 
 import { Package, Edit, Trash2, Power } from "lucide-react";
+import { Service } from "./types";
 
 interface ServiceCardProps {
-  service: {
-    id: string;
-    name: string;
-    description: string;
-    type: string;
-    priceMin: number;
-    priceMax: number;
-    turnaroundDays: number;
-    status: string;
-    _count?: {
-      tickets: number;
-    };
-  };
+  service: Service;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string) => void;

@@ -1,17 +1,7 @@
 "use client";
 
 import TicketCard from "./ticket-card";
-
-interface Ticket {
-  id: string;
-  clientName: string;
-  niche: string;
-  status: string;
-  updatedAt: Date;
-  service: {
-    name: string;
-  };
-}
+import { Ticket } from "./types";
 
 interface TicketPipelineProps {
   tickets: Ticket[];

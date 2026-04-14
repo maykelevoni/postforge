@@ -2,18 +2,10 @@
 
 import React from "react";
 import { Clock } from "lucide-react";
+import { Ticket } from "./types";
 
 interface TicketCardProps {
-  ticket: {
-    id: string;
-    clientName: string;
-    niche: string;
-    status: string;
-    updatedAt: Date;
-    service: {
-      name: string;
-    };
-  };
+  ticket: Ticket;
   onClick: () => void;
 }
 

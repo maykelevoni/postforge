@@ -2,35 +2,12 @@
 
 import { useState } from "react";
 import { X, Mail, Calendar, Clock, FileText, Package, Send } from "lucide-react";
+import { Ticket } from "./types";
 
 interface TicketDrawerProps {
-  ticket: {
-    id: string;
-    clientName: string;
-    clientEmail: string;
-    niche: string;
-    message: string;
-    source?: string;
-    status: string;
-    notes?: string;
-    quote?: string;
-    quoteSentAt?: Date;
-    deliverables?: string;
-    deliveredAt?: Date;
-    createdAt: Date;
-    updatedAt: Date;
-    service: {
-      id: string;
-      name: string;
-      type: string;
-      deliverables: string;
-      priceMin: number;
-      priceMax: number;
-      turnaroundDays: number;
-    };
-  };
+  ticket: Ticket;
   onClose: () => void;
-  onUpdate: (updatedTicket: any) => void;
+  onUpdate: (updatedTicket: Ticket) => void;
 }
 
 const drawerOverlayStyle: React.CSSProperties = {

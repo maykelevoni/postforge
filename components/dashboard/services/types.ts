@@ -1,0 +1,41 @@
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  deliverablesTemplate: string;
+  priceMin: number;
+  priceMax: number;
+  turnaroundDays: number;
+  funnelUrl: string | null;
+  status: string;
+  _count?: {
+    tickets: number;
+  };
+}
+
+export interface Ticket {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  niche: string;
+  message: string;
+  source?: string;
+  status: string;
+  notes?: string;
+  quote?: string;
+  quoteSentAt?: Date | string;
+  deliverables?: string;
+  deliveredAt?: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  service: {
+    id: string;
+    name: string;
+    type: string;
+    deliverables: string;
+    priceMin: number;
+    priceMax: number;
+    turnaroundDays: number;
+  };
+}

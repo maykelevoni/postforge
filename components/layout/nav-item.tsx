@@ -6,6 +6,7 @@ import {
   Sparkles,
   FileText,
   Megaphone,
+  Briefcase,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const navItems: NavItemProps[] = [
   { href: "/discover", icon: Sparkles, label: "Discover" },
   { href: "/content", icon: FileText, label: "Content" },
   { href: "/promote", icon: Megaphone, label: "Promote" },
+  { href: "/services", icon: Briefcase, label: "Services" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
