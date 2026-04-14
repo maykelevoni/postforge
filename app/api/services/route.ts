@@ -49,6 +49,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
+  // Create promotion if funnelUrl is provided
+  let promotionId = null;
+  if (funnelUrl) {
+    const promotion = await db.promotion.create({
+      data: {
+        userId: session.user.id,
+        name,
+        type: "service",
+        description,
+        url: funnelUrl,
+        priority: 5,
+        status: "active",
+      },
+    });
+    promotionId = promotion.id;
+  }
+
   const service = await db.service.create({
     data: {
       userId: session.user.id,
@@ -61,6 +78,7 @@ export async function POST(req: Request) {
       turnaroundDays: turnaroundDays || 3,
       funnelUrl: funnelUrl || null,
       status: "active",
+      promotionId,
     },
   });
 

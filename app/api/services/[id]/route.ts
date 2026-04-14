@@ -36,6 +36,22 @@ export async function PATCH(
     status,
   } = body;
 
+  // Handle status changes - sync with promotion
+  if (status !== undefined && status !== service.status && service.promotionId) {
+    await db.promotion.update({
+      where: { id: service.promotionId },
+      data: { status },
+    });
+  }
+
+  // Handle funnelUrl changes - update promotion URL
+  if (funnelUrl !== undefined && funnelUrl !== service.funnelUrl && service.promotionId) {
+    await db.promotion.update({
+      where: { id: service.promotionId },
+      data: { url: funnelUrl },
+    });
+  }
+
   const updated = await db.service.update({
     where: { id: params.id },
     data: {
