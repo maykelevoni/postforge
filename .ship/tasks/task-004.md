@@ -1,57 +1,36 @@
-# Task 004: Quote Generation + Send API
+# Task 004: Update Auth Pages with New Icons
+
+## Type
+ui
 
 ## Description
-Two API routes: one generates an AI quote and saves it to the ticket, the other sends it via Systeme.io email.
+Replace lucide-react icons in authentication pages (sign-in and register) to complete the icon replacement across the entire app.
 
 ## Files
-- `app/api/tickets/[id]/quote/route.ts` (create)
-- `app/api/tickets/[id]/send-quote/route.ts` (create)
+- `app/(auth)/sign-in/page.tsx` (modify)
+- `app/(auth)/register/page.tsx` (modify)
 
 ## Requirements
-
-### POST /api/tickets/[id]/quote
-- Auth + ownership check
-- Load ticket (with service)
-- Call `generateText()` from `lib/ai.ts` with prompt:
-  ```
-  System: You are a professional freelance services consultant writing proposals.
-  User: Write a professional quote proposal for:
-    Service: {service.name}
-    Description: {service.description}
-    Client: {ticket.clientName}
-    Their niche/topic: {ticket.niche}
-    Their message: {ticket.message}
-    What you will deliver: {service.deliverablesTemplate}
-    Investment range: ${service.priceMin}–${service.priceMax}
-    Turnaround: {service.turnaroundDays} days
-
-  Structure: personalized intro → scope of work (specific to their niche) → deliverables list → timeline → investment → next steps (reply to accept).
-  ```
-- Save result to `ticket.quote`
-- Return `{ quote: string }`
-
-### POST /api/tickets/[id]/send-quote
-- Auth + ownership check
-- Load ticket (with service)
-- Require `ticket.quote` to exist (400 if missing)
-- Call Systeme.io broadcast API to send quote email to `ticket.clientEmail`
-  - Subject: `Your quote for {service.name} — {ticket.clientName}`
-  - Body: ticket.quote
-- Update ticket: `quoteSentAt = now()`, `status = "quoted"`
-- Return `{ success: true }`
+1. Remove lucide-react imports from auth pages
+2. Import Icon component from components/ui/icon
+3. Replace icon usage with Icon component using icon mapping
+4. Maintain existing icon sizes and colors
+5. Ensure auth forms still look professional
 
 ## Existing Code to Reference
-- `lib/ai.ts` — generateText() usage
-- `worker/posting/systeme.ts` — Systeme.io broadcast API pattern
-- `lib/settings.ts` — getSetting() for API keys
+- `components/layout/nav-item.tsx` - Pattern for Icon component usage
+- `lib/icon-mapping.ts` - Icon name mapping reference
 
 ## Acceptance Criteria
-- [ ] POST /quote generates and saves AI quote
-- [ ] POST /send-quote sends email and moves ticket to "quoted"
-- [ ] Returns 400 if quote not yet generated before sending
+- [ ] No lucide-react imports in auth pages
+- [ ] Icon component used in both auth pages
+- [ ] All icons render correctly in sign-in and register pages
+- [ ] Icon sizes and colors match previous appearance
+- [ ] Auth pages maintain professional appearance
 
 ## Dependencies
-- Task 001, Task 003
+- Task 001 (Icon system must exist)
+- Task 002 (Pattern established)
 
 ## Commit Message
-feat: add quote generation and send API routes
+feat: update auth pages to use new icon component system

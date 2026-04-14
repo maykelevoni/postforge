@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Pause, Play, Archive, Plus, Minus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 
 interface PromotionCardProps {
   id: string;
@@ -205,7 +205,7 @@ export default function PromotionCard({
             style={iconButtonStyle}
             disabled={priority <= 1}
           >
-            <Minus size={14} />
+            <Icon name="minus" size={14} />
           </button>
           <span style={{ fontSize: "16px", fontWeight: "700", color: "#f5f5f5", minWidth: "24px", textAlign: "center" }}>
             {priority}
@@ -215,7 +215,7 @@ export default function PromotionCard({
             style={iconButtonStyle}
             disabled={priority >= 10}
           >
-            <Plus size={14} />
+            <Icon name="add" size={14} />
           </button>
         </div>
       </div>
@@ -228,7 +228,7 @@ export default function PromotionCard({
           rel="noopener noreferrer"
           style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "#6366f1" }}
         >
-          <ExternalLink size={12} />
+          <Icon name="external" size={12} />
           <span style={{ textDecoration: "underline" }}>Link</span>
         </a>
       </div>
@@ -293,12 +293,12 @@ export default function PromotionCard({
         >
           {status === "active" ? (
             <>
-              <Pause size={14} />
+              <Icon name="pause" size={14} />
               Pause
             </>
           ) : (
             <>
-              <Play size={14} />
+              <Icon name="play" size={14} />
               Resume
             </>
           )}
@@ -307,7 +307,7 @@ export default function PromotionCard({
           onClick={() => onArchive(id)}
           style={{ ...buttonStyle, backgroundColor: "transparent", border: "1px solid #333", color: "#888" }}
         >
-          <Archive size={14} />
+          <Icon name="archive" size={14} />
           Archive
         </button>
       </div>

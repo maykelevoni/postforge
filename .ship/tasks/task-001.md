@@ -1,39 +1,36 @@
-# Task 001: Prisma Schema — Service + ServiceTicket Models
+# Task 001: Install Developer Icons & Create Icon System
+
+## Type
 
 ## Description
-Add Service and ServiceTicket models to prisma/schema.prisma, add relations to User, and run migration.
+Install developer-icons package and create centralized icon component system to replace lucide-react. This establishes the foundation for icon updates across the entire app.
 
 ## Files
-- `prisma/schema.prisma` (modify)
+- `package.json` (modify)
+- `components/ui/icon.tsx` (create)
+- `lib/icon-mapping.ts` (create)
 
 ## Requirements
-1. Add `Service` model:
-   - Fields: id (cuid), userId, name, description (Text), deliverablesTemplate (Text), priceMin (Float), priceMax (Float), turnaroundDays (Int default 3), funnelUrl (String?), status (String default "active"), createdAt, updatedAt
-   - Relations: user → User, tickets → ServiceTicket[], promotion → Promotion? (optional promotionId @unique)
-   - @@index([userId]), @@map("services")
-
-2. Add `ServiceTicket` model:
-   - Fields: id (cuid), userId, serviceId, clientName, clientEmail, niche, message (Text), source (String?), status (String default "new"), quote (Text?), quoteSentAt (DateTime?), notes (Text?), deliverables (Text?), deliveredAt (DateTime?), createdAt, updatedAt
-   - Relations: user → User, service → Service
-   - @@index([userId]), @@index([serviceId]), @@map("service_tickets")
-
-3. Add to `User` model: `services Service[]` and `serviceTickets ServiceTicket[]`
-
-4. Add to `Promotion` model: `service Service?` back-relation (owned by Service.promotionId)
-
-5. Run: `pnpm exec prisma migrate dev --name add_services`
-6. Run: `pnpm exec prisma generate`
+1. Remove lucide-react dependency from package.json
+2. Install developer-icons package (or equivalent)
+3. Create centralized Icon component that wraps developer-icons
+4. Create icon mapping reference for consistent icon usage
+5. Support size and color props for flexibility
 
 ## Existing Code to Reference
-- `prisma/schema.prisma` — follow exact same pattern as Promotion, ContentPiece models
+- `components/layout/nav-item.tsx` - Current lucide-react usage pattern
+- `components/layout/sidebar.tsx` - Current icon styling approach
 
 ## Acceptance Criteria
-- [ ] Migration runs without errors
-- [ ] `prisma generate` succeeds
-- [ ] `db.service` and `db.serviceTicket` are available
+- [ ] lucide-react removed from package.json
+- [ ] developer-icons package installed
+- [ ] Icon component created in components/ui/icon.tsx
+- [ ] Icon mapping created in lib/icon-mapping.ts
+- [ ] Icon component supports size and color props
+- [ ] Icon mapping covers all current icon usages (home, trending, sparkles, etc.)
 
 ## Dependencies
-None
+- None
 
 ## Commit Message
-feat: add Service and ServiceTicket Prisma models
+feat: install developer-icons and create centralized icon component system

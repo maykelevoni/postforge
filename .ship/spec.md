@@ -1,240 +1,399 @@
-# PostForge Services — Spec
+# Templates Responsive Navigation Redesign
 
 ## Feature Summary
-Add a **Services** monetization track to PostForge. The user defines AI-deliverable service templates (video content, social media packages, newsletters, etc.). PostForge promotes those services via generated content, captures leads via Systeme.io webhook, manages the client pipeline, generates AI quotes and deliverables, and communicates entirely by email. No calls, no manual content creation.
+Fix the responsive layout of the Templates page. On small/medium screens replace the fixed left sidebar with a horizontal scrollable tab strip pinned to the top of the content area.
 
 ## Problem Statement
-PostForge currently promotes affiliate products and app ideas. Services are the fastest monetization track — no inventory, no build risk, and PostForge can produce the deliverables itself using its existing AI engine. A Minecraft creator pays for "30 video scripts" → PostForge generates them in minutes.
+The templates page uses a fixed two-column layout (240px sidebar + flex content) with zero responsive adaptation. On screens narrower than ~1024px the sidebar compresses the content area into an unusable state.
+
+## Solution
+- **Desktop (≥ 900px):** keep the existing left sidebar with vertical platform list
+- **Mobile/tablet (< 900px):** collapse sidebar into a horizontal scrollable pill-tab strip at the top; content takes full width below
+
+## Acceptance Criteria
+- [ ] Desktop (≥ 900px): 240px left sidebar unchanged
+- [ ] Mobile/tablet (< 900px): horizontal scrollable platform tabs across the top, full-width content below
+- [ ] Active tab clearly highlighted in both layouts
+- [ ] No Tailwind — responsive via JS window-width detection + inline styles
+- [ ] Smooth hover/active transitions
+
+## Out of Scope
+- Template cards, filters, gallery — no changes
+- New platform categories
+
+## Feature Summary
+**Two-part feature:**
+1. **Developer Icons Integration** (Phase 1 - Quick Win)
+2. **Content Templates System** (Phase 2 - Main Feature)
+
+## Phase 1: Developer Icons Integration
+
+### Feature Summary
+Replace all existing icons in PostForge with high-quality developer icons from [xandemon/developer-icons](https://github.com/xandemon/developer-icons) for improved visual appeal and consistency.
+
+### Problem Statement
+Current icons may be inconsistent or lack visual polish. The developer-icons repository provides comprehensive, high-quality icons designed for developer apps, improving overall UX and visual quality.
+
+### User Stories
+
+#### Story 1: Icon Replacement
+**As a** user  
+**I want to** see consistent, high-quality icons throughout the app  
+**So that** the interface looks professional and polished
+
+**Acceptance Criteria:**
+- All existing icons replaced with developer-icons alternatives
+- Icons are consistent in style and visual quality
+- Icon sizes and spacing remain appropriate
+- No broken icons or missing references
+- Icons match semantic meaning (settings icon for settings, etc.)
+
+#### Story 2: Easy Icon Maintenance
+**As a** developer  
+**I want to** use a standardized icon library  
+**So that** future icon additions are consistent
+
+**Acceptance Criteria:**
+- Icon components are reusable
+- Clear pattern for adding new icons
+- Icon imports are centralized
+- Documentation on available icons
+
+### Technical Requirements
+
+#### Icon Source
+- **Repository**: https://github.com/xandemon/developer-icons
+- **Format**: SVG (preferred) or React components
+- **Installation**: npm package or direct SVG import
+
+#### Implementation Approach
+1. Install/add developer-icons to project
+2. Create centralized icon component system
+3. Map existing icons to developer-icons equivalents
+4. Replace all icon references throughout app
+
+#### Files to Update
+- `components/layout/sidebar.tsx` - Navigation icons
+- `components/dashboard/services/service-card.tsx` - Service icons
+- `components/dashboard/content/content-piece-card.tsx` - Content icons
+- `components/layout/nav-item.tsx` - Nav icons
+- `app/(auth)/sign-in/page.tsx` - Auth icons
+- `app/(auth)/register/page.tsx` - Auth icons
+- All components with icon imports
+
+#### Icon Mapping Examples
+- Home/Dashboard → home icon
+- Services → services/briefcase icon  
+- Content → content/document icon
+- Promote → promote/rocket icon
+- Discover → discover/search icon
+- Research → research/analytics icon
+- Settings → settings/cog icon
+- Status → success, error, warning icons
+- Actions → edit, delete, add, remove icons
+
+### UI/UX Requirements
+- Visual consistency across all icons
+- Consistent sizing and spacing
+- Good color contrast
+- SVG format for scalability
+- Minimal performance impact
+
+### Success Criteria
+- ✅ All existing icons replaced with developer-icons
+- ✅ No broken icons or visual inconsistencies
+- ✅ App visual quality improved
+- ✅ Reusable icon component system in place
+- ✅ Zero performance degradation
 
 ---
 
-## The Flywheel Extension
+## Phase 2: Content Templates System
 
-```
-Research finds trending niche (e.g., "Minecraft tutorials")
-    ↓
-PostForge generates content promoting the service for that niche:
-  "I create Minecraft video scripts + thumbnails for creators"
-    ↓
-CTA links to Systeme.io landing page (user-built manually)
-    ↓
-Lead submits form → Systeme.io webhook → ServiceTicket created in PostForge
-    ↓
-Auto-reply email sent to lead (confirmation + what to expect)
-    ↓
-User generates AI quote (scope, timeline, price) → sends via email
-    ↓
-Deal closed externally (email negotiation + payment)
-    ↓
-User triggers delivery: PostForge generates deliverables for their niche
-    ↓
-Review + send via email → ticket marked Delivered → Closed
-```
+### Feature Summary
+A comprehensive template system providing viral, proven copywriting frameworks for all AI-generated content types. Users select from pre-built viral templates or create custom templates, with AI generating content that strictly follows template structures, constraints, and platform-specific rules.
 
----
+### Problem Statement
+Currently, AI-generated content lacks proven viral frameworks and doesn't follow platform-specific best practices. This leads to inconsistent quality, missing critical elements (strong CTAs, proper hashtag usage, optimal character counts), and lower engagement.
 
-## User Stories
+**Key Issues:**
+- Inconsistent content quality across platforms
+- No enforced character limits or platform constraints
+- Missing proven viral copywriting frameworks
+- No reusable template system for scaling content creation
+- AI generates content that doesn't perform well
 
-### 1. Service Catalog
-**As a user**, I want to define my service offerings once so PostForge can promote and deliver them automatically.
+### User Stories
 
-Acceptance criteria:
-- [ ] User can create a service with: name, description, deliverables template, price range (min/max), estimated turnaround (days), active/paused status
-- [ ] Service has a `type` that maps to a content generation mode: `video_content` | `social_package` | `newsletter_package` | `landing_page` | `content_strategy`
-- [ ] Service can be paused (stops being promoted, tickets still managed)
-- [ ] Services page shows catalog + quick stats (active tickets per service)
+#### Story 1: Template Selection & Content Generation
+**As a** content creator  
+**I want to** select from proven viral templates for different platforms  
+**So that** my AI-generated content follows frameworks known to perform well
 
-### 2. Lead Capture via Systeme.io Webhook
-**As a user**, I want Systeme.io to fire a webhook when a lead submits the form so a ticket is created automatically.
+**Acceptance Criteria:**
+- User can select platform (Twitter, LinkedIn, Reddit, Instagram, TikTok, Email, Image, Video)
+- User sees gallery of pre-built viral templates for that platform
+- User can preview template structure, variables, and examples
+- User can select template and fill variables (or let AI auto-fill)
+- AI generates content strictly following template structure
+- Generated content respects all template constraints
 
-Acceptance criteria:
-- [ ] `POST /api/webhooks/systeme` receives Systeme.io form submission payload
-- [ ] Creates a `ServiceTicket` with: name, email, niche/topic, service type, message, source
-- [ ] Auto-reply email sent to lead via Systeme.io broadcast API (confirmation + "we'll be in touch within 24h")
-- [ ] Ticket appears in pipeline under "New"
+#### Story 2: Custom Template Creation
+**As a** power user  
+**I want to** create and save my own templates  
+**So that** I can reuse successful content structures
 
-### 3. Pipeline View
-**As a user**, I want to see all active service tickets in a pipeline so I know where each client is.
+**Acceptance Criteria:**
+- User can create custom templates with variable placeholders
+- User can define template constraints (max length, required sections, platform rules)
+- User can save, edit, and delete custom templates
+- Custom templates appear alongside pre-built templates
 
-Acceptance criteria:
-- [ ] Pipeline shows 5 columns: New → Quoted → In Progress → Delivered → Closed
-- [ ] Each ticket card shows: client name, service type, niche, days in current stage
-- [ ] Clicking a ticket opens a detail panel (right side or modal): full info, quote, notes, history, actions
-- [ ] User can drag ticket or use a status dropdown to move between stages
-- [ ] Filter by service type
+#### Story 3: Smart Variable Filling
+**As a** user  
+**I want** AI to intelligently fill template variables based on product info  
+**So that** I don't have to manually write every variable
 
-### 4. AI Quote Generation
-**As a user**, I want PostForge to generate a professional quote/proposal for a lead so I can send it without writing from scratch.
+**Acceptance Criteria:**
+- User provides product info (name, description, URL)
+- AI automatically maps product info to template variables
+- User can override AI-filled variables
+- AI generates context-aware variables
+- User can preview all variables before generation
 
-Acceptance criteria:
-- [ ] "Generate Quote" button on ticket detail
-- [ ] AI generates a proposal including:
-  - Personalized intro (references their niche and goal)
-  - Scope of work (specific to their niche: e.g., "10 Minecraft video scripts targeting beginners")
-  - Deliverables list
-  - Timeline
-  - Investment (price within service's range)
-  - Next steps (reply to accept, payment details)
-- [ ] User can edit the quote in a text area
-- [ ] "Send Quote" → sends via Systeme.io broadcast API to the lead's email
-- [ ] Ticket moves to "Quoted" automatically after send
+#### Story 4: Content Validation & Preview
+**As a** user  
+**I want to** see real-time validation and preview of generated content  
+**So that** I know it meets platform requirements before publishing
 
-### 5. AI Deliverable Generation
-**As a user**, I want PostForge to generate the actual service deliverables for a client's niche so I can review and send them.
+**Acceptance Criteria:**
+- Real-time character count display with warnings
+- Validation for required sections (hook, CTA, benefits, etc.)
+- Platform-specific validation (hashtag counts, mention formats, etc.)
+- Preview of how content will appear on platform
+- Clear error messages for validation failures
 
-Acceptance criteria:
-- [ ] "Generate Deliverables" button on ticket (available when status = In Progress)
-- [ ] PostForge runs content generation engine targeting the client's niche:
-  - `video_content`: X video scripts + thumbnail prompts + captions (niche-specific)
-  - `social_package`: N posts per platform for their niche
-  - `newsletter_package`: N newsletter drafts for their niche
-  - `landing_page`: sales page HTML for their product/offer
-  - `content_strategy`: content calendar + angle list for their niche
-- [ ] Generated content shown in ticket detail for review/edit
-- [ ] "Send Deliverables" → packages content and sends via Systeme.io email to client
-- [ ] Ticket moves to "Delivered" after send
+#### Story 5: Template Management
+**As a** user  
+**I want to** organize and favorite my most-used templates  
+**So that** I can quickly access successful templates
 
-### 6. Service Promotion Integration
-**As a user**, I want PostForge to promote my services in generated content when a relevant niche is trending.
+**Acceptance Criteria:**
+- User can favorite templates for quick access
+- Favorite templates appear at top of gallery
+- User can search and filter templates by platform, type, or keywords
+- User can see template usage history
 
-Acceptance criteria:
-- [ ] Active services are included as promotion targets alongside affiliate products and app ideas
-- [ ] When a ResearchTopic matches a service's niche scope, PostForge generates a post promoting the service
-- [ ] Post content is tailored to the trending niche: "Minecraft content is booming — I create scripts for creators"
-- [ ] CTA links to the service's Systeme.io funnel URL (set per service)
+### Technical Requirements
 
----
-
-## Technical Requirements
-
-### New Database Models
-
-```prisma
-model Service {
-  id             String    @id @default(cuid())
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name           String
-  description    String    @db.Text
-  type           String    // "video_content" | "social_package" | "newsletter_package" | "landing_page" | "content_strategy"
-  deliverables   String    @db.Text  // template description (what AI generates)
-  priceMin       Float
-  priceMax       Float
-  turnaroundDays Int
-  funnelUrl      String?   // Systeme.io landing page URL
-  status         String    @default("active") // "active" | "paused"
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  tickets ServiceTicket[]
-
-  @@index([userId])
-  @@map("services")
+#### Template Data Structure
+```typescript
+interface Template {
+  id: string;
+  name: string;
+  category: 'twitter' | 'linkedin' | 'reddit' | 'instagram' | 'tiktok' | 'email_subject' | 'email_body' | 'image_prompt' | 'video_prompt';
+  type: 'prebuilt' | 'custom';
+  template: string; // Template with variables like "{number} ways to {benefit}"
+  variables: {
+    [key: string]: {
+      type: 'text' | 'number' | 'ai_generated';
+      required: boolean;
+      default?: string | number;
+      description?: string;
+      placeholder?: string;
+    };
+  };
+  constraints: {
+    maxLength?: number;
+    minLength?: number;
+    requiredSections?: string[];
+    hashtagCount?: string;
+    mentionCount?: string;
+    customRules?: string[];
+  };
+  example?: string;
+  userId?: string;
+  isFavorite?: boolean;
+  usageCount?: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
-
-model ServiceTicket {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  serviceId   String
-  service     Service   @relation(fields: [serviceId], references: [id])
-  clientName  String
-  clientEmail String
-  niche       String    // e.g., "Minecraft", "fitness", "crypto"
-  message     String    @db.Text
-  source      String?   // which funnel/page they came from
-  status      String    @default("new") // "new" | "quoted" | "in_progress" | "delivered" | "closed"
-  quote       String?   @db.Text  // AI-generated proposal (editable)
-  quoteSentAt DateTime?
-  notes       String?   @db.Text  // internal notes
-  deliverables String?  @db.Text  // JSON — generated content per type
-  deliveredAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([userId])
-  @@index([serviceId])
-  @@map("service_tickets")
-}
 ```
 
-### New API Routes
+#### Content Types Covered
+1. **Twitter/X** (280 chars max, 2-3 hashtags, viral hooks)
+2. **LinkedIn** (150-300 words, professional tone, value-driven)
+3. **Reddit** (helpful, authentic, non-promotional)
+4. **Instagram** (150 chars max, 3-5 hashtags)
+5. **TikTok** (Hook 3s + Value 15s + CTA 5s format)
+6. **Email Subject** (under 50 chars, catchy but not spammy)
+7. **Email Body** (under 500 words, Hook → Value → Bridge → CTA)
+8. **Image Prompts** (detailed visual descriptions, style, composition, colors, mood)
+9. **Video Prompts** (cinematic quality, camera movement, duration)
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/services` | List user's services |
-| POST | `/api/services` | Create service |
-| PATCH | `/api/services/[id]` | Update service (name, price, status, etc.) |
-| DELETE | `/api/services/[id]` | Delete service |
-| GET | `/api/tickets` | List tickets with `?status=&serviceId=` filter |
-| GET | `/api/tickets/[id]` | Get ticket detail |
-| PATCH | `/api/tickets/[id]` | Update ticket (status, notes, quote) |
-| POST | `/api/tickets/[id]/quote` | Generate + save AI quote |
-| POST | `/api/tickets/[id]/send-quote` | Send quote email via Systeme.io |
-| POST | `/api/tickets/[id]/deliver` | Generate deliverables for client's niche |
-| POST | `/api/tickets/[id]/send-delivery` | Send deliverables email via Systeme.io |
-| POST | `/api/webhooks/systeme` | Receive Systeme.io form webhook → create ticket |
+#### AI Integration
+- Extend existing `generateText()` to accept template parameter
+- New function: `generateFromTemplate(template, variables, productInfo)`
+- AI must respect template constraints strictly
+- Fallback to existing generation if no template selected
 
-### Email Templates (sent via Systeme.io broadcast API)
+#### Database Schema
+- New table: `Template` (stores all templates)
+- Update `ContentPiece` table: add `templateId` field
+- Update `Newsletter` table: add `subjectTemplateId` and `bodyTemplateId` fields
 
-1. **Confirmation** — on ticket creation: "Thanks, got your request, we'll send a quote within 24h"
-2. **Quote** — full AI proposal
-3. **Delivery** — deliverables attached/inline + "please review and let me know"
+### UI/UX Requirements
+
+#### Templates Page
+- **Route**: `/templates`
+- **Layout**: Platform tabs on left, template gallery on right
+- **Template Card**: Shows template name, example, variables count, favorite button
+- **Filter/Search**: By platform, type, favorites, most-used
+
+#### Template Selection Modal
+- **Trigger**: When user generates content
+- **Layout**: Grid of template cards with preview
+- **Quick Select**: Recent/favorite templates at top
+
+#### Template Editor (for custom templates)
+- **Form Fields**: Name, category, template string, variable definitions, constraints
+- **Live Preview**: See template with example variables filled
+- **Validation**: Real-time syntax checking
+
+#### Content Generation Flow Enhancement
+- **Step 1**: Select platform (existing)
+- **Step 2**: Select template (NEW)
+- **Step 3**: Fill/confirm variables (NEW - optional, AI can auto-fill)
+- **Step 4**: Generate content (existing)
+- **Step 5**: Preview with validation (NEW)
+- **Step 6**: Approve/edit (existing)
+
+### Integration Points
+
+#### Existing Content Generation
+- **File**: `worker/content/generate.ts`
+- **Modification**: Add template parameter to `generateContentForPlatform()`
+- **Change**: Use template-based generation when template provided
+
+#### Existing Media Generation
+- **File**: `worker/content/media.ts`
+- **Modification**: Add template-based prompt generation
+- **Change**: Use image/video templates to structure prompts
+
+#### API Routes
+- **New**: `GET/POST /api/templates` - List/create templates
+- **New**: `GET/PUT/DELETE /api/templates/[id]` - Template CRUD
+- **New**: `POST /api/templates/[id]/favorite` - Favorite/unfavorite
+- **New**: `POST /api/generate/from-template` - Generate from template
+
+### Pre-Built Viral Templates
+
+#### Twitter/X Templates (5-10)
+1. "X ways to {benefit} without {pain} in {time}"
+2. "I {achieved result} in {time}. Here's how: 🧵"
+3. "Stop {common mistake}. Instead, {better approach}"
+4. "The {adjective} truth about {topic} nobody talks about"
+5. "Why {strategy} beats {alternative} for {goal}"
+6. "{Number} {noun} that will {benefit} instantly"
+7. "Unpopular opinion: {contrarian view}. Here's why:"
+8. "{Result} in {time}. The exact framework I used:"
+
+#### LinkedIn Templates (5-10)
+1. "Most people {common belief}. But {counterpoint}..."
+2. "In the past {timeframe}, I've learned {lesson}. Here's the breakdown:"
+3. "Here's what nobody tells you about {topic}:"
+4. "The {number}-step framework I used to {result}:"
+5. "POV: You're {situation}. Here's what to do:"
+6. "After {number} years in {industry}, here's my biggest takeaway:"
+7. "The {adjective} guide to {topic} (that actually works):"
+
+#### Email Subject Templates (5-10)
+1. "{Number} ways to {benefit}"
+2. "Your {noun} is {problem}. Here's the fix."
+3. "How I {result} in {time} (exact steps)"
+4. "The {adjective} guide to {topic}"
+5. "Stop {mistake}. Start {solution}."
+
+#### Email Body Templates (5-10)
+1. Hook → Value → Bridge → CTA structure
+2. Problem → Agitation → Solution → Result framework
+3. Story → Lesson → Application format
+4. Question → Insight → Action structure
+5. Bullet-point benefit list → Single CTA
+
+#### Instagram/TikTok Templates (5-10)
+1. **Hook**: "Wait for it..." / Value / CTA
+2. **Hook**: "This changed everything..." / Value / CTA
+3. **Hook**: "Don't skip this..." / Value / CTA
+4. **Hook**: "POV:" / Value / CTA
+5. **Hook**: "The secret to..." / Value / CTA
+
+#### Image Prompt Templates (5-10)
+1. "Cinematic {style} photo of {subject}, {lighting}, {composition}, HD resolution 1250x555, professional photography, {mood}"
+2. "Professional {type} image showing {subject}, {background}, {lighting style}, sharp focus, {color palette}, {mood}"
+3. "High-quality {style} photograph of {subject}, {composition rule}, {lighting}, {colors}, professional, 4K quality"
+
+#### Video Prompt Templates (5-10)
+1. "Cinematic video of {subject}, {camera movement}, {lighting style}, {duration}, high quality, {mood}, smooth transitions"
+2. "Professional video showing {subject}, {camera movement}, {action}, {lighting}, {style}, high quality"
+3. "{Style} video of {subject}, {movement}, {lighting}, {duration}, cinematic quality, {mood}"
+
+### Out of Scope
+- A/B testing templates
+- Template analytics/performance tracking
+- Advanced template builder (drag-and-drop)
+- Template marketplace/sharing
+- Version history for templates
+- Multi-language templates
+
+### Success Criteria
+
+**Functional Requirements:**
+- ✅ All 9 content types supported with templates
+- ✅ 5-10 pre-built viral templates per platform (45-90 total)
+- ✅ Users can create custom templates
+- ✅ AI generates content strictly following template structure
+- ✅ Template constraints enforced
+- ✅ Real-time validation and preview
+- ✅ Template favorites and search functionality
+
+**Quality Metrics:**
+- ✅ Generated content quality improvement
+- ✅ Reduction in generation time
+- ✅ Consistent formatting across platforms
+- ✅ Fewer validation errors
+
+**User Experience:**
+- ✅ Intuitive template selection flow
+- ✅ Clear template previews with examples
+- ✅ Easy custom template creation
+- ✅ Fast template search and filtering
+
+**Performance:**
+- ✅ Template loading < 500ms
+- ✅ Content generation with templates < 5s
+- ✅ Validation feedback real-time (< 100ms)
 
 ---
 
-## UI/UX Requirements
+## Implementation Phases
 
-### New Page: `/services`
+### Phase 1: Developer Icons (Quick Win - 2-4 hours)
+1. Add developer-icons to project
+2. Create centralized icon component
+3. Replace all icon references
+4. Test visual consistency
 
-**Two-panel layout:**
-
-**Left panel — Service Catalog** (top half)
-- List of services: name, type badge, price range, turnaround, active/paused toggle
-- [+ Add Service] button → inline form or modal
-
-**Right panel (or full width below) — Pipeline**
-- 5-column kanban: New | Quoted | In Progress | Delivered | Closed
-- Ticket cards: client name, niche tag, service type, days in stage
-- Click → opens ticket detail drawer (right side)
-
-**Ticket Detail Drawer:**
-- Header: client name, email, niche, service name, source
-- Status dropdown (move pipeline)
-- Internal notes (textarea, auto-saves)
-- Quote section: [Generate Quote] → editable textarea → [Send Quote]
-- Deliverables section: [Generate Deliverables] (visible when In Progress) → preview → [Send Delivery]
-- Timeline: when ticket was created, when quoted, when delivered
+### Phase 2: Content Templates System (Main Feature)
+1. Database & Backend (Template tables, API routes)
+2. AI Integration (template-based generation)
+3. Frontend UI (templates page, selection modal, editor)
+4. Testing & Polish
 
 ---
 
-## Integration Points
-
-| Service | Usage |
-|---|---|
-| Systeme.io webhook | `POST /api/webhooks/systeme` → creates ServiceTicket |
-| Systeme.io broadcast API | Sends confirmation, quote, and delivery emails |
-| OpenRouter | Generates quote proposal + service deliverables |
-| fal.ai | Image generation if service type = `video_content` (thumbnail prompts → images) |
-| Existing content engine | Powers deliverable generation (reuses `worker/content/generate.ts` logic) |
-
----
-
-## Out of Scope (MVP)
-- In-app payment processing (Stripe) — payment handled externally
-- Client portal (clients don't log in)
-- Revision tracking / feedback loop
-- Multiple deliverable generations per ticket
-- Calls / scheduling (fully async email)
-- Service packages / upsells
-
----
-
-## Success Criteria
-- [ ] User can define 1+ service with deliverable template + funnel URL
-- [ ] Systeme.io webhook creates a ticket automatically
-- [ ] Confirmation email auto-sent to lead on ticket creation
-- [ ] AI quote generated in < 10s and sendable via one click
-- [ ] AI deliverables generated for client's niche and sendable via one click
-- [ ] Pipeline view shows all tickets across 5 stages
-- [ ] Services promoted in PostForge content when relevant niche is trending
+## Overall Success Criteria
+- ✅ Icons: Improved visual appeal across entire app
+- ✅ Templates: All content types supported with viral frameworks
+- ✅ Both features working seamlessly together
+- ✅ User experience enhanced (better visuals + better content quality)

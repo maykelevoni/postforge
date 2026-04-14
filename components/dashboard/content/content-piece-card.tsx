@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Image, Video, Clock, Check, Send, Edit2, AlertCircle } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 
 interface ContentPieceCardProps {
   id: string;
@@ -134,7 +134,7 @@ export default function ContentPieceCard({
     <div style={cardStyle}>
       <div style={headerStyle}>
         <div style={platformStyle}>
-          <FileText size={14} />
+          <Icon name="fileText" size={14} />
           {platform}
         </div>
         {getStatusBadge(status)}
@@ -163,7 +163,7 @@ export default function ContentPieceCard({
 
       {error && (
         <div style={{ color: "#ef4444", fontSize: "12px", marginBottom: "8px" }}>
-          <AlertCircle size={12} style={{ display: "inline", marginRight: "4px" }} />
+          <Icon name="warning" size={12} style={{ display: "inline", marginRight: "4px" }} />
           {error}
         </div>
       )}
@@ -173,7 +173,7 @@ export default function ContentPieceCard({
         {(imageUrl || videoUrl) && <span>{(imageUrl ? "Image" : "") + (videoUrl ? " Video" : "")}</span>}
         {scheduledAt && (
           <span>
-            <Clock size={12} style={{ display: "inline", marginRight: "4px" }} />
+            <Icon name="clock" size={12} style={{ display: "inline", marginRight: "4px" }} />
             {new Date(scheduledAt).toLocaleString()}
           </span>
         )}
@@ -204,7 +204,7 @@ export default function ContentPieceCard({
               onClick={() => setEditing(true)}
               style={{ ...buttonStyle, backgroundColor: "#222", color: "#888" }}
             >
-              <Edit2 size={14} />
+              <Icon name="edit2" size={14} />
               Edit
             </button>
             {!approved && status === "draft" && (
@@ -212,7 +212,7 @@ export default function ContentPieceCard({
                 onClick={() => onApprove(id)}
                 style={{ ...buttonStyle, backgroundColor: "#22c55e", color: "white" }}
               >
-                <Check size={14} />
+                <Icon name="check" size={14} />
                 Approve
               </button>
             )}
@@ -220,7 +220,7 @@ export default function ContentPieceCard({
               onClick={() => onPublish(id)}
               style={{ ...buttonStyle, backgroundColor: "#6366f1", color: "white" }}
             >
-              <Send size={14} />
+              <Icon name="send" size={14} />
               Publish Now
             </button>
           </>

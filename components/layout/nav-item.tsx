@@ -1,35 +1,27 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  TrendingUp,
-  Sparkles,
-  FileText,
-  Megaphone,
-  Briefcase,
-  Settings,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 
 interface NavItemProps {
   href: string;
-  icon: LucideIcon;
+  icon: string;
   label: string;
 }
 
 const navItems: NavItemProps[] = [
-  { href: "/", icon: Home, label: "Today" },
-  { href: "/research", icon: TrendingUp, label: "Research" },
-  { href: "/discover", icon: Sparkles, label: "Discover" },
-  { href: "/content", icon: FileText, label: "Content" },
-  { href: "/promote", icon: Megaphone, label: "Promote" },
-  { href: "/services", icon: Briefcase, label: "Services" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/", icon: "home", label: "Today" },
+  { href: "/research", icon: "trending", label: "Research" },
+  { href: "/discover", icon: "sparkles", label: "Discover" },
+  { href: "/content", icon: "fileText", label: "Content" },
+  { href: "/promote", icon: "megaphone", label: "Promote" },
+  { href: "/services", icon: "briefcase", label: "Services" },
+  { href: "/templates", icon: "layout", label: "Templates" },
+  { href: "/settings", icon: "settings", label: "Settings" },
 ];
 
 export default function NavItem({
   href,
-  icon: Icon,
+  icon,
   label,
 }: NavItemProps) {
   const pathname = usePathname();
@@ -52,7 +44,7 @@ export default function NavItem({
 
   return (
     <Link href={href} style={itemStyle}>
-      <Icon size={18} />
+      <Icon name={icon as any} size={18} />
       <span>{label}</span>
     </Link>
   );

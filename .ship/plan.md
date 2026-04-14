@@ -1,253 +1,668 @@
-# PostForge Services — Technical Plan
+# Technical Implementation Plan: Icons & Templates System
 
-## Section 1: Architecture Integration
-
-This feature adds two new first-class entities (`Service` + `ServiceTicket`) alongside the existing `Promotion` / `ContentPiece` / `Newsletter` system. It does NOT replace anything — services are an additional monetization track.
-
-### How it fits
-
-- **Services** live on a new `/services` page (sidebar nav item added)
-- **Tickets** are managed entirely within `/services` (no separate route)
-- **Webhook** receives Systeme.io form submissions at `/api/webhooks/systeme` (no auth required — uses a secret token check instead)
-- **Promotion integration**: `Service` can link to the `Promotion` model — when a service is active, PostForge creates a Promotion record (type: `"service"`) which feeds into the existing content generation engine
-- **Deliverable generation**: reuses `lib/ai.ts` `generateText()` — same pattern as `worker/content/generate.ts` but driven by the service's custom template + client niche
-
-### Existing patterns to follow
-
-- API routes: `auth()` → 401 check → Prisma query → `NextResponse.json()`
-- Client pages: `"use client"` + `useEffect` fetch + `useState` — no server components
-- Inline styles everywhere — no Tailwind
-- All keys from DB `Setting` table via `getSetting()`
+## Overview
+Two-phase implementation plan for (1) Developer Icons Integration and (2) Content Templates System. Both features integrate with existing PostForge architecture while maintaining consistency with current patterns.
 
 ---
 
-## Section 2: Database Changes
+## Phase 1: Developer Icons Integration (Quick Win)
 
-### New models added to `prisma/schema.prisma`
+### Architecture Integration
+
+#### Current State Analysis
+- **Icon Library**: lucide-react (currently used in 15+ components)
+- **Icon Locations**: Sidebar, navigation, dashboard cards, auth pages, buttons
+- **Pattern**: Direct imports from lucide-react, inline styling
+- **Components Affected**: 15 components across layout, dashboard, and auth
+
+#### Implementation Strategy
+**Option A: Replace lucide-react with developer-icons**
+- Remove lucide-react dependency
+- Add developer-icons package
+- Replace all icon imports and usages
+- Create wrapper components for consistency
+
+**Option B: Run both libraries in parallel**
+- Keep lucide-react for existing icons
+- Add developer-icons for new icons
+- Gradual migration approach
+
+**Decision**: **Option A** - Complete replacement for visual consistency
+
+### File Changes
+
+#### 1. Package Installation
+```bash
+pnpm remove lucide-react
+pnpm add developer-icons
+# OR if not available as package
+# Download SVG files and create local icon components
+```
+
+#### 2. Create Icon Component System
+**New File**: `components/ui/icon.tsx`
+```typescript
+// Centralized icon component with size and color variants
+import { IconName } from 'developer-icons';
+
+interface IconProps {
+  name: IconName;
+  size?: number;
+  color?: string;
+  className?: string;
+}
+
+export function Icon({ name, size = 18, color, className }: IconProps) {
+  // Implementation based on developer-icons API
+}
+```
+
+#### 3. Component Updates (15 files)
+**Priority Order**:
+1. `components/layout/nav-item.tsx` - Navigation icons (highest visibility)
+2. `components/layout/sidebar.tsx` - Sidebar structure
+3. `components/dashboard/content/content-piece-card.tsx` - Content icons
+4. `components/dashboard/promote/promotion-card.tsx` - Promotion icons
+5. `components/dashboard/services/service-card.tsx` - Service icons
+6. `components/dashboard/discover/app-idea-card.tsx` - Discovery icons
+7. `components/dashboard/research/topic-card.tsx` - Research icons
+8. `components/dashboard/today/*.tsx` - Today page cards
+9. `app/(auth)/sign-in/page.tsx` - Auth icons
+10. `app/(auth)/register/page.tsx` - Auth icons
+
+#### 4. Icon Mapping Reference
+Create `lib/icon-mapping.ts`:
+```typescript
+export const iconMap = {
+  // Navigation
+  home: 'HomeIcon',
+  trending: 'TrendingUpIcon',
+  sparkles: 'SparklesIcon',
+  fileText: 'DocumentIcon',
+  megaphone: 'AnnouncementIcon',
+  briefcase: 'BriefcaseIcon',
+  settings: 'SettingsIcon',
+
+  // Actions
+  edit: 'EditIcon',
+  delete: 'TrashIcon',
+  add: 'PlusIcon',
+  remove: 'MinusIcon',
+  check: 'CheckIcon',
+  x: 'XIcon',
+
+  // Status
+  success: 'CheckCircleIcon',
+  error: 'XCircleIcon',
+  warning: 'AlertTriangleIcon',
+  info: 'InfoIcon',
+
+  // Services
+  video: 'VideoIcon',
+  social: 'ShareIcon',
+  newsletter: 'MailIcon',
+  landing: 'GlobeIcon',
+  strategy: 'LightbulbIcon',
+};
+```
+
+### Testing Requirements
+- Visual regression test for all icon locations
+- Responsive design verification (different screen sizes)
+- Dark mode compatibility check
+- Icon sizing consistency validation
+- Performance impact assessment
+
+### Rollback Strategy
+- Keep lucide-react in package.json as commented dependency
+- Git commit before icon replacement
+- Easy rollback via `git revert` if visual issues arise
+
+---
+
+## Phase 2: Content Templates System
+
+### Architecture Integration
+
+#### Current State Analysis
+- **Content Generation**: `worker/content/generate.ts` (platform-specific prompts)
+- **Media Generation**: `worker/content/media.ts` (image/video prompts)
+- **Database**: Prisma v5.20.0, PostgreSQL (Neon)
+- **AI Text**: OpenRouter API via `lib/ai.ts`
+- **Pattern**: Direct prompt engineering, no template system
+- **Platforms**: Twitter, LinkedIn, Reddit, Instagram, TikTok, Email
+- **Storage**: ContentPiece and Newsletter models
+
+#### Database Schema Changes
+
+**New Models to Add**:
 
 ```prisma
-model Service {
-  id             String    @id @default(cuid())
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name           String
-  description    String    @db.Text
-  deliverablesTemplate String @db.Text  // user's custom AI prompt with [niche] placeholder
-  priceMin       Float
-  priceMax       Float
-  turnaroundDays Int       @default(3)
-  funnelUrl      String?   // Systeme.io landing page URL for this service
-  status         String    @default("active") // "active" | "paused"
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+model Template {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  category    String   // "twitter" | "linkedin" | "reddit" | "instagram" | "tiktok" | "email_subject" | "email_body" | "image_prompt" | "video_prompt"
+  type        String   @default("custom") // "prebuilt" | "custom"
+  template    String   @db.Text  // Template with variables like "{number} ways to {benefit}"
+  variables   String   @db.Text  // JSON: variable definitions
+  constraints String   @db.Text  // JSON: maxLength, requiredSections, etc.
+  example     String?  @db.Text  // Filled example for preview
+  isFavorite  Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  tickets   ServiceTicket[]
-  promotion Promotion?      @relation(fields: [promotionId], references: [id])
-  promotionId String?       @unique
+  contentPieces         ContentPiece[] @relation("ContentPieceTemplates")
+  newsletterSubjects    Newsletter[] @relation("NewsletterSubjectTemplates")
+  newsletterBodies      Newsletter[] @relation("NewsletterBodyTemplates")
+  generatedContents     GeneratedContent[]
 
   @@index([userId])
-  @@map("services")
+  @@index([category])
+  @@map("templates")
 }
 
-model ServiceTicket {
-  id          String    @id @default(cuid())
+model GeneratedContent {
+  id          String       @id @default(cuid())
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  serviceId   String
-  service     Service   @relation(fields: [serviceId], references: [id])
-  clientName  String
-  clientEmail String
-  niche       String
-  message     String    @db.Text
-  source      String?
-  status      String    @default("new") // "new" | "quoted" | "in_progress" | "delivered" | "closed"
-  quote       String?   @db.Text
-  quoteSentAt DateTime?
-  notes       String?   @db.Text
-  deliverables String?  @db.Text  // JSON string — generated output
-  deliveredAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId  String
+  template    Template     @relation(fields: [templateId], references: [id])
+  variables   String       @db.Text  // JSON: filled variables
+  generatedAt DateTime     @default(now())
 
   @@index([userId])
-  @@index([serviceId])
-  @@map("service_tickets")
+  @@index([templateId])
+  @@map("generated_contents")
 }
 ```
 
-### Changes to existing models
+**Model Updates**:
 
-- `User` — add `services Service[]` and `serviceTickets ServiceTicket[]` relations
-- `Promotion` — add `type` value `"service"` (already a string field, no migration needed) + optional back-relation from `Service`
+```prisma
+model ContentPiece {
+  // ... existing fields ...
+  templateId String?
+  template   Template?  @relation("ContentPieceTemplates", fields: [templateId], references: [id])
+  variables  String?    @db.Text  // JSON: filled template variables
 
-### Migration
+  @@index([templateId])
+}
 
-Run `prisma migrate dev --name add_services` after schema update.
+model Newsletter {
+  // ... existing fields ...
+  subjectTemplateId String?
+  subjectTemplate   Template?  @relation("NewsletterSubjectTemplates", fields: [subjectTemplateId], references: [id])
+  bodyTemplateId    String?
+  bodyTemplate      Template?  @relation("NewsletterBodyTemplates", fields: [bodyTemplateId], references: [id])
+  subjectVariables  String?    @db.Text  // JSON
+  bodyVariables     String?    @db.Text  // JSON
 
----
+  @@index([subjectTemplateId])
+  @@index([bodyTemplateId])
+}
 
-## Section 3: API Design
+model User {
+  // ... existing fields ...
+  templates         Template[]
+  generatedContents GeneratedContent[]
+}
+```
 
-All routes except the webhook require `auth()` session. `userId` always from session.
+### API Design
 
-### Services CRUD
+#### New API Routes
 
-| Method | Path | Body / Query | Description |
-|---|---|---|---|
-| GET | `/api/services` | — | List user's services with ticket counts |
-| POST | `/api/services` | `{ name, description, deliverablesTemplate, priceMin, priceMax, turnaroundDays, funnelUrl }` | Create service + auto-create Promotion |
-| PATCH | `/api/services/[id]` | any fields | Update service |
-| DELETE | `/api/services/[id]` | — | Delete service (cascade tickets) |
+**Template CRUD**:
+- `GET /api/templates` - List templates (filter by category, type, favorites)
+- `POST /api/templates` - Create custom template
+- `GET /api/templates/[id]` - Get template details
+- `PUT /api/templates/[id]` - Update template
+- `DELETE /api/templates/[id]` - Delete template
 
-### Ticket Management
+**Template Actions**:
+- `POST /api/templates/[id]/favorite` - Toggle favorite
+- `POST /api/templates/[id]/use` - Increment usage counter
 
-| Method | Path | Body / Query | Description |
-|---|---|---|---|
-| GET | `/api/tickets` | `?status=&serviceId=` | List tickets |
-| GET | `/api/tickets/[id]` | — | Get ticket detail |
-| PATCH | `/api/tickets/[id]` | `{ status?, notes?, quote? }` | Update ticket |
-| POST | `/api/tickets/[id]/quote` | — | Generate AI quote → save to ticket |
-| POST | `/api/tickets/[id]/send-quote` | — | Send quote email via Systeme.io → set quoteSentAt, move to "quoted" |
-| POST | `/api/tickets/[id]/deliver` | — | Generate AI deliverables → save to ticket |
-| POST | `/api/tickets/[id]/send-delivery` | — | Send delivery email via Systeme.io → set deliveredAt, move to "delivered" |
+**Template-based Generation**:
+- `POST /api/generate/from-template` - Generate content using template
+  - Body: `{ templateId, variables, productInfo, platform }`
+  - Returns: `{ content, validation, warnings }`
 
-### Webhook (no auth — token check)
+**Template Previews**:
+- `POST /api/templates/[id]/preview` - Generate example from template
+- `POST /api/templates/[id]/validate` - Validate template syntax and constraints
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/webhooks/systeme` | Receive Systeme.io form payload → create ServiceTicket → send confirmation email |
+#### Existing API Modifications
 
-Webhook payload expected shape (Systeme.io form):
-```json
-{
-  "contact": { "first_name": "...", "email": "..." },
-  "fields": {
-    "niche": "...",
-    "service": "...",
-    "message": "..."
+**Update Content Generation**:
+- Modify `worker/content/generate.ts`:
+  ```typescript
+  export async function generatePostsForPromotion(
+    promotionId: string,
+    userId: string,
+    templateId?: string // NEW: optional template parameter
+  ): Promise<void>
+  ```
+
+**Update Media Generation**:
+- Modify `worker/content/media.ts`:
+  ```typescript
+  export async function generateMediaForPiece(
+    pieceId: string,
+    userId: string,
+    imageTemplateId?: string, // NEW
+    videoTemplateId?: string  // NEW
+  ): Promise<void>
+  ```
+
+### Frontend Components
+
+#### New Page: `/templates`
+
+**File**: `app/(dashboard)/templates/page.tsx`
+
+**Layout**:
+```typescript
+<div style={{ display: 'flex', height: '100vh' }}>
+  {/* Left sidebar - Platform tabs */}
+  <div style={{ width: '240px', backgroundColor: '#111', padding: '24px' }}>
+    <PlatformTabs
+      categories={['twitter', 'linkedin', 'reddit', 'instagram', 'tiktok', 'email', 'media']}
+      selectedCategory={selectedCategory}
+      onSelect={setSelectedCategory}
+    />
+  </div>
+
+  {/* Right content - Template gallery */}
+  <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+    <TemplateFilters
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      filterType={filterType} // 'all' | 'prebuilt' | 'custom' | 'favorites'
+      onFilterChange={setFilterType}
+    />
+
+    <TemplateGallery
+      templates={filteredTemplates}
+      onSelectTemplate={handleSelectTemplate}
+      onCreateNew={handleCreateNew}
+    />
+  </div>
+</div>
+```
+
+**New Components**:
+- `components/dashboard/templates/platform-tabs.tsx`
+- `components/dashboard/templates/template-filters.tsx`
+- `components/dashboard/templates/template-gallery.tsx`
+- `components/dashboard/templates/template-card.tsx`
+- `components/dashboard/templates/template-editor.tsx`
+- `components/dashboard/templates/template-preview.tsx`
+
+#### Template Selection Modal
+
+**File**: `components/dashboard/templates/template-selection-modal.tsx`
+
+**Usage Context**: When user generates content (Content page, Promote page)
+
+```typescript
+interface TemplateSelectionModalProps {
+  platform: string;
+  onSelectTemplate: (templateId: string) => void;
+  onSkip: () => void; // Generate without template
+  onClose: () => void;
+}
+```
+
+#### Enhanced Content Generation Flow
+
+**Modify**: `components/dashboard/content/content-piece-card.tsx`
+
+**Add**: Template selection before generation
+```typescript
+// Step 1: Platform selection (existing)
+// Step 2: Template selection (NEW)
+<TemplateSelectionModal
+  platform={platform}
+  onSelectTemplate={(templateId) => {
+    setSelectedTemplate(templateId);
+    setShowVariableForm(true);
+  }}
+  onSkip={() => {
+    // Proceed without template
+    generateContent();
+  }}
+/>
+
+// Step 3: Variable confirmation (NEW)
+{showVariableForm && selectedTemplate && (
+  <VariableForm
+    template={selectedTemplate}
+    productInfo={promotionInfo}
+    aiGeneratedVariables={aiVariables}
+    onConfirm={(variables) => {
+      generateContentWithTemplate(selectedTemplate.id, variables);
+    }}
+  />
+)}
+```
+
+### Service Integration
+
+#### Template Service Layer
+
+**New File**: `lib/templates.ts`
+
+```typescript
+import { db } from "@/lib/db";
+import { generateText } from "@/lib/ai";
+
+export interface TemplateVariable {
+  type: 'text' | 'number' | 'ai_generated';
+  required: boolean;
+  default?: string | number;
+  description?: string;
+  placeholder?: string;
+}
+
+export interface TemplateConstraints {
+  maxLength?: number;
+  minLength?: number;
+  requiredSections?: string[];
+  hashtagCount?: string;
+  mentionCount?: string;
+  customRules?: string[];
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  category: string;
+  type: 'prebuilt' | 'custom';
+  template: string;
+  variables: Record<string, TemplateVariable>;
+  constraints: TemplateConstraints;
+  example?: string;
+  isFavorite?: boolean;
+  usageCount?: number;
+}
+
+// Template CRUD functions
+export async function getTemplates(userId: string, filters?: {
+  category?: string;
+  type?: 'prebuilt' | 'custom';
+  favorites?: boolean;
+}): Promise<Template[]>
+
+export async function getTemplateById(id: string, userId?: string): Promise<Template | null>
+
+export async function createTemplate(userId: string, template: Omit<Template, 'id'>): Promise<Template>
+
+export async function updateTemplate(id: string, userId: string, updates: Partial<Template>): Promise<Template>
+
+export async function deleteTemplate(id: string, userId: string): Promise<void>
+
+export async function toggleTemplateFavorite(id: string, userId: string): Promise<Template>
+
+// Template generation functions
+export async function generateFromTemplate(
+  template: Template,
+  variables: Record<string, string>,
+  productInfo: {
+    name: string;
+    description: string;
+    url: string;
   },
-  "funnel_url": "..."
+  userId: string
+): Promise<{
+  content: string;
+  validation: {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+  };
+}>
+
+export async function fillTemplateVariables(
+  template: Template,
+  productInfo: {
+    name: string;
+    description: string;
+    url: string;
+  },
+  userId: string
+): Promise<Record<string, string>>
+
+export async function validateTemplateConstraints(
+  content: string,
+  template: Template
+): Promise<{
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}>
+```
+
+#### AI Integration
+
+**Modify**: `lib/ai.ts`
+
+```typescript
+export interface GenerateFromTemplateOptions {
+  template: string;
+  variables: Record<string, string>;
+  constraints: {
+    maxLength?: number;
+    requiredSections?: string[];
+  };
+  productInfo: {
+    name: string;
+    description: string;
+    url: string;
+  };
+  system?: string;
+  userId: string;
+}
+
+export async function generateFromTemplate({
+  template,
+  variables,
+  constraints,
+  productInfo,
+  system = "You are a content generation expert. Follow the template structure exactly.",
+  userId,
+}: GenerateFromTemplateOptions): Promise<string> {
+  // Fill template with variables
+  let filledTemplate = template;
+  Object.entries(variables).forEach(([key, value]) => {
+    filledTemplate = filledTemplate.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+  });
+
+  // Generate prompt from filled template
+  const prompt = `Generate content following this exact template structure:
+
+Template: ${filledTemplate}
+
+Product: ${productInfo.name}
+Description: ${productInfo.description}
+URL: ${productInfo.url}
+
+Requirements:
+- Follow the template structure EXACTLY
+- Do not deviate from the template format
+- Fill in any remaining placeholders with high-quality content
+${constraints.maxLength ? `- Maximum length: ${constraints.maxLength} characters` : ''}
+${constraints.requiredSections ? `- Must include: ${constraints.requiredSections.join(', ')}` : ''}`;
+
+  const content = await generateText({
+    prompt,
+    system,
+    userId,
+  });
+
+  return content;
 }
 ```
 
-Token check: compare `x-systeme-token` header against `systeme_webhook_token` in DB Setting.
+### File Map
+
+#### Phase 1: Developer Icons (11 files)
+**New Files**:
+- `components/ui/icon.tsx` - Centralized icon component
+- `lib/icon-mapping.ts` - Icon name mapping
+
+**Modified Files** (9):
+- `components/layout/nav-item.tsx` - Replace lucide-react imports
+- `components/layout/sidebar.tsx` - Replace lucide-react imports
+- `components/dashboard/content/content-piece-card.tsx` - Replace icons
+- `components/dashboard/promote/promotion-card.tsx` - Replace icons
+- `components/dashboard/services/service-card.tsx` - Replace icons
+- `components/dashboard/discover/app-idea-card.tsx` - Replace icons
+- `components/dashboard/research/topic-card.tsx` - Replace icons
+- `app/(auth)/sign-in/page.tsx` - Replace icons
+- `app/(auth)/register/page.tsx` - Replace icons
+
+#### Phase 2: Content Templates System (25+ files)
+
+**Database** (2 files):
+- `prisma/schema.prisma` - Add Template and GeneratedContent models, update existing models
+- Create migration: `pnpm dlx "prisma@5.20.0" migrate dev --name add_templates`
+
+**Backend Services** (4 files):
+- `lib/templates.ts` - Template service layer (NEW)
+- `lib/ai.ts` - Add generateFromTemplate function (MODIFY)
+- `worker/content/generate.ts` - Add template parameter (MODIFY)
+- `worker/content/media.ts` - Add template parameter (MODIFY)
+
+**API Routes** (7 files):
+- `app/api/templates/route.ts` - List/create templates (NEW)
+- `app/api/templates/[id]/route.ts` - Template CRUD (NEW)
+- `app/api/templates/[id]/favorite/route.ts` - Toggle favorite (NEW)
+- `app/api/templates/[id]/use/route.ts` - Track usage (NEW)
+- `app/api/templates/[id]/preview/route.ts` - Generate preview (NEW)
+- `app/api/templates/[id]/validate/route.ts` - Validate template (NEW)
+- `app/api/generate/from-template/route.ts` - Generate from template (NEW)
+
+**Frontend Pages** (1 file):
+- `app/(dashboard)/templates/page.tsx` - Templates page (NEW)
+
+**Frontend Components** (10 files):
+- `components/dashboard/templates/platform-tabs.tsx` (NEW)
+- `components/dashboard/templates/template-filters.tsx` (NEW)
+- `components/dashboard/templates/template-gallery.tsx` (NEW)
+- `components/dashboard/templates/template-card.tsx` (NEW)
+- `components/dashboard/templates/template-editor.tsx` (NEW)
+- `components/dashboard/templates/template-preview.tsx` (NEW)
+- `components/dashboard/templates/template-selection-modal.tsx` (NEW)
+- `components/dashboard/templates/variable-form.tsx` (NEW)
+- `components/dashboard/content/content-piece-card.tsx` - Add template selection (MODIFY)
+- `components/dashboard/promote/promotion-card.tsx` - Add template selection (MODIFY)
+
+**Database Seeding** (1 file):
+- `prisma/seed-templates.ts` - Pre-built viral templates (NEW)
 
 ---
 
-## Section 4: Frontend
+## Implementation Order
 
-### Sidebar update
-Add "Services" nav item to `components/layout/sidebar.tsx` between Promote and Settings.
+### Phase 1: Developer Icons (2-4 hours)
+1. **Setup** (30 min)
+   - Install developer-icons package
+   - Create icon component system
+   - Create icon mapping reference
 
-### `/services` page — two-section layout
+2. **Component Updates** (2 hours)
+   - Update navigation components (nav-item, sidebar)
+   - Update dashboard card components (8 files)
+   - Update auth pages (2 files)
 
-**Top: Service Catalog**
-- List of service cards (name, price range, turnaround, status toggle, ticket count badge)
-- [+ Add Service] → opens a modal/drawer with form:
-  - Name, Description (textarea)
-  - Deliverables Template (large textarea with `[niche]` hint)
-  - Price Min / Max, Turnaround Days
-  - Funnel URL
-- [Edit] on each card → same form pre-filled
-- Active/Paused toggle per service
+3. **Testing & Polish** (1 hour)
+   - Visual testing across all pages
+   - Responsive design verification
+   - Performance check
 
-**Bottom: Ticket Pipeline**
-- 5 columns: New | Quoted | In Progress | Delivered | Closed
-- Ticket cards: client name, niche tag, service name, days in stage
-- Click card → Ticket Drawer opens (right side, fixed panel)
+### Phase 2: Content Templates System (8-12 hours)
 
-**Ticket Drawer:**
-- Header: client name, email (mailto link), niche, service, source, created date
-- Status dropdown → moves pipeline stage
-- Internal Notes — auto-saves on blur
-- **Quote section:**
-  - [Generate Quote] button → POST `/api/tickets/[id]/quote` → populates textarea
-  - Editable textarea
-  - [Send Quote] → POST `/api/tickets/[id]/send-quote`
-  - Shows quoteSentAt timestamp if sent
-- **Deliverables section** (visible when status = in_progress):
-  - [Generate Deliverables] → POST `/api/tickets/[id]/deliver` → shows preview
-  - Scrollable preview area
-  - [Send Delivery] → POST `/api/tickets/[id]/send-delivery`
+**Step 1: Database & Backend** (2 hours)
+- Update Prisma schema
+- Create migration
+- Build template service layer
+- Modify AI generation functions
 
-### New component files
+**Step 2: API Routes** (2 hours)
+- Template CRUD endpoints
+- Template generation endpoints
+- Template preview/validation endpoints
 
-```
-app/(dashboard)/services/page.tsx          ← main page
-components/dashboard/services/
-  service-card.tsx                         ← catalog card
-  service-form.tsx                         ← create/edit modal form
-  ticket-pipeline.tsx                      ← 5-column pipeline
-  ticket-card.tsx                          ← pipeline card
-  ticket-drawer.tsx                        ← detail panel
-```
+**Step 3: Frontend UI** (3 hours)
+- Build templates page
+- Create template components
+- Add template selection to existing flows
+
+**Step 4: Template Seeding** (1 hour)
+- Create 45-90 pre-built viral templates
+- Seed database with templates
+
+**Step 5: Testing & Integration** (2-4 hours)
+- End-to-end testing
+- Template validation testing
+- Integration with existing content generation
+- Performance optimization
 
 ---
 
-## Section 5: Service Integrations
+## Risk Assessment & Mitigation
 
-### Systeme.io (existing `worker/posting/systeme.ts`)
-Extend with two new functions:
-- `sendConfirmationEmail(ticket)` — "Got your request, quote within 24h"
-- `sendQuoteEmail(ticket, quote)` — full proposal email
-- `sendDeliveryEmail(ticket, deliverables)` — deliverables packaged as email body
+### Phase 1 Risks
+**Risk**: developer-icons package may not have all required icons
+**Mitigation**: Check icon availability before starting, fallback to custom SVG icons
 
-### OpenRouter (`lib/ai.ts` `generateText()`)
-Two new prompt builders:
+**Risk**: Visual inconsistency with new icons
+**Mitigation**: Gradual rollout option, test in development first
 
-**Quote generation:**
-```
-System: You are a professional freelance services consultant.
-User: Generate a professional quote for:
-  Service: {service.name}
-  Client: {ticket.clientName}
-  Their niche: {ticket.niche}
-  Their message: {ticket.message}
-  Template of what you'll deliver: {service.deliverablesTemplate}
-  Price range: ${service.priceMin}–${service.priceMax}
-  Turnaround: {service.turnaroundDays} days
+### Phase 2 Risks
+**Risk**: Template complexity may slow down content generation
+**Mitigation**: Performance testing, optimize template processing, caching
 
-Write a professional proposal with: intro, scope, deliverables, timeline, investment, next steps.
-```
+**Risk**: Users may find templates too restrictive
+**Mitigation**: Make templates optional, provide "skip template" option, allow custom templates
 
-**Deliverable generation:**
-```
-System: You are an expert content creator.
-User: {service.deliverablesTemplate with [niche] replaced by ticket.niche}
-```
-
-### Promotion integration
-When a `Service` is created with `status: active`, auto-create a `Promotion` record:
-- `type: "service"`
-- `name`: service name
-- `description`: service description
-- `url`: service funnelUrl
-- This makes the service appear in content generation as a promotion target
+**Risk**: AI may not follow template constraints strictly
+**Mitigation**: Add validation layer, post-processing to enforce constraints, clear error messages
 
 ---
 
-## Section 6: File Map
+## Success Criteria
 
-### New files
-- `prisma/migrations/[timestamp]_add_services/` (auto-generated)
-- `app/(dashboard)/services/page.tsx`
-- `app/api/services/route.ts`
-- `app/api/services/[id]/route.ts`
-- `app/api/tickets/route.ts`
-- `app/api/tickets/[id]/route.ts`
-- `app/api/tickets/[id]/quote/route.ts`
-- `app/api/tickets/[id]/send-quote/route.ts`
-- `app/api/tickets/[id]/deliver/route.ts`
-- `app/api/tickets/[id]/send-delivery/route.ts`
-- `app/api/webhooks/systeme/route.ts`
-- `components/dashboard/services/service-card.tsx`
-- `components/dashboard/services/service-form.tsx`
-- `components/dashboard/services/ticket-pipeline.tsx`
-- `components/dashboard/services/ticket-card.tsx`
-- `components/dashboard/services/ticket-drawer.tsx`
+### Phase 1: Developer Icons
+- ✅ All 15+ components updated with new icons
+- ✅ Visual consistency improved across app
+- ✅ Zero performance degradation
+- ✅ No broken icons or visual bugs
+- ✅ Reusable icon component system in place
 
-### Modified files
-- `prisma/schema.prisma` — add Service, ServiceTicket models + User relations
-- `components/layout/sidebar.tsx` — add Services nav item
-- `worker/posting/systeme.ts` — add email helper functions
-- `app/(dashboard)/promote/page.tsx` — minor: exclude "service" type from promote page (optional, services managed on /services)
+### Phase 2: Content Templates System
+- ✅ Database schema updated and migrated
+- ✅ Template CRUD API functional
+- ✅ Templates page built and functional
+- ✅ 45-90 pre-built viral templates seeded
+- ✅ AI generates content using templates
+- ✅ Template constraints enforced
+- ✅ Real-time validation working
+- ✅ Template selection integrated into content generation flow
+- ✅ Users can create custom templates
+- ✅ Template favorites and search functional
+
+---
+
+## Notes
+
+- **pnpm Version**: Always specify `@5.20.0` for Prisma commands to avoid v7 breaking changes
+- **Styling**: Maintain inline styling approach (no Tailwind in JSX)
+- **Testing**: Use Playwright for end-to-end tests
+- **Performance**: Monitor template generation speed, optimize if > 5s
+- **User Feedback**: Collect template performance data for future improvements
+- **Extensibility**: Design template system to easily add new content types in future

@@ -1,47 +1,36 @@
-# Task 002: Services CRUD API
+# Task 002: Update Navigation Components with New Icons
+
+## Type
+ui
 
 ## Description
-API routes for creating, listing, updating, and deleting services.
+Replace lucide-react imports with new Icon component in navigation components (nav-item and sidebar). These are the most visible icons in the app.
 
 ## Files
-- `app/api/services/route.ts` (create)
-- `app/api/services/[id]/route.ts` (create)
+- `components/layout/nav-item.tsx` (modify)
+- `components/layout/sidebar.tsx` (modify)
 
 ## Requirements
-
-### GET /api/services
-- Auth check (401 if no session)
-- Return all services for userId, include `_count: { tickets: true }` for each
-- Order by createdAt desc
-
-### POST /api/services
-- Body: `{ name, description, deliverablesTemplate, priceMin, priceMax, turnaroundDays, funnelUrl? }`
-- Create Service with userId from session, status "active"
-- Return created service
-
-### PATCH /api/services/[id]
-- Verify service belongs to userId (404 if not found/wrong user)
-- Update any provided fields
-- Return updated service
-
-### DELETE /api/services/[id]
-- Verify ownership
-- Delete service (cascades to tickets via Prisma)
-- Return `{ success: true }`
+1. Remove lucide-react imports from both files
+2. Import new Icon component from components/ui/icon
+3. Update navItems array to use icon names from icon mapping
+4. Update Icon component usage to pass size and color
+5. Maintain existing styling and hover effects
 
 ## Existing Code to Reference
-- `app/api/promote/route.ts` — GET pattern
-- `app/api/promote/[id]/route.ts` — PATCH/DELETE pattern
+- `components/layout/nav-item.tsx` - Current navItems array and icon usage
+- `lib/icon-mapping.ts` - Icon name mapping reference
 
 ## Acceptance Criteria
-- [ ] GET returns services with ticket counts
-- [ ] POST creates a service
-- [ ] PATCH updates fields
-- [ ] DELETE removes service
-- [ ] All routes return 401 for unauthenticated requests
+- [ ] No lucide-react imports in navigation components
+- [ ] Icon component imported and used
+- [ ] All navigation icons render correctly (home, trending, sparkles, fileText, megaphone, briefcase, settings)
+- [ ] Icon size and color match previous appearance
+- [ ] Hover effects still work properly
+- [ ] No visual regression in sidebar
 
 ## Dependencies
-- Task 001
+- Task 001 (Icon system must exist)
 
 ## Commit Message
-feat: add services CRUD API routes
+feat: update navigation components to use new icon component system

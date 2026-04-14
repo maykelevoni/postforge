@@ -1,47 +1,42 @@
-# Task 005: Deliverables Generation + Send API
+# Task 005: Icon System Testing and Polish
+
+## Type
+ui
 
 ## Description
-Two API routes: one generates AI deliverables for the client's niche using the service template, the other sends them via email.
+Test all icon replacements across the app and polish any visual inconsistencies. Complete Phase 1 (Developer Icons) with quality assurance.
 
 ## Files
-- `app/api/tickets/[id]/deliver/route.ts` (create)
-- `app/api/tickets/[id]/send-delivery/route.ts` (create)
+- All modified components (visual testing)
+- `components/ui/icon.tsx` (potential polish)
+- `lib/icon-mapping.ts` (potential additions)
 
 ## Requirements
-
-### POST /api/tickets/[id]/deliver
-- Auth + ownership check
-- Load ticket (with service)
-- Replace `[niche]` in `service.deliverablesTemplate` with `ticket.niche`
-- Call `generateText()` with the resolved template as the user prompt
-  - System: "You are an expert content creator. Follow the instructions exactly and produce high-quality output."
-- Save result as JSON string to `ticket.deliverables`: `JSON.stringify({ generated: result, generatedAt: new Date() })`
-- Return `{ deliverables: string }`
-
-### POST /api/tickets/[id]/send-delivery
-- Auth + ownership check
-- Load ticket (with service)
-- Require `ticket.deliverables` to exist (400 if missing)
-- Parse deliverables JSON, extract `generated` text
-- Send via Systeme.io broadcast API:
-  - To: ticket.clientEmail
-  - Subject: `Your {service.name} deliverables are ready — {ticket.clientName}`
-  - Body: intro paragraph + generated content
-- Update ticket: `deliveredAt = now()`, `status = "delivered"`
-- Return `{ success: true }`
+1. Visual testing of all pages with new icons
+2. Check for any broken or missing icons
+3. Verify icon sizing consistency
+4. Test responsive design with new icons
+5. Performance check (no performance degradation)
+6. Polish any visual inconsistencies
 
 ## Existing Code to Reference
-- `lib/ai.ts` — generateText()
-- `worker/posting/systeme.ts` — broadcast API
-- `app/api/tickets/[id]/quote/route.ts` — same pattern as Task 004
+- All components modified in Tasks 1-4
+- Original lucide-react implementations for comparison
 
 ## Acceptance Criteria
-- [ ] POST /deliver generates deliverables using service template with niche substitution
-- [ ] POST /send-delivery sends email and moves ticket to "delivered"
-- [ ] [niche] placeholder correctly replaced in template
+- [ ] All pages tested visually with new icons
+- [ ] No broken or missing icons found
+- [ ] Icon sizes consistent across app
+- [ ] Responsive design works with new icons
+- [ ] No performance degradation
+- [ ] All visual inconsistencies polished
+- [ ] Developer icons integration complete
 
 ## Dependencies
-- Task 001, Task 003, Task 004
+- Task 001 (Icon system)
+- Task 002 (Navigation updates)
+- Task 003 (Dashboard updates)
+- Task 004 (Auth updates)
 
 ## Commit Message
-feat: add deliverables generation and send API routes
+polish: complete developer icons integration with testing and visual polish

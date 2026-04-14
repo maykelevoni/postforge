@@ -114,7 +114,8 @@ test.describe('Service CRUD', () => {
   });
 
   test('shows Active badge and action buttons on a service card', async ({ page }) => {
-    // Only runs if there's at least one service
+    // Wait for page to load, then check if any services exist
+    await expect(page.locator('h1', { hasText: 'Services' })).toBeVisible();
     const hasCards = await page.locator('button', { hasText: 'Edit' }).count();
     if (hasCards === 0) {
       test.skip();

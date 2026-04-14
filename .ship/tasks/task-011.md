@@ -1,47 +1,46 @@
-# Task 011: Promotion Auto-Create for Active Services
+# Task 011: Create Template Action and Generation API Routes
+
+## Type
 
 ## Description
-When a Service is created or activated, automatically create/update a corresponding Promotion record so PostForge starts generating promotional content for it. When paused, pause the Promotion.
+Create API routes for template actions (favorite, use) and template-based content generation (from-template endpoint).
 
 ## Files
-- `app/api/services/route.ts` (modify — POST handler)
-- `app/api/services/[id]/route.ts` (modify — PATCH handler)
+- `app/api/templates/[id]/favorite/route.ts` (create)
+- `app/api/templates/[id]/use/route.ts` (create)
+- `app/api/generate/from-template/route.ts` (create)
 
 ## Requirements
-
-### On POST /api/services (create)
-After creating the service, if `funnelUrl` is provided:
-- Create a `Promotion` record:
-  - userId: session.user.id
-  - name: service.name
-  - type: "service"
-  - description: service.description
-  - url: service.funnelUrl
-  - priority: 5
-  - status: "active"
-- Update service: set `promotionId = promotion.id`
-
-### On PATCH /api/services/[id]
-If `status` is being changed:
-- If changed to "paused" and service has promotionId: PATCH promotion status to "paused"
-- If changed to "active" and service has promotionId: PATCH promotion status to "active"
-If `funnelUrl` is changed and service has promotionId: update promotion url
-
-### Content generation note
-No changes to the content engine needed — the existing engine already generates content for any Promotion regardless of type. Setting type = "service" is enough for future filtering.
+1. POST /api/templates/[id]/favorite - Toggle template favorite status
+2. POST /api/templates/[id]/use - Increment template usage counter
+3. POST /api/generate/from-template - Generate content using template
+4. Generation endpoint should accept: templateId, variables, productInfo
+5. Generation endpoint should return: content, validation, warnings
+6. All routes require auth() session check
+7. All routes follow existing API patterns
+8. Proper error handling and status codes
+9. Generation should use template service layer
 
 ## Existing Code to Reference
-- `app/api/discover/[id]/approve/route.ts` — pattern of creating a Promotion after approving an item
-- `app/api/services/route.ts` — from Task 002
+- `app/api/templates/[id]/route.ts` - Pattern for template routes
+- `lib/templates.ts` - Template service functions
+- `app/api/content/route.ts` - Pattern for generation endpoints
 
 ## Acceptance Criteria
-- [ ] Creating a service with funnelUrl creates a Promotion automatically
-- [ ] Pausing service pauses its Promotion
-- [ ] Activating service re-activates its Promotion
-- [ ] Service without funnelUrl skips Promotion creation gracefully
+- [ ] app/api/templates/[id]/favorite/route.ts created
+- [ ] app/api/templates/[id]/use/route.ts created
+- [ ] app/api/generate/from-template/route.ts created
+- [ ] Favorite route toggles isFavorite status
+- [ ] Use route increments usageCount
+- [ ] Generation route accepts templateId, variables, productInfo
+- [ ] Generation route returns content with validation
+- [ ] All routes use auth() for session check
+- [ ] All routes have proper error handling
+- [ ] Status codes appropriate for each response
 
 ## Dependencies
-- Task 002
+- Task 010 (Template CRUD API routes)
+- Task 009 (AI library template support)
 
 ## Commit Message
-feat: auto-create and sync Promotion when service is created or toggled
+feat: create template action and generation API routes

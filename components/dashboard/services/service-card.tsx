@@ -1,6 +1,6 @@
 "use client";
 
-import { Package, Edit, Trash2, Power } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Service } from "./types";
 
 interface ServiceCardProps {
@@ -189,7 +189,7 @@ export default function ServiceCard({
 
       <div style={footerStyle}>
         <div style={ticketCountStyle}>
-          <Package size={14} />
+          <Icon name="briefcase" size={14} />
           {service._count?.tickets || 0} tickets
         </div>
         <div style={buttonGroupStyle}>
@@ -197,21 +197,21 @@ export default function ServiceCard({
             onClick={() => onEdit(service.id)}
             style={secondaryButtonStyle}
           >
-            <Edit size={14} />
+            <Icon name="edit" size={14} />
             Edit
           </button>
           <button
             onClick={() => onToggleStatus(service.id)}
             style={toggleButtonStyle}
           >
-            <Power size={14} />
+            <Icon name="power" size={14} />
             {isActive ? "Pause" : "Activate"}
           </button>
           <button
             onClick={() => onDelete(service.id)}
             style={deleteButtonStyle}
           >
-            <Trash2 size={14} />
+            <Icon name="trash2" size={14} />
             Delete
           </button>
         </div>

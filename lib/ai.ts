@@ -51,3 +51,62 @@ export async function generateText({
   const data = await response.json();
   return data.choices[0]?.message?.content || "";
 }
+
+// ========================================
+// Template-based Generation
+// ========================================
+
+export interface GenerateFromTemplateOptions {
+  template: string;
+  variables: Record<string, string>;
+  constraints: {
+    maxLength?: number;
+    requiredSections?: string[];
+  };
+  productInfo: {
+    name: string;
+    description: string;
+    url: string;
+  };
+  system?: string;
+  userId: string;
+}
+
+export async function generateFromTemplate({
+  template,
+  variables,
+  constraints,
+  productInfo,
+  system = "You are a content generation expert. Follow the template structure exactly.",
+  userId,
+}: GenerateFromTemplateOptions): Promise<string> {
+  // Fill template with variables
+  let filledTemplate = template;
+  Object.entries(variables).forEach(([key, value]) => {
+    filledTemplate = filledTemplate.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+  });
+
+  // Generate prompt from filled template
+  const prompt = `Generate content following this exact template structure:
+
+Template: ${filledTemplate}
+
+Product: ${productInfo.name}
+Description: ${productInfo.description}
+URL: ${productInfo.url}
+
+Requirements:
+- Follow the template structure EXACTLY
+- Do not deviate from the template format
+- Fill in any remaining placeholders with high-quality content
+${constraints.maxLength ? `- Maximum length: ${constraints.maxLength} characters` : ''}
+${constraints.requiredSections ? `- Must include: ${constraints.requiredSections.join(', ')}` : ''}`;
+
+  const content = await generateText({
+    prompt,
+    system,
+    userId,
+  });
+
+  return content;
+}

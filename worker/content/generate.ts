@@ -2,6 +2,12 @@ import { db } from "@/lib/db";
 import { generateText } from "@/lib/ai";
 import { buildUtmUrl } from "@/lib/utm";
 import { getSetting } from "@/lib/settings";
+import {
+  getTemplateById,
+  generateFromTemplate as templateServiceGenerate,
+  fillTemplateVariables,
+  trackTemplateUsage,
+} from "@/lib/templates";
 
 const PLATFORMS = ["twitter", "linkedin", "reddit", "instagram", "tiktok"] as const;
 
@@ -84,7 +90,8 @@ Format: HOOK (3 sec) → VALUE (15 sec) → CTA with ${utmUrl} (5 sec)`,
 
 export async function generatePostsForPromotion(
   promotionId: string,
-  userId: string
+  userId: string,
+  templateId?: string
 ): Promise<void> {
   console.log(`Generating content for promotion ${promotionId}...`);
 
@@ -141,7 +148,45 @@ export async function generatePostsForPromotion(
   const results = await Promise.allSettled(
     PLATFORMS.map(async (platform) => {
       try {
-        const { content } = await generateContentForPlatform(platform, context, userId);
+        let content: string;
+        let usedTemplateId: string | undefined;
+        let templateVariables: string | undefined;
+
+        // Use template-based generation if templateId provided
+        if (templateId) {
+          const template = await getTemplateById(templateId, userId);
+          if (template && template.category === platform) {
+            // Fill variables with AI
+            const variables = await fillTemplateVariables(
+              template,
+              context.promotion,
+              userId
+            );
+
+            // Generate content from template
+            const result = await templateServiceGenerate(
+              template,
+              variables,
+              context.promotion,
+              userId
+            );
+
+            content = result.content;
+            usedTemplateId = templateId;
+            templateVariables = JSON.stringify(variables);
+
+            // Track template usage
+            await trackTemplateUsage(templateId);
+          } else {
+            // Fallback to regular generation if template not found or wrong category
+            const result = await generateContentForPlatform(platform, context, userId);
+            content = result.content;
+          }
+        } else {
+          // Use regular generation
+          const result = await generateContentForPlatform(platform, context, userId);
+          content = result.content;
+        }
 
         const piece = await db.contentPiece.create({
           data: {
@@ -150,6 +195,8 @@ export async function generatePostsForPromotion(
             date: new Date(),
             platform,
             content,
+            templateId: usedTemplateId,
+            variables: templateVariables,
             status: baseStatus,
             approved: !gateMode,
           },
@@ -172,6 +219,15 @@ export async function generatePostsForPromotion(
       campaign: "daily-newsletter",
     });
 
+    let body: string;
+    let subject: string;
+    let subjectTemplateId: string | undefined;
+    let bodyTemplateId: string | undefined;
+    let subjectVariables: string | undefined;
+    let bodyVariables: string | undefined;
+
+    // For now, use regular generation for newsletters
+    // TODO: Add template support for newsletters with specific template IDs
     const newsletterPrompt = `Write an engaging email newsletter about: ${context.promotion.name}
 
 Description: ${context.promotion.description}
@@ -182,13 +238,13 @@ Include this link in your CTA: ${utmUrl}
 
 Structure: Hook paragraph → Value section → Bridge to product → Single clear CTA`;
 
-    const body = await generateText({
+    body = await generateText({
       prompt: newsletterPrompt,
       system: "You are an email marketing expert. Write newsletters that provide value and drive conversions. Keep it under 500 words.",
       userId,
     });
 
-    const subject = await generateText({
+    subject = await generateText({
       prompt: `Generate a catchy email subject line for: ${context.promotion.name}. Make it compelling but not spammy. Under 50 characters.`,
       system: "You are an email marketing expert. Write subject lines that get opened.",
       userId,
@@ -201,6 +257,10 @@ Structure: Hook paragraph → Value section → Bridge to product → Single cle
         date: new Date(),
         subject: subject.substring(0, 100) || "Today's Pick",
         body,
+        subjectTemplateId,
+        bodyTemplateId,
+        subjectVariables,
+        bodyVariables,
         status: baseStatus,
         approved: !gateMode,
       },

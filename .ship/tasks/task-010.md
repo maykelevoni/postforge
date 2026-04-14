@@ -1,60 +1,46 @@
-# Task 010: Services Page + Sidebar Nav Item
+# Task 010: Create Template CRUD API Routes
 
 ## Type
-ui
 
 ## Description
-Wire all service components into the main /services page and add Services to the sidebar nav.
+Create API routes for template CRUD operations (list, create, get, update, delete) following existing API patterns in the codebase.
 
 ## Files
-- `app/(dashboard)/services/page.tsx` (create)
-- `components/layout/sidebar.tsx` (modify)
+- `app/api/templates/route.ts` (create)
+- `app/api/templates/[id]/route.ts` (create)
 
 ## Requirements
-
-### app/(dashboard)/services/page.tsx
-- "use client"
-- State: services[], tickets[], selectedTicket, showForm, editingService
-- On mount: fetch /api/services + /api/tickets
-- Layout (dark, padding 24px):
-
-  **Top section — Service Catalog:**
-  - Page title "Services" (h1, white)
-  - [+ Add Service] button (top right)
-  - Grid of ServiceCard components (2 columns)
-  - ServiceForm modal rendered when showForm=true (create) or editingService set (edit)
-  - On save: POST or PATCH /api/services → refresh services list
-  - On delete: DELETE /api/services/[id] → refresh
-  - On toggle: PATCH /api/services/[id] with { status: "active"|"paused" } → refresh
-
-  **Divider**
-
-  **Bottom section — Ticket Pipeline:**
-  - Section title "Client Pipeline" (h2)
-  - Filter row: [All Services] dropdown to filter tickets by serviceId
-  - TicketPipeline component with filtered tickets
-  - TicketDrawer rendered when selectedTicket is set
-  - On ticket update: refresh tickets list, keep drawer open with updated data
-
-### components/layout/sidebar.tsx
-- Add "Services" nav item between Promote and Settings
-- Icon: use an appropriate lucide-react icon (e.g., Briefcase or LayoutList)
-- href: /services
+1. GET /api/templates - List templates with filtering (category, type, favorites)
+2. POST /api/templates - Create new custom template
+3. GET /api/templates/[id] - Get single template by ID
+4. PUT /api/templates/[id] - Update template
+5. DELETE /api/templates/[id] - Delete template
+6. All routes require auth() session check
+7. All routes return proper JSON responses
+8. All routes have error handling
+9. Follow existing API patterns (auth → check → query → response)
+10. Proper HTTP status codes
 
 ## Existing Code to Reference
-- `app/(dashboard)/content/page.tsx` — two-tab page wiring pattern
-- `app/(dashboard)/discover/page.tsx` — tab + card list pattern
-- `components/layout/sidebar.tsx` — existing nav item pattern
+- `app/api/services/route.ts` - Pattern for list/create routes
+- `app/api/services/[id]/route.ts` - Pattern for single item CRUD
+- `app/api/content/route.ts` - Pattern for API structure
 
 ## Acceptance Criteria
-- [ ] /services page loads and shows catalog + pipeline
-- [ ] Add/Edit/Delete/Toggle service works end-to-end
-- [ ] Clicking a ticket opens the drawer
-- [ ] Drawer close refreshes ticket list
-- [ ] Services appears in sidebar between Promote and Settings
+- [ ] app/api/templates/route.ts created with GET and POST
+- [ ] app/api/templates/[id]/route.ts created with GET, PUT, DELETE
+- [ ] All routes use auth() for session check
+- [ ] GET /api/templates supports filtering (category, type, favorites)
+- [ ] POST /api/templates creates template with proper validation
+- [ ] GET /api/templates/[id] returns template or 404
+- [ ] PUT /api/templates/[id] updates template or returns 404
+- [ ] DELETE /api/templates/[id] deletes template or returns 404
+- [ ] All routes return proper JSON and status codes
+- [ ] Error handling on all routes
 
 ## Dependencies
-- Task 007, Task 008, Task 009
+- Task 008 (Template service layer)
+- Task 009 (AI library updates)
 
 ## Commit Message
-feat: add services page and sidebar nav item
+feat: create template CRUD API routes

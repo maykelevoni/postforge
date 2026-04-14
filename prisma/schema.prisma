@@ -60,18 +60,20 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts        Account[]
-  sessions        Session[]
-  researchTopics  ResearchTopic[]
-  discoverItems   DiscoverItem[]
-  promotions      Promotion[]
-  contentPieces   ContentPiece[]
-  newsletters     Newsletter[]
-  scheduleEntries ScheduleEntry[]
-  engineRuns      EngineRun[]
-  settings        Setting[]
-  services        Service[]
-  serviceTickets  ServiceTicket[]
+  accounts           Account[]
+  sessions           Session[]
+  researchTopics     ResearchTopic[]
+  discoverItems      DiscoverItem[]
+  promotions         Promotion[]
+  contentPieces      ContentPiece[]
+  newsletters        Newsletter[]
+  scheduleEntries    ScheduleEntry[]
+  engineRuns         EngineRun[]
+  settings           Setting[]
+  services           Service[]
+  serviceTickets     ServiceTicket[]
+  templates          Template[]
+  generatedContents  GeneratedContent[]
 
   @@map("users")
 }
@@ -180,9 +182,12 @@ model ContentPiece {
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   promotionId  String?
   promotion    Promotion? @relation(fields: [promotionId], references: [id])
+  templateId   String?
+  template     Template?  @relation("ContentPieceTemplates", fields: [templateId], references: [id])
   date         DateTime
   platform     String     // "twitter" | "linkedin" | "reddit" | "instagram" | "tiktok"
   content      String     @db.Text
+  variables    String?    @db.Text  // JSON: filled template variables
   imageUrl     String?    // fal.ai Flux image URL
   videoUrl     String?    // fal.ai Kling video URL (instagram + tiktok)
   status       String     @default("draft") // "draft" | "scheduled" | "published" | "failed"
@@ -195,27 +200,36 @@ model ContentPiece {
   updatedAt    DateTime   @updatedAt
 
   @@index([userId])
+  @@index([templateId])
   @@map("content_pieces")
 }
 
 model Newsletter {
-  id          String     @id @default(cuid())
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  promotionId String?
-  promotion   Promotion? @relation(fields: [promotionId], references: [id])
-  date        DateTime
-  subject     String
-  body        String     @db.Text
-  status      String     @default("draft") // "draft" | "scheduled" | "sent" | "failed"
-  approved    Boolean    @default(false)
-  sentAt      DateTime?
-  scheduledAt DateTime?
-  error       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id               String     @id @default(cuid())
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promotionId      String?
+  promotion        Promotion? @relation(fields: [promotionId], references: [id])
+  subjectTemplateId String?
+  subjectTemplate  Template?  @relation("NewsletterSubjectTemplates", fields: [subjectTemplateId], references: [id])
+  bodyTemplateId    String?
+  bodyTemplate      Template?  @relation("NewsletterBodyTemplates", fields: [bodyTemplateId], references: [id])
+  date             DateTime
+  subject          String
+  body             String     @db.Text
+  subjectVariables String?    @db.Text  // JSON
+  bodyVariables    String?    @db.Text  // JSON
+  status           String     @default("draft") // "draft" | "scheduled" | "sent" | "failed"
+  approved         Boolean    @default(false)
+  sentAt           DateTime?
+  scheduledAt      DateTime?
+  error            String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   @@index([userId])
+  @@index([subjectTemplateId])
+  @@index([bodyTemplateId])
   @@map("newsletters")
 }
 
@@ -308,4 +322,44 @@ model ServiceTicket {
   @@index([userId])
   @@index([serviceId])
   @@map("service_tickets")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  category    String   // "twitter" | "linkedin" | "reddit" | "instagram" | "tiktok" | "email_subject" | "email_body" | "image_prompt" | "video_prompt"
+  type        String   @default("custom") // "prebuilt" | "custom"
+  template    String   @db.Text  // Template with variables like "{number} ways to {benefit}"
+  variables   String   @db.Text  // JSON: variable definitions
+  constraints String   @db.Text  // JSON: maxLength, requiredSections, etc.
+  example     String?  @db.Text  // Filled example for preview
+  isFavorite  Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  contentPieces       ContentPiece[]  @relation("ContentPieceTemplates")
+  newsletterSubjects  Newsletter[]    @relation("NewsletterSubjectTemplates")
+  newsletterBodies    Newsletter[]    @relation("NewsletterBodyTemplates")
+  generatedContents   GeneratedContent[]
+
+  @@index([userId])
+  @@index([category])
+  @@map("templates")
+}
+
+model GeneratedContent {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId  String
+  template    Template     @relation(fields: [templateId], references: [id])
+  variables   String       @db.Text  // JSON: filled variables
+  generatedAt DateTime     @default(now())
+
+  @@index([userId])
+  @@index([templateId])
+  @@map("generated_contents")
 }
