@@ -132,7 +132,7 @@ export default function ServicesPage() {
 
       if (ticketsRes.ok) {
         const ticketsData = await ticketsRes.json();
-        setTickets(ticketsData);
+        setTickets(Array.isArray(ticketsData) ? ticketsData : (ticketsData.tickets ?? []));
       }
     } catch (error) {
       console.error("Failed to load data:", error);

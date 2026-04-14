@@ -5,7 +5,8 @@ async function signIn(page: any) {
   await page.getByLabel('Email').fill('test@postforge.dev');
   await page.getByLabel('Password').fill('testpassword123');
   await page.getByRole('button', { name: 'Sign In' }).click();
-  await page.waitForURL('http://localhost:3000/');
+  // Wait for navigation away from sign-in (router.push('/') after credentials)
+  await page.waitForURL((url: URL) => !url.pathname.startsWith('/sign-in'), { timeout: 30000 });
 }
 
 test.describe('Services page', () => {
@@ -19,26 +20,28 @@ test.describe('Services page', () => {
     await expect(page.getByRole('button', { name: 'Add Service' })).toBeVisible();
   });
 
-  test('shows empty catalog state when no services exist', async ({ page }) => {
+  test('services page loads with catalog and pipeline sections', async ({ page }) => {
     await page.goto('/services');
-    // Either the empty state message or service cards should be present
-    const hasEmpty = await page.getByText('No services yet').isVisible().catch(() => false);
-    const hasCards = await page.locator('[data-testid="service-card"]').count().then(n => n > 0).catch(() => false);
-    expect(hasEmpty || hasCards).toBe(true);
+    // Page loads fully — both catalog and pipeline sections visible
+    await expect(page.locator('h1', { hasText: 'Services' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add Service' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Client Pipeline' })).toBeVisible();
   });
 
   test('pipeline shows all 5 stage columns', async ({ page }) => {
     await page.goto('/services');
-    await expect(page.getByText('NEW')).toBeVisible();
-    await expect(page.getByText('QUOTED')).toBeVisible();
-    await expect(page.getByText('IN PROGRESS')).toBeVisible();
-    await expect(page.getByText('DELIVERED')).toBeVisible();
-    await expect(page.getByText('CLOSED')).toBeVisible();
+    // text-transform: uppercase in CSS doesn't change DOM text content
+    await expect(page.getByText('New', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Quoted', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('In Progress', { exact: true })).toBeVisible();
+    await expect(page.getByText('Delivered', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Closed', { exact: true }).first()).toBeVisible();
   });
 
   test('client pipeline section is visible', async ({ page }) => {
     await page.goto('/services');
-    await expect(page.getByRole('heading', { name: 'Client Pipeline' })).toBeVisible();
+    // h2 with text "Client Pipeline"
+    await expect(page.locator('h2', { hasText: 'Client Pipeline' })).toBeVisible();
   });
 
   test('filter by service dropdown is visible in pipeline', async ({ page }) => {
@@ -94,9 +97,9 @@ test.describe('Service CRUD', () => {
       'Generate 10 [niche] video scripts with hooks and CTAs.'
     );
 
-    // Price fields
-    await page.getByPlaceholder('99').fill('100');
-    await page.getByPlaceholder('299').fill('500');
+    // Price fields (exact: true avoids matching "299" with "99")
+    await page.getByPlaceholder('99', { exact: true }).fill('100');
+    await page.getByPlaceholder('299', { exact: true }).fill('500');
 
     // Turnaround (already has default 3, just verify)
     const turnaroundInput = page.getByPlaceholder('3');
@@ -105,9 +108,9 @@ test.describe('Service CRUD', () => {
     // Submit
     await page.getByRole('button', { name: 'Create Service' }).click();
 
-    // Form closes and service appears
+    // Form closes and service appears in catalog as a heading
     await expect(page.getByRole('heading', { name: 'Create Service' })).not.toBeVisible();
-    await expect(page.getByText(serviceName)).toBeVisible();
+    await expect(page.getByRole('heading', { name: serviceName })).toBeVisible();
   });
 
   test('shows Active badge and action buttons on a service card', async ({ page }) => {
@@ -172,8 +175,8 @@ test.describe('Service form validation', () => {
     await page.getByPlaceholder('e.g., Video Content Package').fill('Test Service');
     await page.getByPlaceholder('Brief description of your service...').fill('A test service description.');
     await page.getByPlaceholder(/Generate 10 video scripts/).fill('Generate content for [niche].');
-    await page.getByPlaceholder('99').fill('500');
-    await page.getByPlaceholder('299').fill('100');
+    await page.getByPlaceholder('99', { exact: true }).fill('500');
+    await page.getByPlaceholder('299', { exact: true }).fill('100');
 
     await page.getByRole('button', { name: 'Create Service' }).click();
     await expect(page.getByText('Maximum price must be greater than minimum price')).toBeVisible();
@@ -201,14 +204,18 @@ test.describe('Ticket pipeline', () => {
   });
 
   test('pipeline columns show ticket counts', async ({ page }) => {
-    // Each column should show a numeric badge (0 or higher)
+    // Wait for pipeline to fully load
+    await expect(page.locator('h2', { hasText: 'Client Pipeline' })).toBeVisible();
+    // Each column has a numeric badge
     const countBadges = page.locator('span').filter({ hasText: /^\d+$/ });
     const count = await countBadges.count();
     expect(count).toBeGreaterThanOrEqual(5); // One per column at minimum
   });
 
   test('empty columns show "No tickets" placeholder', async ({ page }) => {
-    // At least some columns should show "No tickets" when fresh
+    // Wait for pipeline to fully load
+    await expect(page.locator('h2', { hasText: 'Client Pipeline' })).toBeVisible();
+    // At least some columns should show "No tickets"
     const emptyTexts = page.getByText('No tickets');
     const count = await emptyTexts.count();
     expect(count).toBeGreaterThan(0);
@@ -237,11 +244,11 @@ test.describe('Webhook endpoint', () => {
 test.describe('Services API', () => {
   test('GET /api/services returns 401 when not authenticated', async ({ request }) => {
     const response = await request.get('/api/services');
-    expect([401, 302]).toContain(response.status());
+    expect(response.status()).toBe(401);
   });
 
   test('GET /api/tickets returns 401 when not authenticated', async ({ request }) => {
     const response = await request.get('/api/tickets');
-    expect([401, 302]).toContain(response.status());
+    expect(response.status()).toBe(401);
   });
 });

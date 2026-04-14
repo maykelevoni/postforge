@@ -3,7 +3,7 @@ export interface Service {
   name: string;
   description: string;
   type: string;
-  deliverablesTemplate: string;
+  deliverables: string;
   priceMin: number;
   priceMax: number;
   turnaroundDays: number;

@@ -9,7 +9,7 @@ interface ServiceFormProps {
     name: string;
     description: string;
     type: string;
-    deliverablesTemplate: string;
+    deliverables: string;
     priceMin: number;
     priceMax: number;
     turnaroundDays: number;
@@ -23,7 +23,7 @@ export interface ServiceFormData {
   name: string;
   description: string;
   type: string;
-  deliverablesTemplate: string;
+  deliverables: string;
   priceMin: number;
   priceMax: number;
   turnaroundDays: number;
@@ -184,7 +184,7 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
     name: "",
     description: "",
     type: "video_content",
-    deliverablesTemplate: "",
+    deliverables: "",
     priceMin: 0,
     priceMax: 0,
     turnaroundDays: 3,
@@ -199,7 +199,7 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
         name: service.name,
         description: service.description,
         type: service.type,
-        deliverablesTemplate: service.deliverablesTemplate,
+        deliverables: service.deliverables,
         priceMin: service.priceMin,
         priceMax: service.priceMax,
         turnaroundDays: service.turnaroundDays,
@@ -228,8 +228,8 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
     }
-    if (!formData.deliverablesTemplate.trim()) {
-      newErrors.deliverablesTemplate = "Deliverables template is required";
+    if (!formData.deliverables.trim()) {
+      newErrors.deliverables = "Deliverables template is required";
     }
     if (formData.priceMin <= 0) {
       newErrors.priceMin = "Minimum price must be greater than 0";
@@ -320,8 +320,8 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
               <span style={requiredIndicatorStyle}>*</span>
             </label>
             <textarea
-              value={formData.deliverablesTemplate}
-              onChange={(e) => handleChange("deliverablesTemplate", e.target.value)}
+              value={formData.deliverables}
+              onChange={(e) => handleChange("deliverables", e.target.value)}
               placeholder="Generate 10 video scripts about [niche] with engaging hooks and clear calls-to-action. Each script should be 60-90 seconds long."
               rows={6}
               style={textareaStyle}
@@ -329,8 +329,8 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
             <div style={hintStyle}>
               Use {"[niche]"} as a placeholder — it will be replaced with the client's niche when generating deliverables.
             </div>
-            {errors.deliverablesTemplate && (
-              <div style={errorStyle}>{errors.deliverablesTemplate}</div>
+            {errors.deliverables && (
+              <div style={errorStyle}>{errors.deliverables}</div>
             )}
           </div>
 
