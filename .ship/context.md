@@ -1,5 +1,12 @@
 # Ship Context Log
 
+## NEXT ACTION (resume here on /ship)
+- Feature: pdf-document-generator is fully built and committed
+- Dev server must be restarted (`pnpm dev`) — jspdf was downgraded v4→v2.5.1, old process is corrupted
+- After restart: run `npx playwright test tests/documents.spec.ts --project=chromium`
+- If all 18 tests pass → set phase to "complete", verified to true, done
+- If any fail → read error, fix implementation or test, rerun
+
 ## Key Decisions
 
 ### Previous Project Decisions
