@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Globe } from "lucide-react";
 import ServiceCard from "@/components/dashboard/services/service-card";
 import ServiceForm, { ServiceFormData } from "@/components/dashboard/services/service-form";
+import LandingPageModal from "@/components/dashboard/services/landing-page-modal";
 import TicketPipeline from "@/components/dashboard/services/ticket-pipeline";
 import TicketDrawer from "@/components/dashboard/services/ticket-drawer";
 import { Service, Ticket } from "@/components/dashboard/services/types";
@@ -104,6 +105,68 @@ const emptyStyle: React.CSSProperties = {
   color: "#888",
 };
 
+const landingPageRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  marginTop: "8px",
+  padding: "8px 12px",
+  backgroundColor: "#0a0a0a",
+  border: "1px solid #1a1a1a",
+  borderRadius: "6px",
+  minHeight: "38px",
+};
+
+const generateLandingPageButtonStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  background: "none",
+  border: "none",
+  color: "#6366f1",
+  fontSize: "13px",
+  fontWeight: "500",
+  cursor: "pointer",
+  padding: "2px 0",
+};
+
+const landingPageLinkStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "5px",
+  color: "#6366f1",
+  fontSize: "12px",
+  textDecoration: "none",
+  flex: 1,
+  overflow: "hidden",
+};
+
+const editLandingPageButtonStyle: React.CSSProperties = {
+  padding: "4px 10px",
+  fontSize: "12px",
+  fontWeight: "500",
+  borderRadius: "4px",
+  border: "1px solid #333",
+  backgroundColor: "transparent",
+  color: "#999",
+  cursor: "pointer",
+  flexShrink: 0,
+};
+
+const deleteLandingPageButtonStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "4px 8px",
+  fontSize: "12px",
+  borderRadius: "4px",
+  border: "none",
+  backgroundColor: "#ef444415",
+  color: "#ef4444",
+  cursor: "pointer",
+  flexShrink: 0,
+};
+
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -112,6 +175,8 @@ export default function ServicesPage() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [filterServiceId, setFilterServiceId] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  // Landing page modal state
+  const [landingPageService, setLandingPageService] = useState<Service | null>(null);
 
   useEffect(() => {
     loadData();
@@ -213,6 +278,38 @@ export default function ServicesPage() {
     }
   };
 
+  const handleOpenLandingPageModal = (service: Service) => {
+    setLandingPageService(service);
+  };
+
+  const handleLandingPageModalClose = () => {
+    setLandingPageService(null);
+  };
+
+  const handleLandingPageCreatedOrUpdated = async () => {
+    setLandingPageService(null);
+    await loadData();
+  };
+
+  const handleLandingPageDeleted = async () => {
+    setLandingPageService(null);
+    await loadData();
+  };
+
+  const handleDeleteLandingPage = async (landingPageId: string) => {
+    if (!confirm("Delete this landing page? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/landing-pages/${landingPageId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        await loadData();
+      }
+    } catch (error) {
+      console.error("Failed to delete landing page:", error);
+    }
+  };
+
   const handleTicketClick = (ticket: Ticket) => {
     setSelectedTicket(ticket);
   };
@@ -267,13 +364,53 @@ export default function ServicesPage() {
         ) : (
           <div style={gridStyle}>
             {services.map((service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onEdit={handleEditService}
-                onDelete={handleDeleteService}
-                onToggleStatus={handleToggleServiceStatus}
-              />
+              <div key={service.id}>
+                <ServiceCard
+                  service={service}
+                  onEdit={handleEditService}
+                  onDelete={handleDeleteService}
+                  onToggleStatus={handleToggleServiceStatus}
+                />
+                {/* Landing page row */}
+                <div style={landingPageRowStyle}>
+                  {service.ownedLandingPage ? (
+                    <>
+                      <a
+                        href={`/l/${service.ownedLandingPage.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={landingPageLinkStyle}
+                      >
+                        <Globe size={13} style={{ flexShrink: 0 }} />
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          /l/{service.ownedLandingPage.slug}
+                        </span>
+                        <ExternalLink size={12} style={{ flexShrink: 0, opacity: 0.6 }} />
+                      </a>
+                      <button
+                        style={editLandingPageButtonStyle}
+                        onClick={() => handleOpenLandingPageModal(service)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        style={deleteLandingPageButtonStyle}
+                        onClick={() => handleDeleteLandingPage(service.ownedLandingPage!.id)}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      style={generateLandingPageButtonStyle}
+                      onClick={() => handleOpenLandingPageModal(service)}
+                    >
+                      <Globe size={14} />
+                      Generate Landing Page
+                    </button>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -288,6 +425,18 @@ export default function ServicesPage() {
             setShowForm(false);
             setEditingService(null);
           }}
+        />
+      )}
+
+      {/* Landing Page Modal */}
+      {landingPageService && (
+        <LandingPageModal
+          serviceId={landingPageService.id}
+          serviceName={landingPageService.name}
+          existingPage={landingPageService.ownedLandingPage}
+          onClose={handleLandingPageModalClose}
+          onCreated={handleLandingPageCreatedOrUpdated}
+          onDeleted={handleLandingPageDeleted}
         />
       )}
 

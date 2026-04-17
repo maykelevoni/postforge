@@ -55,6 +55,12 @@
 - **Solution**: The send-delivery route extracts `deliverablesData.generated` before calling `sendDeliveryEmail`. The 400 validation guard for missing `generatedContent` is placed before the try/catch so it short-circuits cleanly.
 - **Note**: The send-quote route does NOT have this issue — `ticket.quote` is stored as a plain string directly in the DB.
 
+## Task 012 - landing-page-modal.tsx already existed with full implementation
+
+- **Discovery**: When task-012 was due for implementation, `components/dashboard/services/landing-page-modal.tsx` already existed with a complete create/edit/delete modal. The file includes: template selector (3 cards), dynamic feature list (add/remove), section toggles, published URL with copy button, PATCH/DELETE calls, and preview button.
+- **Action taken**: The modal was already complete. The only work needed was wiring it up in `app/(dashboard)/services/page.tsx` — adding the import, state, handlers, and landing page row UI below each service card.
+- **Note**: When a component file already exists from a prior partial implementation, read it before creating a new one. The `landing-page-modal.tsx` used dynamic feature list (not textarea), which is the superior UX — kept as-is rather than downgrading to textarea.
+
 ## Task 013 - Renaming Prisma fields that still reference removed integrations
 
 - **Discovery**: `AppIdea.systemeFunnelUrl` in `prisma/schema.prisma` was never referenced by any application code but still contained the "systeme" string. Dropping it would require a migration and loses the DB column.
