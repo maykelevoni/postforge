@@ -110,9 +110,7 @@ export default function ApiKeysSection({ settings, onSave }: ApiKeysSectionProps
         {renderInput("openrouter_model", "OpenRouter Model", false)}
         {renderInput("falai_api_key", "fal.ai API Key", true)}
         {renderInput("postbridge_api_key", "post-bridge API Key", true)}
-        {renderInput("clickbank_api_key", "ClickBank API Key", true)}
-        {renderInput("clickbank_account", "ClickBank Account", false)}
-        {renderInput("resend_api_key", "Resend API Key", true)}
+{renderInput("resend_api_key", "Resend API Key", true)}
         {renderInput("resend_from_email", "Resend From Email", false)}
         {renderInput("youtube_api_key", "YouTube API Key", true)}
         {renderInput("newsapi_key", "NewsAPI Key", true)}

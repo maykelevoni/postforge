@@ -11,8 +11,7 @@ interface NavItemProps {
 const navItems: NavItemProps[] = [
   { href: "/", icon: "home", label: "Today" },
   { href: "/research", icon: "trending", label: "Research" },
-  { href: "/discover", icon: "sparkles", label: "Discover" },
-  { href: "/content", icon: "fileText", label: "Content" },
+{ href: "/content", icon: "fileText", label: "Content" },
   { href: "/services", icon: "briefcase", label: "Services" },
   { href: "/subscribers", icon: "users", label: "Subscribers" },
   { href: "/templates", icon: "layout", label: "Templates" },
