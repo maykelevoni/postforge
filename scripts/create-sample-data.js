@@ -30,7 +30,7 @@ async function createSampleData() {
         priceMin: 97,
         priceMax: 197,
         turnaroundDays: 3,
-        funnelUrl: 'https://systeme.io/minecraft-scripts-funnel',
+        funnelUrl: 'https://example.com/minecraft-scripts',
         status: 'active'
       }
     });

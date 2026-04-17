@@ -49,3 +49,15 @@
 - **Implementation**: Used `/api/emails` endpoint for sending individual quote emails with parameters: `{ email, subject, body, send_now }`
 - **Note**: This pattern may need to be adjusted in Task 006 when email helper functions are added to `worker/posting/systeme.ts`. The exact API endpoint structure should be verified against Systeme.io documentation
 
+## Task 004 - sendDeliveryEmail expects plain string but DB stores JSON
+
+- **Discovery**: The DB `ticket.deliverables` field stores a JSON string with shape `{ generated: "..." }`, but `sendDeliveryEmail` in `lib/email.ts` expects `ticket.deliverables` to be a plain content string.
+- **Solution**: The send-delivery route extracts `deliverablesData.generated` before calling `sendDeliveryEmail`. The 400 validation guard for missing `generatedContent` is placed before the try/catch so it short-circuits cleanly.
+- **Note**: The send-quote route does NOT have this issue — `ticket.quote` is stored as a plain string directly in the DB.
+
+## Task 013 - Renaming Prisma fields that still reference removed integrations
+
+- **Discovery**: `AppIdea.systemeFunnelUrl` in `prisma/schema.prisma` was never referenced by any application code but still contained the "systeme" string. Dropping it would require a migration and loses the DB column.
+- **Solution**: Rename the Prisma field to `funnelUrl` with `@map("systemeFunnelUrl")` — this keeps the DB column intact (no migration needed) while removing the integration-name from the field identifier. The `@map` value is a technical mapping detail, not a live reference.
+- **Note**: Historical migration SQL files (`prisma/migrations/`) are immutable — they will always contain the original column names. Only exclude `.git` and `migrations/` from "no remaining references" checks.
+

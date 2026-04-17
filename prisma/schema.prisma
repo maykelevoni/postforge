@@ -130,7 +130,7 @@ model AppIdea {
   competition      String       @db.Text
   whyNow           String       @db.Text
   landingPageHtml  String       @db.Text
-  systemeFunnelUrl String?
+  funnelUrl        String?  @map("systemeFunnelUrl")
   createdAt        DateTime     @default(now())
 
   @@map("app_ideas")
@@ -165,7 +165,7 @@ model Promotion {
   type           String        // "app_idea" | "affiliate"
   description    String        @db.Text
   url            String        // landing page or affiliate link
-  funnelUrl      String?       // Systeme.io funnel URL
+  funnelUrl      String?       // funnel/landing page URL
   priority       Int           @default(5) // 1-10 rotation weight
   status         String        @default("active") // "active" | "paused" | "archived"
   createdAt      DateTime      @default(now())
@@ -289,7 +289,7 @@ model Service {
   priceMin          Float
   priceMax          Float
   turnaroundDays    Int       @default(3)
-  funnelUrl         String?   // Systeme.io landing page URL
+  funnelUrl         String?   // landing page URL
   status            String    @default("active") // "active" | "paused"
   promotionId       String?   @unique
   promotion         Promotion? @relation(fields: [promotionId], references: [id])

@@ -1,0 +1,317 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
+
+interface Subscriber {
+  id: string;
+  name: string;
+  email: string;
+  source: string | null;
+  landingPage: { id: string; slug: string } | null;
+  service: { id: string; name: string } | null;
+  createdAt: string;
+}
+
+interface LandingPageOption {
+  id: string;
+  slug: string;
+}
+
+interface ServiceOption {
+  id: string;
+  name: string;
+}
+
+const pageStyle: React.CSSProperties = {
+  padding: "24px",
+};
+
+const headerStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "32px",
+};
+
+const titleRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+};
+
+const titleStyle: React.CSSProperties = {
+  fontSize: "28px",
+  fontWeight: "700",
+  color: "#f5f5f5",
+};
+
+const badgeStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "4px 10px",
+  fontSize: "13px",
+  fontWeight: "600",
+  borderRadius: "999px",
+  backgroundColor: "#1a1a2e",
+  color: "#6366f1",
+  border: "1px solid #2a2a4e",
+};
+
+const exportButtonStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "10px 20px",
+  fontSize: "14px",
+  fontWeight: "600",
+  borderRadius: "6px",
+  border: "none",
+  backgroundColor: "#6366f1",
+  color: "white",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+};
+
+const filterRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "16px",
+  marginBottom: "24px",
+};
+
+const filterLabelStyle: React.CSSProperties = {
+  fontSize: "14px",
+  fontWeight: "500",
+  color: "#888",
+};
+
+const selectStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  fontSize: "13px",
+  backgroundColor: "#111",
+  border: "1px solid #222",
+  borderRadius: "4px",
+  color: "#f5f5f5",
+  cursor: "pointer",
+};
+
+const tableWrapperStyle: React.CSSProperties = {
+  overflowX: "auto",
+  borderRadius: "8px",
+  border: "1px solid #222",
+};
+
+const tableStyle: React.CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse",
+};
+
+const theadStyle: React.CSSProperties = {
+  backgroundColor: "#111",
+};
+
+const thStyle: React.CSSProperties = {
+  padding: "12px 16px",
+  textAlign: "left",
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "#888",
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  borderBottom: "1px solid #222",
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: "14px 16px",
+  fontSize: "14px",
+  color: "#f5f5f5",
+  borderBottom: "1px solid #1a1a1a",
+};
+
+const mutedTdStyle: React.CSSProperties = {
+  ...tdStyle,
+  color: "#888",
+};
+
+const emptyStyle: React.CSSProperties = {
+  padding: "60px",
+  textAlign: "center",
+  color: "#888",
+  fontSize: "14px",
+};
+
+const loadingStyle: React.CSSProperties = {
+  padding: "60px",
+  textAlign: "center",
+  color: "#888",
+};
+
+export default function SubscribersPage() {
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+  const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
+  const [services, setServices] = useState<ServiceOption[]>([]);
+  const [filterLandingPageId, setFilterLandingPageId] = useState<string>("all");
+  const [filterServiceId, setFilterServiceId] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFilterOptions();
+  }, []);
+
+  useEffect(() => {
+    loadSubscribers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterLandingPageId, filterServiceId]);
+
+  const loadFilterOptions = async () => {
+    try {
+      const [lpRes, svcRes] = await Promise.all([
+        fetch("/api/landing-pages"),
+        fetch("/api/services"),
+      ]);
+      if (lpRes.ok) {
+        const data = await lpRes.json();
+        setLandingPages(Array.isArray(data) ? data : []);
+      }
+      if (svcRes.ok) {
+        const data = await svcRes.json();
+        setServices(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Failed to load filter options:", err);
+    }
+  };
+
+  const loadSubscribers = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterLandingPageId !== "all") params.set("landingPageId", filterLandingPageId);
+      if (filterServiceId !== "all") params.set("serviceId", filterServiceId);
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const res = await fetch(`/api/subscribers${query}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSubscribers(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Failed to load subscribers:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportCsv = () => {
+    const params = new URLSearchParams();
+    if (filterLandingPageId !== "all") params.set("landingPageId", filterLandingPageId);
+    if (filterServiceId !== "all") params.set("serviceId", filterServiceId);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    const a = document.createElement("a");
+    a.href = `/api/subscribers/export${query}`;
+    a.download = "subscribers.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  if (loading) {
+    return <div style={loadingStyle}>Loading...</div>;
+  }
+
+  return (
+    <div style={pageStyle}>
+      {/* Header */}
+      <div style={headerStyle}>
+        <div style={titleRowStyle}>
+          <h1 style={titleStyle}>Subscribers</h1>
+          <span style={badgeStyle}>{subscribers.length}</span>
+        </div>
+        <button
+          onClick={handleExportCsv}
+          style={exportButtonStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#4f46e5";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#6366f1";
+          }}
+        >
+          <Download size={16} />
+          Export CSV
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div style={filterRowStyle}>
+        <label style={filterLabelStyle}>Landing Page:</label>
+        <select
+          value={filterLandingPageId}
+          onChange={(e) => setFilterLandingPageId(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="all">All</option>
+          {landingPages.map((lp) => (
+            <option key={lp.id} value={lp.id}>
+              {lp.slug}
+            </option>
+          ))}
+        </select>
+
+        <label style={filterLabelStyle}>Service:</label>
+        <select
+          value={filterServiceId}
+          onChange={(e) => setFilterServiceId(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="all">All</option>
+          {services.map((svc) => (
+            <option key={svc.id} value={svc.id}>
+              {svc.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Table or empty state */}
+      {subscribers.length === 0 ? (
+        <div style={emptyStyle}>
+          No subscribers yet. Share your landing page to start capturing leads.
+        </div>
+      ) : (
+        <div style={tableWrapperStyle}>
+          <table style={tableStyle}>
+            <thead style={theadStyle}>
+              <tr>
+                <th style={thStyle}>Name</th>
+                <th style={thStyle}>Email</th>
+                <th style={thStyle}>Source</th>
+                <th style={thStyle}>Landing Page</th>
+                <th style={thStyle}>Service</th>
+                <th style={thStyle}>Date Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subscribers.map((sub) => (
+                <tr key={sub.id}>
+                  <td style={tdStyle}>{sub.name}</td>
+                  <td style={tdStyle}>{sub.email}</td>
+                  <td style={mutedTdStyle}>{sub.source ?? "—"}</td>
+                  <td style={mutedTdStyle}>{sub.landingPage?.slug ?? "—"}</td>
+                  <td style={mutedTdStyle}>{sub.service?.name ?? "—"}</td>
+                  <td style={mutedTdStyle}>
+                    {new Date(sub.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
