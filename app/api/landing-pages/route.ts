@@ -53,6 +53,11 @@ export async function GET(_req: Request) {
           name: true,
         },
       },
+      _count: {
+        select: {
+          subscribers: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
