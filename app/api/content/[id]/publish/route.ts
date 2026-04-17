@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { postToPlatform } from "@/worker/posting/post-bridge";
-import { sendNewsletter } from "@/worker/posting/systeme";
+import { sendNewsletter } from "@/lib/email";
 
 export async function POST(
   req: Request,

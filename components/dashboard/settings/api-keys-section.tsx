@@ -112,9 +112,8 @@ export default function ApiKeysSection({ settings, onSave }: ApiKeysSectionProps
         {renderInput("postbridge_api_key", "post-bridge API Key", true)}
         {renderInput("clickbank_api_key", "ClickBank API Key", true)}
         {renderInput("clickbank_account", "ClickBank Account", false)}
-        {renderInput("systeme_domain", "Systeme.io Domain", false)}
-        {renderInput("systeme_funnel_url", "Systeme.io Funnel URL", false)}
-        {renderInput("systeme_api_key", "Systeme.io API Key", true)}
+        {renderInput("resend_api_key", "Resend API Key", true)}
+        {renderInput("resend_from_email", "Resend From Email", false)}
         {renderInput("youtube_api_key", "YouTube API Key", true)}
         {renderInput("newsapi_key", "NewsAPI Key", true)}
         <div style={fullGridStyle}>

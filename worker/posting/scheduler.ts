@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { getSetting } from "@/lib/settings";
 import { postToPlatform } from "./post-bridge";
-import { sendNewsletter } from "./systeme";
+import { sendNewsletter } from "../../lib/email";
 
 export async function postScheduledPieces(userId: string): Promise<void> {
   console.log(`Checking for scheduled content pieces for user ${userId}...`);

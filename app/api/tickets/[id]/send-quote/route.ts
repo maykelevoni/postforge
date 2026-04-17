@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { getSetting } from "@/lib/settings";
+import { sendQuoteEmail } from "@/lib/email";
 
 export async function POST(
   req: Request,
@@ -24,6 +24,7 @@ export async function POST(
         select: {
           id: true,
           name: true,
+          turnaroundDays: true,
         },
       },
     },
@@ -49,39 +50,20 @@ export async function POST(
   }
 
   try {
-    // Send quote email via Systeme.io broadcast API
-    const apiKey = await getSetting("systeme_api_key", session.user.id);
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "Systeme.io API key not configured" },
-        { status: 500 }
-      );
-    }
-
-    const subject = `Your quote for ${ticket.service.name} — ${ticket.clientName}`;
-
-    // Systeme.io broadcast API call
-    const response = await fetch("https://api.systeme.io/api/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": apiKey,
+    // Send quote email via Resend
+    await sendQuoteEmail({
+      clientName: ticket.clientName,
+      clientEmail: ticket.clientEmail,
+      service: {
+        name: ticket.service.name,
+        turnaroundDays: ticket.service.turnaroundDays,
       },
-      body: JSON.stringify({
-        email: ticket.clientEmail,
-        subject: subject,
-        body: ticket.quote,
-        send_now: true,
-      }),
+      userId: ticket.userId,
+      quote: ticket.quote,
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Systeme.io API error: ${error}`);
-    }
-
     // Update ticket: set quoteSentAt and move to "quoted" status
-    const updated = await db.serviceTicket.update({
+    await db.serviceTicket.update({
       where: { id: params.id },
       data: {
         quoteSentAt: new Date(),
