@@ -74,6 +74,9 @@ model User {
   serviceTickets     ServiceTicket[]
   templates          Template[]
   generatedContents  GeneratedContent[]
+  landingPages       LandingPage[]
+  submissions        LandingPageSubmission[]
+  subscribers        Subscriber[]
 
   @@map("users")
 }
@@ -290,10 +293,14 @@ model Service {
   status            String    @default("active") // "active" | "paused"
   promotionId       String?   @unique
   promotion         Promotion? @relation(fields: [promotionId], references: [id])
+  landingPageId     String?   @unique
+  landingPage       LandingPage? @relation("ServiceLinkedLandingPage", fields: [landingPageId], references: [id])
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  tickets ServiceTicket[]
+  tickets          ServiceTicket[]
+  subscribers      Subscriber[]
+  ownedLandingPage LandingPage?    @relation("LandingPageOwnerService")
 
   @@index([userId])
   @@map("services")
@@ -362,4 +369,61 @@ model GeneratedContent {
   @@index([userId])
   @@index([templateId])
   @@map("generated_contents")
+}
+
+model LandingPage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId String   @unique
+  service   Service  @relation("LandingPageOwnerService", fields: [serviceId], references: [id])
+  slug      String   @unique
+  template  String   // "saas" | "service" | "lead_magnet"
+  variables String   @db.Text  // JSON: { title, subtitle, ctaText, features[], testimonials[], etc }
+  sections  String   @db.Text  // JSON: { hero: true, features: true, testimonials: true, cta: true, logoGrid: false }
+  status    String   @default("draft") // "draft" | "published" | "archived"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions    LandingPageSubmission[]
+  subscribers    Subscriber[]
+  linkedService  Service?                @relation("ServiceLinkedLandingPage")
+
+  @@index([userId])
+  @@index([slug])
+  @@map("landing_pages")
+}
+
+model LandingPageSubmission {
+  id            String      @id @default(cuid())
+  landingPageId String
+  landingPage   LandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  email         String
+  source        String?     // UTM params, referrer, etc.
+  status        String      @default("new") // "new" | "confirmed" | "duplicate"
+  createdAt     DateTime    @default(now())
+
+  @@index([landingPageId])
+  @@map("landing_page_submissions")
+}
+
+model Subscriber {
+  id            String      @id @default(cuid())
+  name          String
+  email         String
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId     String?
+  service       Service?    @relation(fields: [serviceId], references: [id])
+  landingPageId String?
+  landingPage   LandingPage? @relation(fields: [landingPageId], references: [id])
+  source        String?     // UTM params, referrer, etc.
+  createdAt     DateTime    @default(now())
+
+  @@unique([email, userId])
+  @@index([userId])
+  @@map("subscribers")
 }
