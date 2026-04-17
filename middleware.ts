@@ -12,7 +12,8 @@ export default auth((req) => {
     pathname.startsWith("/sign-in") ||
     pathname.startsWith("/register") ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/webhooks");
+    pathname.startsWith("/api/webhooks") ||
+    pathname.startsWith("/l/");
 
   if (!isLoggedIn && !isPublic) {
     // Return 401 for API routes so clients get a proper error response

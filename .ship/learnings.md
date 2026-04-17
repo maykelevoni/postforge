@@ -67,3 +67,9 @@
 - **Solution**: Rename the Prisma field to `funnelUrl` with `@map("systemeFunnelUrl")` — this keeps the DB column intact (no migration needed) while removing the integration-name from the field identifier. The `@map` value is a technical mapping detail, not a live reference.
 - **Note**: Historical migration SQL files (`prisma/migrations/`) are immutable — they will always contain the original column names. Only exclude `.git` and `migrations/` from "no remaining references" checks.
 
+## Task 014 - Middleware must explicitly allowlist /l/* for public landing pages
+
+- **Discovery**: The `(landing)` route group in Next.js App Router does NOT automatically bypass middleware auth checks. The `app/(landing)/l/[slug]/page.tsx` was present and built correctly, but `middleware.ts` only allowed `/sign-in`, `/register`, `/api/auth`, and `/api/webhooks` — so any unauthenticated visitor hitting `/l/<slug>` would be redirected to `/sign-in`.
+- **Solution**: Added `pathname.startsWith("/l/")` to the `isPublic` check in `middleware.ts`.
+- **Note**: Route groups (parenthesized folders) affect URL structure but have no bearing on middleware matching. Always explicitly add new public URL prefixes to the middleware allowlist.
+
