@@ -28,6 +28,21 @@
 - **Solution**: Use named relations: `@relation("LandingPageOwnerService")` for LandingPage→Service and `@relation("ServiceLinkedLandingPage")` for Service→LandingPage. Add explicit back-reference fields on both sides with the same relation name.
 - **Note**: When two models have multiple relations to each other, always use named `@relation("name")` attributes on both sides to avoid Prisma P1012 validation errors.
 
+## Task 016 - Vercel Crons require vercel.json at repo root
+
+- **Note**: Vercel Crons are configured solely via `vercel.json` at the repo root — no dashboard setup needed. The cron triggers an HTTP POST to the specified `path` on the deployed app. The route must handle POST and authenticate the caller via the `Authorization: Bearer <CRON_SECRET>` header that Vercel injects automatically. In dev, the route must be called manually (no local cron runner). The `*/15 * * * *` schedule is the minimum Vercel Crons granularity.
+
+## Task 007 - LandingPage variables/sections stored as JSON strings
+
+- **Note**: The `variables` and `sections` fields on LandingPage are `String @db.Text` in the schema (not native JSON columns). The API routes call `JSON.stringify()` before writing and callers must `JSON.parse()` after reading. The GET list endpoint returns raw string values — callers parsing them should handle this. Using `randomBytes(4).toString("hex")` (from Node's built-in `crypto`) produces an 8-char hex suffix for slug generation since `@paralleldrive/cuid2` is not installed.
+- **Schema note**: `LandingPage.service` is the `"LandingPageOwnerService"` named relation (via `serviceId` FK on LandingPage). `LandingPage.linkedService` is the back-reference for `Service.landingPageId`. Use `service` in Prisma queries to get the owning Service.
+
+## Task 009 - SaaS template is a server component but embeds a client component
+
+- **Discovery**: The `SaasTemplate` itself has no `"use client"` directive (server component), but it imports `LeadForm` which does have `"use client"`. This is valid in Next.js App Router — a server component can import and render a client component. Next.js handles the boundary automatically.
+- **Note**: Default values are destructured from `variables` at the top of the component, so the template renders gracefully even when called with minimal/partial variable data.
+- **Design decision**: The "Learn more" button scrolls to `#features` and the primary CTA scrolls to `#cta`, so the hero CTA works correctly even without JavaScript (plain anchor links).
+
 ## Task 004 - Systeme.io Broadcast API
 
 - **Discovery**: The Systeme.io broadcast API endpoint structure wasn't fully documented in the existing code. The existing `sendNewsletter()` function uses `/api/email_campaigns` but this appears to be for campaigns, not individual emails
