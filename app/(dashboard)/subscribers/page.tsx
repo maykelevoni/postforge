@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
+import { Ticket } from "@/components/dashboard/services/types";
+import TicketPipeline from "@/components/dashboard/services/ticket-pipeline";
+import TicketDrawer from "@/components/dashboard/services/ticket-drawer";
 
 interface Subscriber {
   id: string;
@@ -71,6 +74,13 @@ const exportButtonStyle: React.CSSProperties = {
   color: "white",
   cursor: "pointer",
   transition: "all 0.2s ease",
+};
+
+const tabBarStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "0",
+  borderBottom: "1px solid #222",
+  marginBottom: "24px",
 };
 
 const filterRowStyle: React.CSSProperties = {
@@ -148,12 +158,22 @@ const loadingStyle: React.CSSProperties = {
 };
 
 export default function SubscribersPage() {
+  const [activeTab, setActiveTab] = useState<"subscribers" | "clients">("subscribers");
+
+  // Subscribers state
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [filterLandingPageId, setFilterLandingPageId] = useState<string>("all");
   const [filterServiceId, setFilterServiceId] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+
+  // Clients (pipeline) state
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [ticketServices, setTicketServices] = useState<ServiceOption[]>([]);
+  const [ticketsLoaded, setTicketsLoaded] = useState(false);
+  const [ticketFilterServiceId, setTicketFilterServiceId] = useState<string>("all");
 
   useEffect(() => {
     loadFilterOptions();
@@ -202,6 +222,33 @@ export default function SubscribersPage() {
     }
   };
 
+  const loadTickets = async () => {
+    try {
+      const [ticketsRes, svcRes] = await Promise.all([
+        fetch("/api/tickets"),
+        fetch("/api/services"),
+      ]);
+      if (ticketsRes.ok) {
+        const data = await ticketsRes.json();
+        setTickets(Array.isArray(data) ? data : (data.tickets ?? []));
+      }
+      if (svcRes.ok) {
+        const data = await svcRes.json();
+        setTicketServices(Array.isArray(data) ? data : []);
+      }
+      setTicketsLoaded(true);
+    } catch (err) {
+      console.error("Failed to load tickets:", err);
+    }
+  };
+
+  const handleTabChange = (tab: "subscribers" | "clients") => {
+    setActiveTab(tab);
+    if (tab === "clients" && !ticketsLoaded) {
+      loadTickets();
+    }
+  };
+
   const handleExportCsv = () => {
     const params = new URLSearchParams();
     if (filterLandingPageId !== "all") params.set("landingPageId", filterLandingPageId);
@@ -215,7 +262,40 @@ export default function SubscribersPage() {
     document.body.removeChild(a);
   };
 
-  if (loading) {
+  const handleTicketClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+  };
+
+  const handleTicketUpdate = (updatedTicket: Ticket) => {
+    setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+    if (selectedTicket?.id === updatedTicket.id) {
+      setSelectedTicket(updatedTicket);
+    }
+  };
+
+  const handleDrawerClose = () => {
+    setSelectedTicket(null);
+  };
+
+  const filteredTickets =
+    ticketFilterServiceId === "all"
+      ? tickets
+      : tickets.filter((t) => t.service.id === ticketFilterServiceId);
+
+  const getTabStyle = (tab: "subscribers" | "clients"): React.CSSProperties => ({
+    padding: "10px 20px",
+    fontSize: "14px",
+    fontWeight: activeTab === tab ? "600" : "400",
+    color: activeTab === tab ? "#fff" : "#888",
+    background: "none",
+    border: "none",
+    borderBottom: activeTab === tab ? "2px solid #6366f1" : "2px solid transparent",
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+    marginBottom: "-1px",
+  });
+
+  if (loading && activeTab === "subscribers") {
     return <div style={loadingStyle}>Loading...</div>;
   }
 
@@ -225,92 +305,149 @@ export default function SubscribersPage() {
       <div style={headerStyle}>
         <div style={titleRowStyle}>
           <h1 style={titleStyle}>Subscribers</h1>
-          <span style={badgeStyle}>{subscribers.length}</span>
+          {activeTab === "subscribers" && (
+            <span style={badgeStyle}>{subscribers.length}</span>
+          )}
         </div>
-        <button
-          onClick={handleExportCsv}
-          style={exportButtonStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#4f46e5";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#6366f1";
-          }}
-        >
-          <Download size={16} />
-          Export CSV
+        {activeTab === "subscribers" && (
+          <button
+            onClick={handleExportCsv}
+            style={exportButtonStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#4f46e5";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#6366f1";
+            }}
+          >
+            <Download size={16} />
+            Export CSV
+          </button>
+        )}
+      </div>
+
+      {/* Tab switcher */}
+      <div style={tabBarStyle}>
+        <button style={getTabStyle("subscribers")} onClick={() => handleTabChange("subscribers")}>
+          Subscribers
+        </button>
+        <button style={getTabStyle("clients")} onClick={() => handleTabChange("clients")}>
+          Clients
         </button>
       </div>
 
-      {/* Filters */}
-      <div style={filterRowStyle}>
-        <label style={filterLabelStyle}>Landing Page:</label>
-        <select
-          value={filterLandingPageId}
-          onChange={(e) => setFilterLandingPageId(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="all">All</option>
-          {landingPages.map((lp) => (
-            <option key={lp.id} value={lp.id}>
-              {lp.slug}
-            </option>
-          ))}
-        </select>
-
-        <label style={filterLabelStyle}>Service:</label>
-        <select
-          value={filterServiceId}
-          onChange={(e) => setFilterServiceId(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="all">All</option>
-          {services.map((svc) => (
-            <option key={svc.id} value={svc.id}>
-              {svc.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Table or empty state */}
-      {subscribers.length === 0 ? (
-        <div style={emptyStyle}>
-          No subscribers yet. Share your landing page to start capturing leads.
-        </div>
-      ) : (
-        <div style={tableWrapperStyle}>
-          <table style={tableStyle}>
-            <thead style={theadStyle}>
-              <tr>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Source</th>
-                <th style={thStyle}>Landing Page</th>
-                <th style={thStyle}>Service</th>
-                <th style={thStyle}>Date Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {subscribers.map((sub) => (
-                <tr key={sub.id}>
-                  <td style={tdStyle}>{sub.name}</td>
-                  <td style={tdStyle}>{sub.email}</td>
-                  <td style={mutedTdStyle}>{sub.source ?? "—"}</td>
-                  <td style={mutedTdStyle}>{sub.landingPage?.slug ?? "—"}</td>
-                  <td style={mutedTdStyle}>{sub.service?.name ?? "—"}</td>
-                  <td style={mutedTdStyle}>
-                    {new Date(sub.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                </tr>
+      {/* Subscribers tab */}
+      {activeTab === "subscribers" && (
+        <>
+          {/* Filters */}
+          <div style={filterRowStyle}>
+            <label style={filterLabelStyle}>Landing Page:</label>
+            <select
+              value={filterLandingPageId}
+              onChange={(e) => setFilterLandingPageId(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="all">All</option>
+              {landingPages.map((lp) => (
+                <option key={lp.id} value={lp.id}>
+                  {lp.slug}
+                </option>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </select>
+
+            <label style={filterLabelStyle}>Service:</label>
+            <select
+              value={filterServiceId}
+              onChange={(e) => setFilterServiceId(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="all">All</option>
+              {services.map((svc) => (
+                <option key={svc.id} value={svc.id}>
+                  {svc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Table or empty state */}
+          {subscribers.length === 0 ? (
+            <div style={emptyStyle}>
+              No subscribers yet. Share your landing page to start capturing leads.
+            </div>
+          ) : (
+            <div style={tableWrapperStyle}>
+              <table style={tableStyle}>
+                <thead style={theadStyle}>
+                  <tr>
+                    <th style={thStyle}>Name</th>
+                    <th style={thStyle}>Email</th>
+                    <th style={thStyle}>Source</th>
+                    <th style={thStyle}>Landing Page</th>
+                    <th style={thStyle}>Service</th>
+                    <th style={thStyle}>Date Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subscribers.map((sub) => (
+                    <tr key={sub.id}>
+                      <td style={tdStyle}>{sub.name}</td>
+                      <td style={tdStyle}>{sub.email}</td>
+                      <td style={mutedTdStyle}>{sub.source ?? "—"}</td>
+                      <td style={mutedTdStyle}>{sub.landingPage?.slug ?? "—"}</td>
+                      <td style={mutedTdStyle}>{sub.service?.name ?? "—"}</td>
+                      <td style={mutedTdStyle}>
+                        {new Date(sub.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Clients tab */}
+      {activeTab === "clients" && (
+        <>
+          {!ticketsLoaded ? (
+            <div style={loadingStyle}>Loading clients...</div>
+          ) : (
+            <>
+              {/* Service filter */}
+              <div style={filterRowStyle}>
+                <label style={filterLabelStyle}>Filter by service:</label>
+                <select
+                  value={ticketFilterServiceId}
+                  onChange={(e) => setTicketFilterServiceId(e.target.value)}
+                  style={selectStyle}
+                >
+                  <option value="all">All Services</option>
+                  {ticketServices.map((svc) => (
+                    <option key={svc.id} value={svc.id}>
+                      {svc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <TicketPipeline tickets={filteredTickets} onTicketClick={handleTicketClick} />
+
+              {selectedTicket && (
+                <TicketDrawer
+                  ticket={selectedTicket}
+                  onClose={handleDrawerClose}
+                  onUpdate={handleTicketUpdate}
+                />
+              )}
+            </>
+          )}
+        </>
       )}
     </div>
   );

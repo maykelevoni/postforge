@@ -8,6 +8,14 @@ interface TicketPipelineProps {
   onTicketClick: (ticket: Ticket) => void;
 }
 
+const STATUS_COLORS: Record<string, string> = {
+  new: "#3b82f6",
+  quoted: "#f59e0b",
+  in_progress: "#6366f1",
+  delivered: "#22c55e",
+  closed: "#6b7280",
+};
+
 const containerStyle: React.CSSProperties = {
   display: "flex",
   gap: "16px",
@@ -20,13 +28,12 @@ const containerStyle: React.CSSProperties = {
 
 const columnStyle: React.CSSProperties = {
   flex: "1",
-  minWidth: "280px",
+  minWidth: "260px",
   backgroundColor: "#111",
   borderRadius: "6px",
   padding: "12px",
   display: "flex",
   flexDirection: "column",
-  maxHeight: "600px",
 };
 
 const headerStyle: React.CSSProperties = {
@@ -38,8 +45,14 @@ const headerStyle: React.CSSProperties = {
   borderBottom: "1px solid #222",
 };
 
+const headerLeftStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+};
+
 const titleStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "13px",
   fontWeight: "700",
   color: "#f5f5f5",
   textTransform: "uppercase",
@@ -50,35 +63,30 @@ const countBadgeStyle: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  minWidth: "24px",
-  height: "24px",
-  padding: "0 8px",
+  minWidth: "20px",
+  height: "20px",
+  padding: "0 6px",
   borderRadius: "4px",
-  fontSize: "12px",
+  fontSize: "11px",
   fontWeight: "700",
   backgroundColor: "#222",
   color: "#888",
 };
 
-const activeCountBadgeStyle: React.CSSProperties = {
-  ...countBadgeStyle,
-  backgroundColor: "#6366f120",
-  color: "#6366f1",
-};
-
 const ticketsContainerStyle: React.CSSProperties = {
   flex: 1,
-  overflowY: "auto",
   display: "flex",
   flexDirection: "column",
   gap: "8px",
 };
 
-const emptyTextStyle: React.CSSProperties = {
-  padding: "40px 20px",
+const emptyPlaceholderStyle: React.CSSProperties = {
+  padding: "32px 16px",
   textAlign: "center",
-  color: "#444",
-  fontSize: "13px",
+  color: "#333",
+  fontSize: "12px",
+  border: "1px dashed #2a2a2a",
+  borderRadius: "4px",
   fontStyle: "italic",
 };
 
@@ -96,14 +104,32 @@ export default function TicketPipeline({ tickets, onTicketClick }: TicketPipelin
       {STATUS_COLUMNS.map((column) => {
         const columnTickets = tickets.filter((ticket) => ticket.status === column.id);
         const count = columnTickets.length;
-        const hasActiveTickets = count > 0;
+        const color = STATUS_COLORS[column.id];
 
         return (
           <div key={column.id} style={columnStyle}>
             <div style={headerStyle}>
-              <h3 style={titleStyle}>{column.label}</h3>
+              <div style={headerLeftStyle}>
+                {/* Colored dot */}
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: color,
+                    flexShrink: 0,
+                    display: "inline-block",
+                  }}
+                />
+                <h3 style={titleStyle}>{column.label}</h3>
+              </div>
               <span
-                style={hasActiveTickets ? activeCountBadgeStyle : countBadgeStyle}
+                style={{
+                  ...countBadgeStyle,
+                  ...(count > 0
+                    ? { backgroundColor: `${color}20`, color }
+                    : {}),
+                }}
               >
                 {count}
               </span>
@@ -111,7 +137,7 @@ export default function TicketPipeline({ tickets, onTicketClick }: TicketPipelin
 
             <div style={ticketsContainerStyle}>
               {columnTickets.length === 0 ? (
-                <div style={emptyTextStyle}>No tickets</div>
+                <div style={emptyPlaceholderStyle}>No tickets</div>
               ) : (
                 columnTickets.map((ticket) => (
                   <TicketCard

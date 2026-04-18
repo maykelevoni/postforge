@@ -16,7 +16,6 @@ const cardStyle: React.CSSProperties = {
   padding: "12px",
   cursor: "pointer",
   transition: "all 0.2s ease",
-  marginBottom: "8px",
 };
 
 const cardHoverStyle: React.CSSProperties = {
@@ -25,50 +24,35 @@ const cardHoverStyle: React.CSSProperties = {
   borderColor: "#333",
 };
 
-const headerStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  marginBottom: "8px",
-};
-
 const clientNameStyle: React.CSSProperties = {
-  fontSize: "14px",
+  fontSize: "15px",
   fontWeight: "700",
   color: "#f5f5f5",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  flex: 1,
+  marginBottom: "6px",
 };
 
 const nicheBadgeStyle: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
-  padding: "4px 10px",
+  padding: "3px 8px",
   borderRadius: "4px",
   fontSize: "11px",
-  fontWeight: "600",
-  backgroundColor: "#6366f120",
-  color: "#6366f1",
+  fontWeight: "500",
+  backgroundColor: "#333",
+  color: "#888",
   marginBottom: "8px",
 };
 
 const serviceStyle: React.CSSProperties = {
   fontSize: "12px",
   color: "#888",
-  marginBottom: "8px",
+  marginBottom: "10px",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-};
-
-const footerStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "4px",
-  fontSize: "12px",
-  color: "#888",
 };
 
 const daysStyle: React.CSSProperties = {
@@ -76,7 +60,7 @@ const daysStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "4px",
   fontSize: "11px",
-  color: "#6b7280",
+  color: "#555",
 };
 
 export default function TicketCard({ ticket, onClick }: TicketCardProps) {
@@ -94,21 +78,17 @@ export default function TicketCard({ ticket, onClick }: TicketCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div style={headerStyle}>
-        <div style={clientNameStyle}>{ticket.clientName}</div>
-      </div>
+      <div style={clientNameStyle}>{ticket.clientName}</div>
 
       <div style={nicheBadgeStyle}>{ticket.niche}</div>
 
       <div style={serviceStyle}>{ticket.service.name}</div>
 
-      <div style={footerStyle}>
-        <div style={daysStyle}>
-          <Clock size={12} />
-          <span>
-            {daysInStage === 0 ? "Today" : `${daysInStage} day${daysInStage !== 1 ? "s" : ""}`}
-          </span>
-        </div>
+      <div style={daysStyle}>
+        <Clock size={11} />
+        <span>
+          {daysInStage === 0 ? "Today" : `${daysInStage} day${daysInStage !== 1 ? "s" : ""}`}
+        </span>
       </div>
     </div>
   );

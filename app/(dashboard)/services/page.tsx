@@ -5,9 +5,7 @@ import { Plus, ExternalLink, Trash2, Globe } from "lucide-react";
 import ServiceCard from "@/components/dashboard/services/service-card";
 import ServiceForm, { ServiceFormData } from "@/components/dashboard/services/service-form";
 import LandingPageModal from "@/components/dashboard/services/landing-page-modal";
-import TicketPipeline from "@/components/dashboard/services/ticket-pipeline";
-import TicketDrawer from "@/components/dashboard/services/ticket-drawer";
-import { Service, Ticket } from "@/components/dashboard/services/types";
+import { Service } from "@/components/dashboard/services/types";
 
 const pageStyle: React.CSSProperties = {
   padding: "24px",
@@ -51,46 +49,10 @@ const sectionStyle: React.CSSProperties = {
   marginBottom: "48px",
 };
 
-const sectionTitleStyle: React.CSSProperties = {
-  fontSize: "20px",
-  fontWeight: "600",
-  color: "#f5f5f5",
-  marginBottom: "24px",
-};
-
 const gridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
   gap: "20px",
-};
-
-const dividerStyle: React.CSSProperties = {
-  height: "1px",
-  backgroundColor: "#222",
-  margin: "48px 0",
-};
-
-const filterRowStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "16px",
-  marginBottom: "24px",
-};
-
-const filterLabelStyle: React.CSSProperties = {
-  fontSize: "14px",
-  fontWeight: "500",
-  color: "#888",
-};
-
-const selectStyle: React.CSSProperties = {
-  padding: "8px 12px",
-  fontSize: "13px",
-  backgroundColor: "#111",
-  border: "1px solid #222",
-  borderRadius: "4px",
-  color: "#f5f5f5",
-  cursor: "pointer",
 };
 
 const loadingStyle: React.CSSProperties = {
@@ -169,11 +131,8 @@ const deleteLandingPageButtonStyle: React.CSSProperties = {
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [filterServiceId, setFilterServiceId] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   // Landing page modal state
   const [landingPageService, setLandingPageService] = useState<Service | null>(null);
@@ -185,19 +144,10 @@ export default function ServicesPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [servicesRes, ticketsRes] = await Promise.all([
-        fetch("/api/services"),
-        fetch("/api/tickets"),
-      ]);
-
-      if (servicesRes.ok) {
-        const servicesData = await servicesRes.json();
-        setServices(servicesData);
-      }
-
-      if (ticketsRes.ok) {
-        const ticketsData = await ticketsRes.json();
-        setTickets(Array.isArray(ticketsData) ? ticketsData : (ticketsData.tickets ?? []));
+      const res = await fetch("/api/services");
+      if (res.ok) {
+        const data = await res.json();
+        setServices(data);
       }
     } catch (error) {
       console.error("Failed to load data:", error);
@@ -310,25 +260,6 @@ export default function ServicesPage() {
     }
   };
 
-  const handleTicketClick = (ticket: Ticket) => {
-    setSelectedTicket(ticket);
-  };
-
-  const handleTicketUpdate = (updatedTicket: Ticket) => {
-    setTickets(tickets.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
-    if (selectedTicket?.id === updatedTicket.id) {
-      setSelectedTicket(updatedTicket);
-    }
-  };
-
-  const handleDrawerClose = () => {
-    setSelectedTicket(null);
-  };
-
-  const filteredTickets = filterServiceId === "all"
-    ? tickets
-    : tickets.filter((t) => t.service.id === filterServiceId);
-
   if (loading) {
     return <div style={loadingStyle}>Loading...</div>;
   }
@@ -437,41 +368,6 @@ export default function ServicesPage() {
           onClose={handleLandingPageModalClose}
           onCreated={handleLandingPageCreatedOrUpdated}
           onDeleted={handleLandingPageDeleted}
-        />
-      )}
-
-      {/* Divider */}
-      <div style={dividerStyle} />
-
-      {/* Ticket Pipeline Section */}
-      <div style={sectionStyle}>
-        <h2 style={sectionTitleStyle}>Client Pipeline</h2>
-
-        <div style={filterRowStyle}>
-          <label style={filterLabelStyle}>Filter by service:</label>
-          <select
-            value={filterServiceId}
-            onChange={(e) => setFilterServiceId(e.target.value)}
-            style={selectStyle}
-          >
-            <option value="all">All Services</option>
-            {services.map((service) => (
-              <option key={service.id} value={service.id}>
-                {service.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <TicketPipeline tickets={filteredTickets} onTicketClick={handleTicketClick} />
-      </div>
-
-      {/* Ticket Drawer */}
-      {selectedTicket && (
-        <TicketDrawer
-          ticket={selectedTicket}
-          onClose={handleDrawerClose}
-          onUpdate={handleTicketUpdate}
         />
       )}
     </div>
