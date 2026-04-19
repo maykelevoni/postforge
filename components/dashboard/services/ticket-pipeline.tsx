@@ -18,17 +18,18 @@ const STATUS_COLORS: Record<string, string> = {
 
 const containerStyle: React.CSSProperties = {
   display: "flex",
-  gap: "16px",
+  gap: "12px",
   overflowX: "auto",
-  paddingBottom: "16px",
-  backgroundColor: "#0a0a0a",
   padding: "16px",
   borderRadius: "8px",
+  backgroundColor: "#0a0a0a",
+  minHeight: "0",
+  WebkitOverflowScrolling: "touch",
 };
 
 const columnStyle: React.CSSProperties = {
-  flex: "1",
-  minWidth: "260px",
+  flex: "0 0 260px",
+  width: "260px",
   backgroundColor: "#111",
   borderRadius: "6px",
   padding: "12px",

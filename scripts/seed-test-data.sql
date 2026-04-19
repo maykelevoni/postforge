@@ -9,7 +9,7 @@
 -- Sample Service
 INSERT INTO services (id, "userId", name, description, type, deliverables, "priceMin", "priceMax", "turnaroundDays", "funnelUrl", status, "createdAt", "updatedAt")
 VALUES
-  ('sample-service-1', 'USER_ID_HERE', 'Minecraft Video Scripts', 'I create engaging video scripts and thumbnails for Minecraft creators', 'video_content', 'Generate 10 video scripts tailored for [niche] content, plus thumbnail prompts and captions for each video.', 97.00, 197.00, 3, 'https://systeme.io/minecraft-scripts-funnel', 'active', NOW(), NOW())
+  ('sample-service-1', 'USER_ID_HERE', 'Minecraft Video Scripts', 'I create engaging video scripts and thumbnails for Minecraft creators', 'video_content', 'Generate 10 video scripts tailored for [niche] content, plus thumbnail prompts and captions for each video.', 97.00, 197.00, 3, 'https://example.com/minecraft-scripts', 'active', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- Sample Tickets

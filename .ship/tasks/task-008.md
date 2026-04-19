@@ -1,42 +1,37 @@
-# Task 008: Create Template Service Layer
-
-## Type
+# Task 008: Create lead capture form component
 
 ## Description
-Create lib/templates.ts with all template business logic including CRUD operations, variable filling, constraint validation, and AI integration functions.
+Build the shared lead capture form component used by all landing page templates. Submits to `/api/webhooks/lead`.
 
 ## Files
-- `lib/templates.ts` (create)
+- `components/landing-pages/lead-form.tsx` (create)
 
 ## Requirements
-1. Create TypeScript interfaces for Template, TemplateVariable, TemplateConstraints
-2. Implement getTemplates with filtering (category, type, favorites)
-3. Implement getTemplateById with optional user check
-4. Implement createTemplate, updateTemplate, deleteTemplate
-5. Implement toggleTemplateFavorite
-6. Implement generateFromTemplate with AI integration
-7. Implement fillTemplateVariables for AI variable generation
-8. Implement validateTemplateConstraints for validation
-9. All functions should use existing db patterns
-10. Proper error handling and TypeScript typing
+1. `"use client"` component
+2. Props: `{ landingPageId: string; onSuccess?: () => void; variant?: "light" | "dark" }`
+3. Form fields: name (text input), email (email input), submit button
+4. Uses `fetch` POST to `/api/webhooks/lead` with `{ name, email, landingPageId }`
+5. Shows loading state during submission
+6. Shows success state ("Thank you! We'll be in touch soon.") after submission
+7. Shows error state if submission fails
+8. Handles duplicate response (`{ duplicate: true }`) with friendly message ("You've already submitted!")
+9. Styled with Tailwind CSS — clean, modern, responsive
+10. Works on mobile
 
 ## Existing Code to Reference
-- `lib/ai.ts` - Pattern for AI integration
-- `lib/settings.ts` - Pattern for database operations
-- Technical plan - Template service layer specifications
+- `app/api/webhooks/lead/route.ts` (endpoint the form calls)
+- `components/landing-pages/` (directory for landing page components)
 
 ## Acceptance Criteria
-- [ ] lib/templates.ts created with all required functions
-- [ ] TypeScript interfaces defined (Template, TemplateVariable, TemplateConstraints)
-- [ ] CRUD functions implemented (getTemplates, getTemplateById, createTemplate, updateTemplate, deleteTemplate)
-- [ ] Action functions implemented (toggleTemplateFavorite)
-- [ ] Generation functions implemented (generateFromTemplate, fillTemplateVariables)
-- [ ] Validation function implemented (validateTemplateConstraints)
-- [ ] All functions follow existing code patterns
-- [ ] Proper error handling and TypeScript typing
+- [ ] Form collects name + email
+- [ ] Submits to correct webhook endpoint
+- [ ] Shows loading/success/error states
+- [ ] Handles duplicates gracefully
+- [ ] Responsive on mobile
+- [ ] Tailwind CSS styled
 
 ## Dependencies
-- Task 007 (Database migration complete)
+- Task 005
 
 ## Commit Message
-feat: create template service layer with CRUD and generation functions
+feat: create landing page lead capture form component

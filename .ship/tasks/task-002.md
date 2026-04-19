@@ -1,36 +1,31 @@
-# Task 002: Update Navigation Components with New Icons
-
-## Type
-ui
+# Task 002: Add LandingPage, LandingPageSubmission, and Subscriber models to Prisma
 
 ## Description
-Replace lucide-react imports with new Icon component in navigation components (nav-item and sidebar). These are the most visible icons in the app.
+Add new database models for landing pages, form submissions, and the subscriber email list. Modify Service model to link to landing pages.
 
 ## Files
-- `components/layout/nav-item.tsx` (modify)
-- `components/layout/sidebar.tsx` (modify)
+- `prisma/schema.prisma` (modify)
 
 ## Requirements
-1. Remove lucide-react imports from both files
-2. Import new Icon component from components/ui/icon
-3. Update navItems array to use icon names from icon mapping
-4. Update Icon component usage to pass size and color
-5. Maintain existing styling and hover effects
+1. Add `LandingPage` model with: id, userId, serviceId (unique), slug (unique), template, variables (JSON text), sections (JSON text), status, timestamps
+2. Add `LandingPageSubmission` model with: id, landingPageId, name, email, source, status, createdAt
+3. Add `Subscriber` model with: id, name, email, userId, serviceId (optional), landingPageId (optional), source (optional), createdAt. Add @@unique([email, userId]) to prevent duplicate subscribers per user
+4. Add `landingPageId String? @unique` to Service model
+5. Add `landingPage LandingPage?` relation to Service
+6. Add `landingPages LandingPage[]`, `submissions LandingPageSubmission[]`, and `subscribers Subscriber[]` relations to relevant models
+7. Run migration: `pnpm dlx "prisma@5.20.0" migrate dev --name add_landing_pages_submissions_subscribers`
 
 ## Existing Code to Reference
-- `components/layout/nav-item.tsx` - Current navItems array and icon usage
-- `lib/icon-mapping.ts` - Icon name mapping reference
+- `prisma/schema.prisma` (existing Service model, User model for relation patterns)
 
 ## Acceptance Criteria
-- [ ] No lucide-react imports in navigation components
-- [ ] Icon component imported and used
-- [ ] All navigation icons render correctly (home, trending, sparkles, fileText, megaphone, briefcase, settings)
-- [ ] Icon size and color match previous appearance
-- [ ] Hover effects still work properly
-- [ ] No visual regression in sidebar
+- [ ] Prisma schema updated with all three new models and relations
+- [ ] Subscriber model has @@unique([email, userId]) constraint
+- [ ] Migration runs successfully
+- [ ] `pnpm dlx "prisma@5.20.0" generate` completes without errors
 
 ## Dependencies
-- Task 001 (Icon system must exist)
+- None
 
 ## Commit Message
-feat: update navigation components to use new icon component system
+feat: add landing page, submission, and subscriber prisma models

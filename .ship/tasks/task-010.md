@@ -1,46 +1,44 @@
-# Task 010: Create Template CRUD API Routes
-
-## Type
+# Task 010: Create Service and Lead Magnet landing page templates
 
 ## Description
-Create API routes for template CRUD operations (list, create, get, update, delete) following existing API patterns in the codebase.
+Create the remaining 2 landing page templates: Service (for freelancers/agencies) and Lead Magnet (for downloadable lead magnets).
 
 ## Files
-- `app/api/templates/route.ts` (create)
-- `app/api/templates/[id]/route.ts` (create)
+- `components/landing-pages/templates/service.tsx` (create)
+- `components/landing-pages/templates/lead-magnet.tsx` (create)
 
 ## Requirements
-1. GET /api/templates - List templates with filtering (category, type, favorites)
-2. POST /api/templates - Create new custom template
-3. GET /api/templates/[id] - Get single template by ID
-4. PUT /api/templates/[id] - Update template
-5. DELETE /api/templates/[id] - Delete template
-6. All routes require auth() session check
-7. All routes return proper JSON responses
-8. All routes have error handling
-9. Follow existing API patterns (auth → check → query → response)
-10. Proper HTTP status codes
+
+### Service Template
+- Adapted from Cruip's hero-home + business-categories + features + CTA
+- Sections: Hero, Service Details (features), Trust/Logos grid, CTA with form
+- Focus: showcasing a specific service offering
+- Variables: title, subtitle, serviceList[], trustLogos[], ctaText
+- Sections: hero, features, logoGrid, cta (all toggleable)
+- Dark theme, Tailwind CSS, responsive
+
+### Lead Magnet Template
+- Simpler, conversion-focused template
+- Sections: Hero (with lead form inline), Benefits (3-6 items), CTA
+- Focus: getting visitors to submit immediately
+- Variables: title, subtitle, benefits[], ctaText, urgencyText
+- Sections: hero, benefits, cta (all toggleable)
+- Dark theme, Tailwind CSS, responsive
+- Lead form appears directly in hero section (above the fold)
 
 ## Existing Code to Reference
-- `app/api/services/route.ts` - Pattern for list/create routes
-- `app/api/services/[id]/route.ts` - Pattern for single item CRUD
-- `app/api/content/route.ts` - Pattern for API structure
+- `components/landing-pages/templates/saas.tsx` (from Task 009)
+- `components/landing-pages/lead-form.tsx` (from Task 008)
 
 ## Acceptance Criteria
-- [ ] app/api/templates/route.ts created with GET and POST
-- [ ] app/api/templates/[id]/route.ts created with GET, PUT, DELETE
-- [ ] All routes use auth() for session check
-- [ ] GET /api/templates supports filtering (category, type, favorites)
-- [ ] POST /api/templates creates template with proper validation
-- [ ] GET /api/templates/[id] returns template or 404
-- [ ] PUT /api/templates/[id] updates template or returns 404
-- [ ] DELETE /api/templates/[id] deletes template or returns 404
-- [ ] All routes return proper JSON and status codes
-- [ ] Error handling on all routes
+- [ ] Both templates render correctly
+- [ ] Sections toggleable
+- [ ] Lead forms submit correctly
+- [ ] Responsive on mobile
+- [ ] No TypeScript errors
 
 ## Dependencies
-- Task 008 (Template service layer)
-- Task 009 (AI library updates)
+- Task 009
 
 ## Commit Message
-feat: create template CRUD API routes
+feat: create service and lead magnet landing page templates

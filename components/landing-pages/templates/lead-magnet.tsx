@@ -49,25 +49,25 @@ export default function LeadMagnetTemplate({
 
   return (
     <div className="min-h-screen bg-[#0d0d14] text-white font-sans antialiased">
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .rose-gradient-text {
           background: linear-gradient(to right, #fb7185, #a855f7);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
-      `}</style>
+      ` }} />
 
       {/* Nav */}
       <header className="border-b border-white/5 bg-[#0d0d14]/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
           <span className="text-base font-semibold text-white">{serviceName}</span>
         </div>
       </header>
 
       {/* Hero */}
       {sections.hero && (
-        <section className="relative overflow-hidden py-24 px-6 text-center">
+        <section className="relative overflow-hidden py-14 px-4 text-center sm:py-24 sm:px-6">
           {/* Background glows */}
           <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
             <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-rose-600/20 blur-3xl" />
@@ -82,7 +82,7 @@ export default function LeadMagnetTemplate({
             </div>
 
             {/* Headline */}
-            <h1 className="rose-gradient-text mb-6 text-5xl font-extrabold leading-tight md:text-6xl">
+            <h1 className="rose-gradient-text mb-6 text-3xl font-extrabold leading-tight sm:text-5xl md:text-6xl">
               {title}
             </h1>
 
@@ -116,7 +116,7 @@ export default function LeadMagnetTemplate({
 
       {/* Benefits */}
       {bulletItems.length > 0 && (
-        <section className="py-16 px-6">
+        <section className="py-10 px-4 sm:py-16 sm:px-6">
           <div className="mx-auto max-w-xl">
             <h2 className="mb-10 text-center text-2xl font-bold text-white">
               What you&apos;ll get
@@ -148,8 +148,8 @@ export default function LeadMagnetTemplate({
 
       {/* Form */}
       {sections.cta && (
-        <section id="cta" className="py-16 px-6">
-          <div className="mx-auto max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+        <section id="cta" className="py-10 px-4 sm:py-16 sm:px-6">
+          <div className="mx-auto max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
             <h3 className="mb-2 text-2xl font-bold text-gray-900">Get instant access</h3>
             <p className="mb-6 text-sm text-gray-500">
               Free. No spam. Unsubscribe anytime.

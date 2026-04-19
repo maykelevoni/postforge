@@ -1,42 +1,42 @@
-# Task 005: Icon System Testing and Polish
-
-## Type
-ui
+# Task 005: Replace systeme webhook with native lead webhook
 
 ## Description
-Test all icon replacements across the app and polish any visual inconsistencies. Complete Phase 1 (Developer Icons) with quality assurance.
+Replace the Systeme.io webhook handler with one that handles submissions from our own landing pages.
 
 ## Files
-- All modified components (visual testing)
-- `components/ui/icon.tsx` (potential polish)
-- `lib/icon-mapping.ts` (potential additions)
+- `app/api/webhooks/lead/route.ts` (modify — replace existing content)
+- `app/api/webhooks/systeme/route.ts` (delete)
 
 ## Requirements
-1. Visual testing of all pages with new icons
-2. Check for any broken or missing icons
-3. Verify icon sizing consistency
-4. Test responsive design with new icons
-5. Performance check (no performance degradation)
-6. Polish any visual inconsistencies
+1. Delete `app/api/webhooks/systeme/route.ts` entirely
+2. Rewrite `app/api/webhooks/lead/route.ts`:
+   - Accept POST with body: `{ name, email, landingPageId }`
+   - Validate name and email are present
+   - Look up LandingPage by ID, verify it exists and is published
+   - Get userId and serviceId from the landing page
+   - Check for duplicate submission (same email on same landing page)
+   - If duplicate: create submission with status "duplicate", return 200 with `{ duplicate: true }`
+   - Create ServiceTicket with status "new", source from landing page slug
+   - Create LandingPageSubmission record
+   - Create Subscriber record (upsert on @@unique([email, userId]) — if already subscribed, skip silently)
+   - Send confirmation email via `sendConfirmationEmail` from `lib/email.ts`
+   - Always return 200 (don't fail on email errors)
+3. Remove any `x-systeme-token` auth — landing page submissions come from our own forms
 
 ## Existing Code to Reference
-- All components modified in Tasks 1-4
-- Original lucide-react implementations for comparison
+- `app/api/webhooks/systeme/route.ts` (current webhook logic to replace)
+- `lib/email.ts` (sendConfirmationEmail)
+- `prisma/schema.prisma` (ServiceTicket and LandingPage models)
 
 ## Acceptance Criteria
-- [ ] All pages tested visually with new icons
-- [ ] No broken or missing icons found
-- [ ] Icon sizes consistent across app
-- [ ] Responsive design works with new icons
-- [ ] No performance degradation
-- [ ] All visual inconsistencies polished
-- [ ] Developer icons integration complete
+- [ ] `app/api/webhooks/systeme/route.ts` deleted
+- [ ] New lead webhook creates tickets and submissions correctly
+- [ ] Duplicate submissions handled gracefully
+- [ ] Confirmation email sent on new submission
+- [ ] Compiles without TypeScript errors
 
 ## Dependencies
-- Task 001 (Icon system)
-- Task 002 (Navigation updates)
-- Task 003 (Dashboard updates)
-- Task 004 (Auth updates)
+- Task 002, Task 003
 
 ## Commit Message
-polish: complete developer icons integration with testing and visual polish
+refactor: replace systeme webhook with native landing page lead handler

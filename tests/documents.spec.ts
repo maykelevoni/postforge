@@ -197,7 +197,7 @@ test.describe('Documents generation flow', () => {
 
     // Quote preview appears
     await expect(page.getByText('PROPOSAL')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('AI Chatbot for Dental Clinic')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'AI Chatbot for Dental Clinic' })).toBeVisible();
     await expect(page.getByText('$1,200')).toBeVisible();
     await expect(page.getByText('2 weeks')).toBeVisible();
 

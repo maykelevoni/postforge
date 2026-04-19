@@ -1,43 +1,51 @@
-# Task 015: Create Database Seeding Script for Pre-built Templates
+# Task 015: Create Subscribers page and API
 
 ## Type
+ui
 
 ## Description
-Create prisma/seed-templates.ts script to populate database with 45-90 pre-built viral templates across all 9 content categories.
+Build the Subscribers dashboard page and backing API so users can see and export their email list.
 
 ## Files
-- `prisma/seed-templates.ts` (create)
+- `app/api/subscribers/route.ts` (create)
+- `app/api/subscribers/export/route.ts` (create)
+- `app/(dashboard)/subscribers/page.tsx` (create)
 
 ## Requirements
-1. Create seeding script with pre-built viral templates
-2. Include 5-10 templates per category (Twitter, LinkedIn, Reddit, Instagram, TikTok, Email Subject, Email Body, Image Prompt, Video Prompt)
-3. Each template should have: name, category, type ("prebuilt"), template string, variables, constraints, example
-4. Templates must use proven viral copywriting frameworks
-5. Include specific viral templates from spec (e.g., "X ways to {benefit} without {pain}")
-6. Script should handle duplicate prevention
-7. Script should provide clear output on what was seeded
-8. Follow template data structure from schema
-9. Include proper error handling
+1. `GET /api/subscribers`:
+   - Auth required
+   - Query params: `landingPageId` (optional), `serviceId` (optional)
+   - Returns array of subscribers for the logged-in user with: id, name, email, source, landingPage.slug (if any), service.name (if any), createdAt
+   - Ordered by createdAt desc
+
+2. `GET /api/subscribers/export`:
+   - Auth required
+   - Same filters as above
+   - Returns CSV response with Content-Disposition: attachment header
+   - CSV columns: Name, Email, Source, Landing Page, Service, Date Joined
+
+3. `/subscribers` dashboard page:
+   - Follows existing dashboard page patterns (inline styles, dark theme, "use client" + useEffect fetch)
+   - Header: "Subscribers" title + total count badge + "Export CSV" button
+   - Filter row: dropdown for Landing Page, dropdown for Service (populated from API)
+   - Table columns: Name, Email, Source, Landing Page, Service, Date Joined
+   - Empty state if no subscribers yet
+   - Export CSV button calls `/api/subscribers/export` and triggers browser download
 
 ## Existing Code to Reference
-- `lib/seeds.ts` - Pattern for database seeding
-- Spec - Pre-built viral templates list
-- Technical plan - Template examples
+- `app/(dashboard)/services/page.tsx` (page layout and inline style patterns)
+- `app/api/services/route.ts` (API auth pattern)
+- `app/api/tickets/route.ts` (list query pattern)
 
 ## Acceptance Criteria
-- [ ] prisma/seed-templates.ts created
-- [ ] Script includes 45-90 pre-built templates
-- [ ] All 9 categories covered (5-10 templates each)
-- [ ] Templates follow viral copywriting frameworks
-- [ ] Each template has required fields (name, category, template, variables, constraints, example)
-- [ ] Script handles duplicates appropriately
-- [ ] Script provides clear output
-- [ ] Error handling implemented
-- [ ] Templates use proper variable syntax
-- [ ] Script can be run successfully
+- [ ] `/subscribers` page loads and shows subscriber list
+- [ ] Filters work (by landing page, by service)
+- [ ] Export CSV button downloads a valid CSV file
+- [ ] Empty state shown when no subscribers
+- [ ] Compiles without TypeScript errors
 
 ## Dependencies
-- Task 012 (Worker updates complete)
+- Task 002 (Subscriber model), Task 005 (subscriber creation on form submit)
 
 ## Commit Message
-feat: create database seeding script for pre-built viral templates
+feat: add subscribers page and export API

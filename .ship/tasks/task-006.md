@@ -1,36 +1,34 @@
-# Task 006: Update Database Schema for Templates
-
-## Type
+# Task 006: Update Settings page — swap Systeme.io for Resend
 
 ## Description
-Add Template and GeneratedContent models to Prisma schema and update existing ContentPiece and Newsletter models to support template-based content generation.
+Update the settings page and API to replace Systeme.io settings with Resend settings.
 
 ## Files
-- `prisma/schema.prisma` (modify)
+- `app/api/settings/route.ts` (modify)
+- `app/(dashboard)/settings/page.tsx` (modify)
+- `.env.example` (modify)
 
 ## Requirements
-1. Add Template model with fields: id, userId, name, category, type, template, variables, constraints, example, isFavorite, usageCount
-2. Add GeneratedContent model to track template usage
-3. Update ContentPiece model: add templateId and variables fields
-4. Update Newsletter model: add subjectTemplateId, bodyTemplateId, subjectVariables, bodyVariables fields
-5. Update User model: add templates and generatedContents relations
-6. Add proper indexes for performance
+1. **API route:** Remove `systeme_api_key`, `systeme_domain`, `systeme_funnel_url`, `systeme_webhook_token` from allowed settings keys. Add `resend_api_key` and `resend_from_email`.
+2. **Settings page:** Replace Systeme.io input fields with Resend fields:
+   - `resend_api_key` — text input (sensitive)
+   - `resend_from_email` — text input (e.g. "you@yourdomain.com")
+   - Remove all Systeme.io related fields
+3. **.env.example:** Remove `SYSTEME_API_KEY` line, add `RESEND_API_KEY` (as fallback/example only)
+4. Keep the same settings save/load pattern — just change the keys.
 
 ## Existing Code to Reference
-- `prisma/schema.prisma` - Existing model patterns (ContentPiece, Newsletter, User)
-- Technical plan Section 2 - Database schema specifications
+- `app/api/settings/route.ts` (current settings allowed keys)
+- `app/(dashboard)/settings/page.tsx` (current settings UI fields)
 
 ## Acceptance Criteria
-- [ ] Template model added with all required fields
-- [ ] GeneratedContent model added
-- [ ] ContentPiece model updated with template fields
-- [ ] Newsletter model updated with template fields
-- [ ] User model updated with new relations
-- [ ] Proper indexes added (userId, category, templateId)
-- [ ] Schema follows existing Prisma patterns
+- [ ] Settings page shows Resend fields, no Systeme.io fields
+- [ ] Settings save/load works correctly
+- [ ] `.env.example` updated
+- [ ] No TypeScript errors
 
 ## Dependencies
-- Task 005 (Icons complete, moving to templates)
+- None
 
 ## Commit Message
-feat: add Template and GeneratedContent models to database schema
+refactor: swap systeme.io settings for resend settings

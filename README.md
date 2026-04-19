@@ -22,14 +22,14 @@ Manage affiliate products and app ideas as promotion targets. PostForge weaves C
 Define service offerings (video scripts, social packages, newsletters, landing pages, content strategy) and manage the entire client pipeline without calls or manual writing:
 
 - **Service Catalog** — Create services with deliverables templates, price ranges, and turnaround times. Active services are automatically added as promotion targets so PostForge generates content for them.
-- **Lead Capture** — Systeme.io webhook creates a ticket automatically when a form is submitted. Auto-reply confirmation email sent immediately.
+- **Lead Capture** — Native landing page forms submit to `/api/webhooks/lead`, creating a ticket automatically. Auto-reply confirmation email sent immediately via Resend.
 - **Client Pipeline** — 5-stage kanban: New → Quoted → In Progress → Delivered → Closed. Filter by service type.
 - **AI Quote Generation** — One click generates a personalized proposal (scope, timeline, price, next steps) tailored to the client's niche.
 - **AI Deliverable Generation** — PostForge generates the actual deliverables for the client's niche. `[niche]` placeholder in your template gets replaced with the real niche at generation time.
-- **Email delivery** — Quotes and deliverables sent via Systeme.io broadcast API. No manual copy-paste.
+- **Email delivery** — Quotes and deliverables sent via Resend API. No manual copy-paste.
 
 ### Settings
-Configure API keys (OpenRouter, fal.ai, Systeme.io), posting schedules, gate mode, and platform connections.
+Configure API keys (OpenRouter, fal.ai, Resend), posting schedules, gate mode, and platform connections.
 
 ---
 
@@ -41,7 +41,7 @@ Configure API keys (OpenRouter, fal.ai, Systeme.io), posting schedules, gate mod
 | Auth | Auth.js v5 (credentials + Google OAuth) |
 | Database | PostgreSQL via Prisma ORM |
 | AI | OpenRouter (text) + fal.ai (images) |
-| Email / Funnels | Systeme.io broadcast API |
+| Email | Resend API |
 | Worker | Node.js background worker (tsx watch) |
 | Testing | Playwright |
 
@@ -84,7 +84,6 @@ NEXTAUTH_URL=http://localhost:3000
 # Optional — needed for AI features
 OPENROUTER_API_KEY=sk-or-...
 FAL_KEY=...
-SYSTEME_API_KEY=...
 ```
 
 ---
@@ -114,14 +113,13 @@ Test files live in `tests/`:
 
 ---
 
-## Webhook integration (Systeme.io)
+## Lead capture webhook
 
-To capture leads automatically:
+PostForge landing pages submit leads to the built-in webhook automatically:
 
-1. Create a form on Systeme.io with fields: `niche`, `service`, `message`
-2. Set the webhook URL to `https://your-domain.com/api/webhooks/systeme`
-3. Add a `x-systeme-token` header matching `systeme_webhook_token` in Settings
-4. On form submit → ticket created in PostForge + confirmation email sent to lead
+- Endpoint: `POST /api/webhooks/lead`
+- Payload: `{ name, email, niche, serviceId, message }`
+- On submit → Subscriber created or updated, ServiceTicket created, confirmation email sent via Resend
 
 ---
 
@@ -133,7 +131,7 @@ app/
   api/
     services/          — service CRUD
     tickets/           — ticket management + quote/delivery actions
-    webhooks/systeme/  — lead capture endpoint
+    webhooks/lead/     — lead capture endpoint
   (auth)/              — sign-in, register pages
 
 components/

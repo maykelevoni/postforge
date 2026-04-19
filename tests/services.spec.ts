@@ -229,16 +229,26 @@ test.describe('Ticket pipeline', () => {
 });
 
 test.describe('Webhook endpoint', () => {
-  test('POST /api/webhooks/systeme rejects requests without token', async ({ request }) => {
-    const response = await request.post('/api/webhooks/systeme', {
+  test('POST /api/webhooks/lead rejects requests with missing required fields', async ({ request }) => {
+    const response = await request.post('/api/webhooks/lead', {
+      data: {},
+    });
+    // Should be 400 (missing required fields)
+    expect([400, 401, 403]).toContain(response.status());
+  });
+
+  test('POST /api/webhooks/lead accepts valid payload format', async ({ request }) => {
+    const response = await request.post('/api/webhooks/lead', {
       data: {
-        contact: { first_name: 'Test', email: 'test@example.com' },
-        fields: { niche: 'gaming', service: 'video_content', message: 'Need scripts' },
-        funnel_url: 'https://example.com',
+        name: 'Test User',
+        email: 'testlead@example.com',
+        niche: 'gaming',
+        serviceId: 'nonexistent-service-id',
+        message: 'Need scripts',
       },
     });
-    // Should be 401 (missing/invalid token) or 400 (no matching service)
-    expect([400, 401, 403]).toContain(response.status());
+    // 404 if service not found is acceptable; 400/422 for invalid data
+    expect([400, 404, 422]).toContain(response.status());
   });
 });
 

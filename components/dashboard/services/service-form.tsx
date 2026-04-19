@@ -393,10 +393,10 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
                 type="url"
                 value={formData.funnelUrl}
                 onChange={(e) => handleChange("funnelUrl", e.target.value)}
-                placeholder="https://systeme.io/..."
+                placeholder="https://example.com/your-landing-page"
                 style={inputStyle}
               />
-              <div style={hintStyle}>Link to your Systeme.io landing page</div>
+              <div style={hintStyle}>Link to your landing page (optional)</div>
             </div>
           </div>
 

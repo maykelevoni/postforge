@@ -1,3 +1,12 @@
+export interface LandingPageData {
+  id: string;
+  slug: string;
+  template: string;
+  variables: string; // JSON string
+  sections: string; // JSON string
+  status: string;
+}
+
 export interface Service {
   id: string;
   name: string;
@@ -9,6 +18,7 @@ export interface Service {
   turnaroundDays: number;
   funnelUrl: string | null;
   status: string;
+  ownedLandingPage?: LandingPageData | null;
   _count?: {
     tickets: number;
   };

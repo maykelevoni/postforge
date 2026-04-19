@@ -1,42 +1,37 @@
-# Task 003: Update Dashboard Card Components with New Icons
-
-## Type
-ui
+# Task 003: Install Resend and create lib/email.ts
 
 ## Description
-Replace lucide-react icons in all dashboard card components (content, promote, services, discover, research, today pages).
+Replace Systeme.io email service with Resend. Create a new email service module with the same function signatures.
 
 ## Files
-- `components/dashboard/content/content-piece-card.tsx` (modify)
-- `components/dashboard/promote/promotion-card.tsx` (modify)
-- `components/dashboard/services/service-card.tsx` (modify)
-- `components/dashboard/discover/app-idea-card.tsx` (modify)
-- `components/dashboard/research/topic-card.tsx` (modify)
-- `components/dashboard/today/queue-card.tsx` (modify)
-- `components/dashboard/today/research-feed.tsx` (modify)
-- `components/dashboard/today/promotion-card.tsx` (modify)
+- `lib/email.ts` (create)
+- `package.json` (modify — add resend dependency)
 
 ## Requirements
-1. Remove lucide-react imports from all dashboard card components
-2. Import Icon component from components/ui/icon
-3. Replace icon usage with Icon component using icon mapping
-4. Maintain existing icon sizes and colors
-5. Test all dashboard pages for visual consistency
+1. Install `resend` package
+2. Create `lib/email.ts` with these functions (matching systeme.ts interface):
+   - `sendConfirmationEmail(ticket)` — sends welcome email via Resend
+   - `sendQuoteEmail(ticket)` — sends quote via Resend
+   - `sendDeliveryEmail(ticket)` — sends deliverables via Resend
+   - `sendNewsletter(newsletter)` — sends newsletter via Resend, updates DB status
+3. Each function reads `resend_api_key` and `resend_from_email` from user's DB settings
+4. Uses `new Resend(apiKey)` client, calls `resend.emails.send({ from, to, subject, html })`
+5. HTML email body (not plain text) for better formatting
+6. Error handling: catch Resend errors, log, and throw with descriptive message
+7. Newsletter function updates DB status to "sent" or "failed"
 
 ## Existing Code to Reference
-- `lib/icon-mapping.ts` - Icon name mapping reference
-- `components/layout/nav-item.tsx` - Pattern for Icon component usage
+- `worker/posting/systeme.ts` (function signatures, email body templates to reuse)
+- `lib/settings.ts` (getSetting pattern)
 
 ## Acceptance Criteria
-- [ ] No lucide-react imports in dashboard card components
-- [ ] Icon component used in all 8 card files
-- [ ] All icons render correctly across dashboard pages
-- [ ] Icon sizes and colors match previous appearance
-- [ ] No visual regression in any dashboard page
+- [ ] `lib/email.ts` exports all 4 email functions
+- [ ] Functions read Resend settings from DB
+- [ ] Newsletter status updates correctly on success/failure
+- [ ] Code compiles without TypeScript errors
 
 ## Dependencies
-- Task 001 (Icon system must exist)
-- Task 002 (Navigation pattern established)
+- None
 
 ## Commit Message
-feat: update dashboard card components to use new icon component system
+feat: add resend email service replacing systeme.io

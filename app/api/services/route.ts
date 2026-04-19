@@ -17,6 +17,16 @@ export async function GET(req: Request) {
       _count: {
         select: { tickets: true },
       },
+      ownedLandingPage: {
+        select: {
+          id: true,
+          slug: true,
+          template: true,
+          variables: true,
+          sections: true,
+          status: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

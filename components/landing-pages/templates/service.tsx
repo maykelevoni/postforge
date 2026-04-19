@@ -53,18 +53,18 @@ export default function ServiceTemplate({
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans antialiased">
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .orange-gradient-text {
           background: linear-gradient(to right, #f97316, #ef4444);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
-      `}</style>
+      ` }} />
 
       {/* Sticky Nav */}
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
           <span className="text-base font-bold text-gray-900">{serviceName}</span>
           <a
             href="#cta"
@@ -77,12 +77,12 @@ export default function ServiceTemplate({
 
       {/* Hero */}
       {sections.hero && (
-        <section className="py-20 px-6 text-center bg-white">
+        <section className="py-12 px-4 text-center bg-white sm:py-20 sm:px-6">
           <div className="mx-auto max-w-4xl">
             <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-orange-500">
               {serviceName}
             </p>
-            <h1 className="mb-6 text-5xl font-extrabold leading-tight text-gray-900 md:text-6xl">
+            <h1 className="mb-6 text-3xl font-extrabold leading-tight text-gray-900 sm:text-5xl md:text-6xl">
               <span className="orange-gradient-text">{title.split(" ")[0]}</span>{" "}
               {title.split(" ").slice(1).join(" ")}
             </h1>
@@ -105,8 +105,8 @@ export default function ServiceTemplate({
       )}
 
       {/* Social Proof Bar */}
-      <div className="border-y border-gray-100 bg-gray-50 py-4 px-6">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-8 text-sm font-medium text-gray-600">
+      <div className="border-y border-gray-100 bg-gray-50 py-4 px-4 sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-4 text-sm font-medium text-gray-600 sm:gap-8">
           <span>✓ 500+ clients served</span>
           <span className="text-amber-500">★★★★★ 4.9/5 rating</span>
           <span>🔒 100% Satisfaction guarantee</span>
@@ -115,7 +115,7 @@ export default function ServiceTemplate({
 
       {/* Benefits */}
       {sections.features && benefits.length > 0 && (
-        <section id="features" className="py-20 px-6">
+        <section id="features" className="py-12 px-4 sm:py-20 sm:px-6">
           <div className="mx-auto max-w-4xl">
             <h2 className="mb-3 text-center text-3xl font-bold text-gray-900">
               Why choose {serviceName}
@@ -153,8 +153,8 @@ export default function ServiceTemplate({
 
       {/* Testimonial (single) */}
       {testimonialName && testimonialQuote && (
-        <section className="bg-gray-50 py-16 px-6">
-          <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-md">
+        <section className="bg-gray-50 py-10 px-4 sm:py-16 sm:px-6">
+          <div className="mx-auto max-w-2xl rounded-2xl bg-white p-5 shadow-md sm:p-8">
             <div className="mb-3 text-amber-400">★★★★★</div>
             <p className="mb-5 text-base italic leading-relaxed text-gray-600">
               &ldquo;{testimonialQuote}&rdquo;
@@ -183,15 +183,15 @@ export default function ServiceTemplate({
       {sections.cta && (
         <section
           id="cta"
-          className="py-20 px-6 text-center text-white"
+          className="py-12 px-4 text-center text-white sm:py-20 sm:px-6"
           style={{ background: "linear-gradient(135deg, #f97316, #ef4444)" }}
         >
           <div className="mx-auto max-w-2xl">
-            <h2 className="mb-3 text-4xl font-extrabold">{ctaText}</h2>
+            <h2 className="mb-3 text-2xl font-extrabold sm:text-3xl md:text-4xl">{ctaText}</h2>
             <p className="mb-8 text-white/80">
               Ready to get started? Fill in your details below.
             </p>
-            <div className="mx-auto max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+            <div className="mx-auto max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-8">
               <LeadForm landingPageId={landingPageId} variant="light" />
             </div>
           </div>

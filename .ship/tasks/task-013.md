@@ -1,49 +1,37 @@
-# Task 013: Create Templates Page and Core Components
-
-## Type
-ui
+# Task 013: Clean up — remove remaining Systeme.io references
 
 ## Description
-Create the main /templates page with platform tabs, template gallery, and template card components for browsing and selecting templates.
+Remove all remaining Systeme.io references: middleware, env, tests, README, and delete systeme.ts.
 
 ## Files
-- `app/(dashboard)/templates/page.tsx` (create)
-- `components/dashboard/templates/platform-tabs.tsx` (create)
-- `components/dashboard/templates/template-filters.tsx` (create)
-- `components/dashboard/templates/template-gallery.tsx` (create)
-- `components/dashboard/templates/template-card.tsx` (create)
+- `worker/posting/systeme.ts` (delete)
+- `middleware.ts` (modify)
+- `.env.example` (modify)
+- `.env` (modify)
+- `README.md` (modify)
+- `tests/services.spec.ts` (modify)
 
 ## Requirements
-1. Create /templates page with two-panel layout (platform tabs + gallery)
-2. Platform tabs component for filtering by category
-3. Template filters component (search, type filter, favorites)
-4. Template gallery component to display template cards
-5. Template card component showing name, example, variables count, favorite button
-6. All components use inline styles (no Tailwind)
-7. Proper state management (useState, useEffect)
-8. Fetch templates from API
-9. Handle loading and error states
-10. Responsive design
+1. **Delete** `worker/posting/systeme.ts` entirely (functionality replaced by `lib/email.ts`)
+2. **middleware.ts:** If `/api/webhooks/systeme` is in public paths, remove it. Keep `/api/webhooks/lead` public.
+3. **.env.example:** Remove `SYSTEME_API_KEY`, add `RESEND_API_KEY=` and `RESEND_FROM_EMAIL=`
+4. **.env:** Update with new keys (don't touch actual values, just add the new lines)
+5. **README.md:** Update documentation to reflect Resend instead of Systeme.io for email. Update landing page section.
+6. **tests/services.spec.ts:** Update webhook test to point to new `/api/webhooks/lead` endpoint with new payload format.
 
 ## Existing Code to Reference
-- `app/(dashboard)/services/page.tsx` - Pattern for dashboard pages
-- `components/dashboard/promote/promotion-card.tsx` - Pattern for card components
-- Technical plan - Templates page specifications
+- All listed files
 
 ## Acceptance Criteria
-- [ ] /templates page created with two-panel layout
-- [ ] Platform tabs component filters by category
-- [ ] Template filters component supports search and filtering
-- [ ] Template gallery displays templates in grid
-- [ ] Template card shows name, example, variables, favorite button
-- [ ] All components use inline styles
-- [ ] Templates fetched from API successfully
-- [ ] Loading and error states handled
-- [ ] Responsive design works on mobile
-- [ ] Page navigation functional
+- [ ] `worker/posting/systeme.ts` deleted
+- [ ] No remaining references to `systeme` in any source files (except comments/docs)
+- [ ] `.env.example` has correct Resend keys
+- [ ] README updated
+- [ ] Tests updated
+- [ ] TypeScript compiles
 
 ## Dependencies
-- Task 011 (Template CRUD API routes)
+- Task 004, Task 005, Task 006
 
 ## Commit Message
-feat: create templates page with core components
+chore: remove all remaining systeme.io references

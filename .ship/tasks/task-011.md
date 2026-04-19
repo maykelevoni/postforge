@@ -1,46 +1,38 @@
-# Task 011: Create Template Action and Generation API Routes
-
-## Type
+# Task 011: Create landing page renderer route
 
 ## Description
-Create API routes for template actions (favorite, use) and template-based content generation (from-template endpoint).
+Create the dynamic route that renders landing pages at `/l/[slug]`. Server component that reads the DB and renders the correct template.
 
 ## Files
-- `app/api/templates/[id]/favorite/route.ts` (create)
-- `app/api/templates/[id]/use/route.ts` (create)
-- `app/api/generate/from-template/route.ts` (create)
+- `app/(landing)/l/[slug]/page.tsx` (create)
 
 ## Requirements
-1. POST /api/templates/[id]/favorite - Toggle template favorite status
-2. POST /api/templates/[id]/use - Increment template usage counter
-3. POST /api/generate/from-template - Generate content using template
-4. Generation endpoint should accept: templateId, variables, productInfo
-5. Generation endpoint should return: content, validation, warnings
-6. All routes require auth() session check
-7. All routes follow existing API patterns
-8. Proper error handling and status codes
-9. Generation should use template service layer
+1. Server component (no `"use client"`)
+2. Receives `params: { slug: string }`
+3. Query DB: `LandingPage.findUnique({ where: { slug }, include: { service: true } })`
+4. If not found or status !== "published" → return 404
+5. Parse `variables` and `sections` JSON
+6. Render the correct template based on `page.template`:
+   - `"saas"` → import Saas template
+   - `"service"` → import Service template
+   - `"lead_magnet"` → import LeadMagnet template
+7. Pass landingPageId, variables, and sections to the template
+8. Set proper page metadata (title, description from variables)
+9. Handle errors gracefully
 
 ## Existing Code to Reference
-- `app/api/templates/[id]/route.ts` - Pattern for template routes
-- `lib/templates.ts` - Template service functions
-- `app/api/content/route.ts` - Pattern for generation endpoints
+- `app/(dashboard)/services/page.tsx` (for DB query patterns)
+- `app/(landing)/l/[slug]/layout.tsx` (from Task 001)
 
 ## Acceptance Criteria
-- [ ] app/api/templates/[id]/favorite/route.ts created
-- [ ] app/api/templates/[id]/use/route.ts created
-- [ ] app/api/generate/from-template/route.ts created
-- [ ] Favorite route toggles isFavorite status
-- [ ] Use route increments usageCount
-- [ ] Generation route accepts templateId, variables, productInfo
-- [ ] Generation route returns content with validation
-- [ ] All routes use auth() for session check
-- [ ] All routes have proper error handling
-- [ ] Status codes appropriate for each response
+- [ ] `/l/[slug]` renders the correct template for published pages
+- [ ] Unpublished/non-existent slugs return 404
+- [ ] Page metadata set correctly
+- [ ] No client-side rendering flicker
+- [ ] Works without JavaScript (form degrades gracefully)
 
 ## Dependencies
-- Task 010 (Template CRUD API routes)
-- Task 009 (AI library template support)
+- Task 001, Task 002, Task 009, Task 010
 
 ## Commit Message
-feat: create template action and generation API routes
+feat: create dynamic landing page renderer route
