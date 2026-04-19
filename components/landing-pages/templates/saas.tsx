@@ -10,14 +10,18 @@ export interface LandingPageVariables {
   subtitle: string;
   ctaText: string;
   features: string[];
-  testimonials?: { name: string; text: string }[];
+  testimonials?: { name: string; quote: string; role?: string }[];
+  steps?: { title: string; description: string }[];
+  faqs?: { question: string; answer: string }[];
 }
 
 export interface LandingPageSections {
   hero: boolean;
   features: boolean;
-  testimonials: boolean;
+  testimonial: boolean;
   cta: boolean;
+  howItWorks: boolean;
+  faq: boolean;
 }
 
 interface SaasTemplateProps {
@@ -76,10 +80,20 @@ export default function SaasTemplate({
     ctaText = "Get started for free",
     features = [],
     testimonials = [],
+    steps = [],
+    faqs = [],
   } = variables;
+
+  const validSteps = steps.filter((s) => s.title.trim() !== "");
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-gray-950 text-gray-200 antialiased">
+      <style dangerouslySetInnerHTML={{ __html: `
+        details summary { list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
+        details[open] .saas-faq-chevron { transform: rotate(180deg); }
+        .saas-faq-chevron { transition: transform 0.2s ease; display: inline-block; }
+      ` }} />
 
       {/* ── Page illustration (verbatim from Cruip page-illustration.tsx) ── */}
       <div className="pointer-events-none absolute left-1/2 top-0 -z-10 -translate-x-1/4" aria-hidden="true">
@@ -215,8 +229,43 @@ export default function SaasTemplate({
           </section>
         )}
 
+        {/* ── How It Works ── */}
+        {sections.howItWorks && validSteps.length > 0 && (
+          <section id="how-it-works" className="relative">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="border-t py-12 md:py-20" style={{ borderImage: "linear-gradient(to right, transparent, rgba(148,163,184,0.25), transparent) 1" }}>
+                <div className="mx-auto max-w-3xl pb-4 text-center md:pb-12">
+                  <div className="inline-flex items-center gap-3 pb-3 before:h-px before:w-8 before:bg-gradient-to-r before:from-transparent before:to-indigo-200/50 after:h-px after:w-8 after:bg-gradient-to-l after:from-transparent after:to-indigo-200/50">
+                    <span className="inline-flex bg-gradient-to-r from-indigo-500 to-indigo-200 bg-clip-text text-transparent">
+                      Process
+                    </span>
+                  </div>
+                  <h2 className="cruip-gradient-text pb-4 text-2xl font-semibold sm:text-3xl md:text-4xl" style={{ letterSpacing: "-0.027em" }}>
+                    How it works
+                  </h2>
+                  <p className="text-lg text-indigo-200/65">Simple steps to get you started.</p>
+                </div>
+                <div className="mx-auto grid max-w-sm gap-12 sm:max-w-none sm:grid-cols-3">
+                  {steps.map((s, i) => {
+                    if (!s.title.trim()) return null;
+                    return (
+                      <div key={i} className="flex flex-col items-center text-center">
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-indigo-300" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+                          {i + 1}
+                        </div>
+                        <h3 className="mb-1 text-[1rem] font-semibold text-gray-200">{s.title}</h3>
+                        {s.description && <p className="text-indigo-200/65">{s.description}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── Testimonials — verbatim from Cruip testimonials.tsx ── */}
-        {sections.testimonials && testimonials.length > 0 && (
+        {sections.testimonial && testimonials.length > 0 && (
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="border-t py-12 md:py-20" style={{ borderImage: "linear-gradient(to right, transparent, rgba(148,163,184,0.25), transparent) 1" }}>
               <div className="mx-auto max-w-3xl pb-12 text-center">
@@ -229,7 +278,7 @@ export default function SaasTemplate({
               </div>
 
               <div className="mx-auto grid max-w-sm items-start gap-6 sm:max-w-none sm:grid-cols-2 lg:grid-cols-3">
-                {testimonials.map((t: { name: string; text: string }, i: number) => (
+                {testimonials.map((t: { name: string; quote: string; role?: string }, i: number) => (
                   <article
                     key={i}
                     className="relative rounded-2xl p-5 backdrop-blur-sm"
@@ -240,7 +289,7 @@ export default function SaasTemplate({
                   >
                     <div className="flex flex-col gap-4">
                       <p className="text-indigo-200/65">
-                        &ldquo;{t.text}&rdquo;
+                        &ldquo;{t.quote}&rdquo;
                       </p>
                       <div className="flex items-center gap-3">
                         <div
@@ -249,12 +298,45 @@ export default function SaasTemplate({
                         >
                           {t.name.split(" ").slice(0, 2).map((n: string) => n[0]).join("").toUpperCase()}
                         </div>
-                        <div className="text-sm font-medium text-gray-200">
-                          {t.name}
+                        <div>
+                          <div className="text-sm font-medium text-gray-200">{t.name}</div>
+                          {t.role && <div className="text-xs text-indigo-200/50">{t.role}</div>}
                         </div>
                       </div>
                     </div>
                   </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── FAQ ── */}
+        {sections.faq && faqs.length > 0 && (
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="border-t py-12 md:py-20" style={{ borderImage: "linear-gradient(to right, transparent, rgba(148,163,184,0.25), transparent) 1" }}>
+              <div className="mx-auto max-w-3xl pb-12 text-center">
+                <h2 className="cruip-gradient-text pb-4 text-2xl font-semibold sm:text-3xl md:text-4xl" style={{ letterSpacing: "-0.027em" }}>
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-lg text-indigo-200/65">Everything you need to know.</p>
+              </div>
+              <div className="mx-auto max-w-3xl">
+                {faqs.map((f, i) => (
+                  <details
+                    key={i}
+                    style={{ borderBottom: "1px solid rgba(55,65,81,0.6)" }}
+                  >
+                    <summary className="flex cursor-pointer items-center justify-between py-4 font-medium text-gray-200 hover:text-indigo-300 transition-colors">
+                      {f.question}
+                      <span className="saas-faq-chevron ml-4 shrink-0 text-gray-600">
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    </summary>
+                    <div className="pb-5 text-indigo-200/65">{f.answer}</div>
+                  </details>
                 ))}
               </div>
             </div>
@@ -286,7 +368,7 @@ export default function SaasTemplate({
                     {ctaText}
                   </h2>
                   <div className="mx-auto max-w-sm">
-                    <LeadForm landingPageId={landingPageId} variant="dark" />
+                    <LeadForm landingPageId={landingPageId} variant="dark" ctaText={ctaText} />
                   </div>
                 </div>
               </div>

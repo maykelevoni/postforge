@@ -11,12 +11,18 @@ export interface LandingPageVariables {
   benefits?: string[];
   urgencyText?: string;
   features?: string[];
+  testimonials?: { name: string; quote: string; role?: string }[];
+  steps?: { title: string; description: string }[];
+  faqs?: { question: string; answer: string }[];
 }
 
 export interface LandingPageSections {
   hero: boolean;
   benefits: boolean;
   cta: boolean;
+  testimonial: boolean;
+  howItWorks: boolean;
+  faq: boolean;
 }
 
 interface LeadMagnetTemplateProps {
@@ -42,10 +48,13 @@ export default function LeadMagnetTemplate({
     ctaText = "Send me the guide",
     benefits = [],
     features = [],
+    testimonials = [],
+    steps = [],
+    faqs = [],
   } = variables;
 
-  // Support both `features` and `benefits` as the bullet list source
   const bulletItems = features.length > 0 ? features : benefits;
+  const validSteps = steps.filter((s) => s.title.trim() !== "");
 
   return (
     <div className="min-h-screen bg-[#0d0d14] text-white font-sans antialiased">
@@ -56,6 +65,10 @@ export default function LeadMagnetTemplate({
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
+        details summary { list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
+        details[open] .lm-faq-chevron { transform: rotate(180deg); }
+        .lm-faq-chevron { transition: transform 0.2s ease; display: inline-block; }
       ` }} />
 
       {/* Nav */}
@@ -68,46 +81,32 @@ export default function LeadMagnetTemplate({
       {/* Hero */}
       {sections.hero && (
         <section className="relative overflow-hidden py-14 px-4 text-center sm:py-24 sm:px-6">
-          {/* Background glows */}
           <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
             <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-rose-600/20 blur-3xl" />
             <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-purple-600/15 blur-3xl" />
           </div>
 
           <div className="mx-auto max-w-3xl">
-            {/* Badge */}
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-4 py-1.5 text-sm font-semibold uppercase tracking-widest text-rose-300">
               <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
               Free Download
             </div>
 
-            {/* Headline */}
             <h1 className="rose-gradient-text mb-6 text-3xl font-extrabold leading-tight sm:text-5xl md:text-6xl">
               {title}
             </h1>
 
-            {/* Subtitle */}
             <p className="mx-auto mb-10 max-w-xl text-xl leading-relaxed text-gray-400">
               {subtitle}
             </p>
 
-            {/* Scroll-down arrow */}
             <a
               href="#cta"
               className="inline-flex items-center gap-2 text-sm text-rose-400 transition hover:text-rose-300"
             >
               <span>Get instant access</span>
-              <svg
-                className="h-4 w-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 3a.75.75 0 0 1 .75.75v10.19l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3.75A.75.75 0 0 1 10 3Z"
-                  clipRule="evenodd"
-                />
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v10.19l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3.75A.75.75 0 0 1 10 3Z" clipRule="evenodd" />
               </svg>
             </a>
           </div>
@@ -125,21 +124,99 @@ export default function LeadMagnetTemplate({
               {bulletItems.map((item: string, i: number) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-500/20">
-                    <svg
-                      className="h-3.5 w-3.5 text-rose-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.704 5.296a1 1 0 0 1 0 1.414l-8 8a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L8 12.586l7.296-7.29a1 1 0 0 1 1.408.006Z"
-                        clipRule="evenodd"
-                      />
+                    <svg className="h-3.5 w-3.5 text-rose-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M16.704 5.296a1 1 0 0 1 0 1.414l-8 8a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L8 12.586l7.296-7.29a1 1 0 0 1 1.408.006Z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <p className="text-sm leading-relaxed text-gray-300">{item}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* How It Works */}
+      {sections.howItWorks && validSteps.length > 0 && (
+        <section className="py-10 px-4 sm:py-16 sm:px-6">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="mb-3 text-center text-2xl font-bold text-white">How it works</h2>
+            <p className="mb-10 text-center text-gray-500">Three simple steps to get started.</p>
+            <div className="grid gap-8 sm:grid-cols-3">
+              {steps.map((s, i) => {
+                if (!s.title.trim()) return null;
+                return (
+                  <div key={i} className="flex flex-col items-center text-center">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/20 text-lg font-extrabold text-rose-400 ring-1 ring-rose-500/30">
+                      {i + 1}
+                    </div>
+                    <h3 className="mb-2 text-base font-semibold text-white">{s.title}</h3>
+                    {s.description && (
+                      <p className="text-sm leading-relaxed text-gray-400">{s.description}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Testimonials */}
+      {sections.testimonial && testimonials.length > 0 && (
+        <section className="py-10 px-4 sm:py-16 sm:px-6">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="mb-8 text-center text-2xl font-bold text-white">What people say</h2>
+            <div className={`grid gap-6 ${testimonials.length === 1 ? "max-w-md mx-auto" : "sm:grid-cols-2"}`}>
+              {testimonials.map((t, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl p-5 backdrop-blur-sm"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <div className="mb-3 text-rose-400">★★★★★</div>
+                  <p className="mb-4 text-sm italic leading-relaxed text-gray-300">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-500/20 text-xs font-bold text-rose-300">
+                      {t.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{t.name}</p>
+                      {t.role && <p className="text-xs text-gray-500">{t.role}</p>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAQ */}
+      {sections.faq && faqs.length > 0 && (
+        <section className="py-10 px-4 sm:py-16 sm:px-6">
+          <div className="mx-auto max-w-2xl">
+            <h2 className="mb-3 text-center text-2xl font-bold text-white">
+              Frequently Asked Questions
+            </h2>
+            <p className="mb-10 text-center text-gray-500">Everything you need to know.</p>
+            <div className="overflow-hidden rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+              {faqs.map((f, i) => (
+                <details
+                  key={i}
+                  className="group"
+                  style={{ borderBottom: i < faqs.length - 1 ? "1px solid rgba(255,255,255,0.06)" : undefined }}
+                >
+                  <summary className="flex cursor-pointer items-center justify-between px-6 py-4 font-medium text-white hover:text-rose-300 transition-colors">
+                    {f.question}
+                    <span className="lm-faq-chevron ml-4 shrink-0 text-gray-500">
+                      <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <div className="px-6 pb-5 text-sm leading-relaxed text-gray-400">{f.answer}</div>
+                </details>
               ))}
             </div>
           </div>
@@ -154,7 +231,7 @@ export default function LeadMagnetTemplate({
             <p className="mb-6 text-sm text-gray-500">
               Free. No spam. Unsubscribe anytime.
             </p>
-            <LeadForm landingPageId={landingPageId} variant="light" />
+            <LeadForm landingPageId={landingPageId} variant="light" ctaText={ctaText} />
           </div>
         </section>
       )}

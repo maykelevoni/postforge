@@ -6,14 +6,30 @@ import { LandingPageData } from "./types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+interface Testimonial {
+  name: string;
+  quote: string;
+  role: string;
+}
+
+interface Step {
+  title: string;
+  description: string;
+}
+
+interface Faq {
+  question: string;
+  answer: string;
+}
+
 interface TemplateVariables {
   title: string;
   subtitle: string;
   features: string[];
   ctaText: string;
-  testimonialName: string;
-  testimonialQuote: string;
-  testimonialRole: string;
+  testimonials: Testimonial[];
+  steps: Step[];
+  faqs: Faq[];
 }
 
 interface SectionToggles {
@@ -21,7 +37,8 @@ interface SectionToggles {
   features: boolean;
   testimonial: boolean;
   cta: boolean;
-  logoGrid: boolean;
+  howItWorks: boolean;
+  faq: boolean;
 }
 
 interface LandingPageModalProps {
@@ -39,13 +56,13 @@ const TEMPLATES = [
   {
     id: "saas",
     label: "SaaS",
-    description: "Hero + features grid + testimonial + CTA. Best for software products.",
+    description: "Hero + features grid + testimonials + CTA. Best for software products.",
     icon: "⚡",
   },
   {
     id: "service",
     label: "Service",
-    description: "Hero + business categories + features list + CTA. Best for agencies.",
+    description: "Hero + benefits + How It Works + FAQ + CTA. Best for agencies.",
     icon: "🛠",
   },
   {
@@ -143,6 +160,16 @@ const sectionLabelStyle: React.CSSProperties = {
   marginBottom: "16px",
 };
 
+const subSectionLabelStyle: React.CSSProperties = {
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "#666",
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  marginBottom: "10px",
+  marginTop: "4px",
+};
+
 const templateGridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr 1fr",
@@ -190,11 +217,11 @@ const textareaStyle: React.CSSProperties = {
   lineHeight: "1.5",
 };
 
-const featureRowStyle: React.CSSProperties = {
+const rowStyle: React.CSSProperties = {
   display: "flex",
   gap: "8px",
   marginBottom: "8px",
-  alignItems: "center",
+  alignItems: "flex-start",
 };
 
 const removeButtonStyle: React.CSSProperties = {
@@ -206,9 +233,10 @@ const removeButtonStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   flexShrink: 0,
+  marginTop: "2px",
 };
 
-const addFeatureButtonStyle: React.CSSProperties = {
+const addButtonStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: "6px",
@@ -333,7 +361,29 @@ const errorStyle: React.CSSProperties = {
   marginTop: "8px",
 };
 
+const stepBadgeStyle: React.CSSProperties = {
+  flexShrink: 0,
+  width: "24px",
+  height: "24px",
+  borderRadius: "50%",
+  backgroundColor: "#1a1a2e",
+  border: "1px solid #333",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "11px",
+  fontWeight: "700",
+  color: "#6366f1",
+  marginTop: "9px",
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const DEFAULT_STEPS: Step[] = [
+  { title: "", description: "" },
+  { title: "", description: "" },
+  { title: "", description: "" },
+];
 
 function defaultVariables(): TemplateVariables {
   return {
@@ -341,9 +391,9 @@ function defaultVariables(): TemplateVariables {
     subtitle: "",
     features: [""],
     ctaText: "Get Started",
-    testimonialName: "",
-    testimonialQuote: "",
-    testimonialRole: "",
+    testimonials: [],
+    steps: DEFAULT_STEPS,
+    faqs: [],
   };
 }
 
@@ -353,7 +403,8 @@ function defaultSections(): SectionToggles {
     features: true,
     testimonial: false,
     cta: true,
-    logoGrid: false,
+    howItWorks: true,
+    faq: false,
   };
 }
 
@@ -367,9 +418,11 @@ function parseVariables(raw: string): TemplateVariables {
         ? parsed.features
         : [""],
       ctaText: parsed.ctaText ?? "Get Started",
-      testimonialName: parsed.testimonialName ?? "",
-      testimonialQuote: parsed.testimonialQuote ?? "",
-      testimonialRole: parsed.testimonialRole ?? "",
+      testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : [],
+      steps: Array.isArray(parsed.steps) && parsed.steps.length === 3
+        ? parsed.steps
+        : DEFAULT_STEPS,
+      faqs: Array.isArray(parsed.faqs) ? parsed.faqs : [],
     };
   } catch {
     return defaultVariables();
@@ -382,14 +435,25 @@ function parseSections(raw: string): SectionToggles {
     return {
       hero: parsed.hero ?? true,
       features: parsed.features ?? true,
-      testimonial: parsed.testimonial ?? false,
+      // support legacy "testimonials" (plural) key from old data
+      testimonial: parsed.testimonial ?? parsed.testimonials ?? false,
       cta: parsed.cta ?? true,
-      logoGrid: parsed.logoGrid ?? false,
+      howItWorks: parsed.howItWorks ?? true,
+      faq: parsed.faq ?? false,
     };
   } catch {
     return defaultSections();
   }
 }
+
+const SECTION_LABELS: Record<keyof SectionToggles, string> = {
+  hero: "Hero",
+  features: "Features",
+  testimonial: "Testimonials",
+  cta: "CTA Form",
+  howItWorks: "How It Works",
+  faq: "FAQ",
+};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -403,7 +467,6 @@ export default function LandingPageModal({
 }: LandingPageModalProps) {
   const isEditMode = !!existingPage;
 
-  // Step state — "template" | "editor" (only in create mode)
   const [step, setStep] = useState<"template" | "editor">(
     isEditMode ? "editor" : "template"
   );
@@ -425,7 +488,6 @@ export default function LandingPageModal({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Prefill title with service name on first open in create mode
   useEffect(() => {
     if (!isEditMode && variables.title === "") {
       setVariables((prev) => ({ ...prev, title: serviceName }));
@@ -443,22 +505,57 @@ export default function LandingPageModal({
     setVariables((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Features
   const setFeature = (index: number, value: string) => {
     const updated = [...variables.features];
     updated[index] = value;
     setVariables((prev) => ({ ...prev, features: updated }));
   };
-
-  const addFeature = () => {
-    setVariables((prev) => ({ ...prev, features: [...prev.features, ""] }));
-  };
-
+  const addFeature = () => setVariables((prev) => ({ ...prev, features: [...prev.features, ""] }));
   const removeFeature = (index: number) => {
     const updated = variables.features.filter((_, i) => i !== index);
+    setVariables((prev) => ({ ...prev, features: updated.length > 0 ? updated : [""] }));
+  };
+
+  // Testimonials
+  const setTestimonial = (index: number, field: keyof Testimonial, value: string) => {
+    const updated = variables.testimonials.map((t, i) =>
+      i === index ? { ...t, [field]: value } : t
+    );
+    setVariables((prev) => ({ ...prev, testimonials: updated }));
+  };
+  const addTestimonial = () => {
+    if (variables.testimonials.length >= 5) return;
     setVariables((prev) => ({
       ...prev,
-      features: updated.length > 0 ? updated : [""],
+      testimonials: [...prev.testimonials, { name: "", quote: "", role: "" }],
     }));
+  };
+  const removeTestimonial = (index: number) => {
+    setVariables((prev) => ({
+      ...prev,
+      testimonials: prev.testimonials.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Steps (always exactly 3)
+  const setStep_ = (index: number, field: keyof Step, value: string) => {
+    const updated = variables.steps.map((s, i) =>
+      i === index ? { ...s, [field]: value } : s
+    );
+    setVariables((prev) => ({ ...prev, steps: updated }));
+  };
+
+  // FAQs
+  const setFaq = (index: number, field: keyof Faq, value: string) => {
+    const updated = variables.faqs.map((f, i) =>
+      i === index ? { ...f, [field]: value } : f
+    );
+    setVariables((prev) => ({ ...prev, faqs: updated }));
+  };
+  const addFaq = () => setVariables((prev) => ({ ...prev, faqs: [...prev.faqs, { question: "", answer: "" }] }));
+  const removeFaq = (index: number) => {
+    setVariables((prev) => ({ ...prev, faqs: prev.faqs.filter((_, i) => i !== index) }));
   };
 
   const toggleSection = (key: keyof SectionToggles) => {
@@ -467,29 +564,31 @@ export default function LandingPageModal({
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
+  function buildPayloadVariables() {
+    return {
+      ...variables,
+      features: variables.features.filter((f) => f.trim() !== ""),
+      testimonials: variables.testimonials.filter((t) => t.name.trim() !== "" || t.quote.trim() !== ""),
+      steps: variables.steps,
+      faqs: variables.faqs.filter((f) => f.question.trim() !== ""),
+    };
+  }
+
   const handlePublish = async () => {
-    if (!variables.title.trim()) {
-      setError("Title is required.");
-      return;
-    }
+    if (!variables.title.trim()) { setError("Title is required."); return; }
     setError(null);
     setSaving(true);
-
-    const payload = {
-      serviceId,
-      template: selectedTemplate,
-      variables: {
-        ...variables,
-        features: variables.features.filter((f) => f.trim() !== ""),
-      },
-      sections,
-    };
 
     try {
       const res = await fetch("/api/landing-pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          serviceId,
+          template: selectedTemplate,
+          variables: buildPayloadVariables(),
+          sections,
+        }),
       });
 
       if (!res.ok) {
@@ -508,10 +607,7 @@ export default function LandingPageModal({
 
   const handleSave = async () => {
     if (!isEditMode) return;
-    if (!variables.title.trim()) {
-      setError("Title is required.");
-      return;
-    }
+    if (!variables.title.trim()) { setError("Title is required."); return; }
     setError(null);
     setSaving(true);
 
@@ -520,10 +616,7 @@ export default function LandingPageModal({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          variables: {
-            ...variables,
-            features: variables.features.filter((f) => f.trim() !== ""),
-          },
+          variables: buildPayloadVariables(),
           sections,
         }),
       });
@@ -534,7 +627,7 @@ export default function LandingPageModal({
         return;
       }
 
-      onCreated(); // reuse — refreshes data and closes
+      onCreated();
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -550,9 +643,7 @@ export default function LandingPageModal({
     setError(null);
 
     try {
-      const res = await fetch(`/api/landing-pages/${existingPage.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/landing-pages/${existingPage.id}`, { method: "DELETE" });
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -580,9 +671,7 @@ export default function LandingPageModal({
       await navigator.clipboard.writeText(publishedUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -605,7 +694,7 @@ export default function LandingPageModal({
 
         {/* Body */}
         <div style={modalBodyStyle}>
-          {/* ── Step 1: Template selector (create mode only) ── */}
+          {/* ── Step 1: Template selector ── */}
           {step === "template" && (
             <>
               <div style={sectionLabelStyle}>Choose a template</div>
@@ -639,7 +728,7 @@ export default function LandingPageModal({
           {/* ── Step 2: Variable editor ── */}
           {step === "editor" && (
             <>
-              {/* Published URL (edit mode) */}
+              {/* Published URL */}
               {isEditMode && publishedUrl && (
                 <>
                   <div style={sectionLabelStyle}>Published URL</div>
@@ -683,26 +772,21 @@ export default function LandingPageModal({
               <div style={formGroupStyle}>
                 <label style={labelStyle}>Features / Benefits</label>
                 {variables.features.map((feature, idx) => (
-                  <div key={idx} style={featureRowStyle}>
+                  <div key={idx} style={rowStyle}>
                     <input
                       type="text"
                       value={feature}
                       onChange={(e) => setFeature(idx, e.target.value)}
                       placeholder={`Feature ${idx + 1}`}
-                      style={{ ...inputStyle, marginBottom: 0 }}
+                      style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
                     />
-                    <button
-                      style={removeButtonStyle}
-                      onClick={() => removeFeature(idx)}
-                      title="Remove"
-                    >
+                    <button style={removeButtonStyle} onClick={() => removeFeature(idx)} title="Remove">
                       <Trash2 size={15} />
                     </button>
                   </div>
                 ))}
-                <button style={addFeatureButtonStyle} onClick={addFeature}>
-                  <Plus size={14} />
-                  Add feature
+                <button style={addButtonStyle} onClick={addFeature}>
+                  <Plus size={14} /> Add feature
                 </button>
               </div>
 
@@ -718,46 +802,126 @@ export default function LandingPageModal({
                 />
               </div>
 
-              {/* Testimonial */}
+              {/* ── How It Works ── */}
               <div style={dividerStyle} />
               <div style={{ ...sectionLabelStyle, marginBottom: "14px" }}>
-                Testimonial (optional)
+                How It Works (3 steps)
               </div>
+              {variables.steps.map((s, idx) => (
+                <div key={idx} style={{ marginBottom: "16px" }}>
+                  <div style={subSectionLabelStyle}>Step {idx + 1}</div>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
+                    <div style={stepBadgeStyle}>{idx + 1}</div>
+                    <input
+                      type="text"
+                      value={s.title}
+                      onChange={(e) => setStep_(idx, "title", e.target.value)}
+                      placeholder={`Step ${idx + 1} title`}
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={s.description}
+                    onChange={(e) => setStep_(idx, "description", e.target.value)}
+                    placeholder="Brief description of this step"
+                    style={{ ...inputStyle, marginLeft: "32px", width: "calc(100% - 32px)" }}
+                  />
+                </div>
+              ))}
 
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Customer Name</label>
-                <input
-                  type="text"
-                  value={variables.testimonialName}
-                  onChange={(e) => setVar("testimonialName", e.target.value)}
-                  placeholder="Jane Smith"
-                  style={inputStyle}
-                />
+              {/* ── Testimonials ── */}
+              <div style={dividerStyle} />
+              <div style={{ ...sectionLabelStyle, marginBottom: "14px" }}>
+                Testimonials (optional)
               </div>
+              {variables.testimonials.map((t, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: "#0d0d0d",
+                    border: "1px solid #1f1f1f",
+                    borderRadius: "6px",
+                    padding: "12px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+                    <input
+                      type="text"
+                      value={t.name}
+                      onChange={(e) => setTestimonial(idx, "name", e.target.value)}
+                      placeholder="Name"
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <button style={{ ...removeButtonStyle, marginTop: "0" }} onClick={() => removeTestimonial(idx)} title="Remove">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                  <textarea
+                    value={t.quote}
+                    onChange={(e) => setTestimonial(idx, "quote", e.target.value)}
+                    placeholder="Quote / testimonial text"
+                    rows={2}
+                    style={{ ...textareaStyle, marginBottom: "8px" }}
+                  />
+                  <input
+                    type="text"
+                    value={t.role}
+                    onChange={(e) => setTestimonial(idx, "role", e.target.value)}
+                    placeholder="Role / title (e.g. CEO, Acme Inc.) — optional"
+                    style={inputStyle}
+                  />
+                </div>
+              ))}
+              {variables.testimonials.length < 5 && (
+                <button style={addButtonStyle} onClick={addTestimonial}>
+                  <Plus size={14} /> Add testimonial
+                </button>
+              )}
 
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Quote</label>
-                <textarea
-                  value={variables.testimonialQuote}
-                  onChange={(e) => setVar("testimonialQuote", e.target.value)}
-                  placeholder="This service completely transformed our business..."
-                  rows={3}
-                  style={textareaStyle}
-                />
+              {/* ── FAQ ── */}
+              <div style={dividerStyle} />
+              <div style={{ ...sectionLabelStyle, marginBottom: "14px" }}>
+                FAQ (optional)
               </div>
+              {variables.faqs.map((f, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: "#0d0d0d",
+                    border: "1px solid #1f1f1f",
+                    borderRadius: "6px",
+                    padding: "12px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+                    <input
+                      type="text"
+                      value={f.question}
+                      onChange={(e) => setFaq(idx, "question", e.target.value)}
+                      placeholder={`Question ${idx + 1}`}
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <button style={{ ...removeButtonStyle, marginTop: "0" }} onClick={() => removeFaq(idx)} title="Remove">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={f.answer}
+                    onChange={(e) => setFaq(idx, "answer", e.target.value)}
+                    placeholder="Answer"
+                    style={inputStyle}
+                  />
+                </div>
+              ))}
+              <button style={addButtonStyle} onClick={addFaq}>
+                <Plus size={14} /> Add question
+              </button>
 
-              <div style={formGroupStyle}>
-                <label style={labelStyle}>Role / Title</label>
-                <input
-                  type="text"
-                  value={variables.testimonialRole}
-                  onChange={(e) => setVar("testimonialRole", e.target.value)}
-                  placeholder="CEO, Acme Inc."
-                  style={inputStyle}
-                />
-              </div>
-
-              {/* Section toggles */}
+              {/* ── Section toggles ── */}
               <div style={dividerStyle} />
               <div style={{ ...sectionLabelStyle, marginBottom: "14px" }}>
                 Sections to include
@@ -771,55 +935,35 @@ export default function LandingPageModal({
                       onChange={() => toggleSection(key)}
                       style={checkboxStyle}
                     />
-                    <span style={toggleLabelStyle}>
-                      {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1")}
-                    </span>
+                    <span style={toggleLabelStyle}>{SECTION_LABELS[key]}</span>
                   </label>
                 ))}
               </div>
             </>
           )}
 
-          {/* Error */}
           {error && <div style={errorStyle}>{error}</div>}
         </div>
 
         {/* Footer */}
         <div style={modalFooterStyle}>
           {isEditMode && (
-            <button
-              style={dangerButtonStyle}
-              onClick={handleDelete}
-              disabled={deleting}
-            >
+            <button style={dangerButtonStyle} onClick={handleDelete} disabled={deleting}>
               {deleting ? "Deleting..." : "Delete"}
             </button>
           )}
 
           {step === "template" && (
             <>
-              <button style={secondaryButtonStyle} onClick={onClose}>
-                Cancel
-              </button>
-              <button
-                style={primaryButtonStyle}
-                onClick={() => setStep("editor")}
-              >
-                Continue →
-              </button>
+              <button style={secondaryButtonStyle} onClick={onClose}>Cancel</button>
+              <button style={primaryButtonStyle} onClick={() => setStep("editor")}>Continue →</button>
             </>
           )}
 
           {step === "editor" && !isEditMode && (
             <>
-              <button style={secondaryButtonStyle} onClick={() => setStep("template")}>
-                ← Back
-              </button>
-              <button
-                style={primaryButtonStyle}
-                onClick={handlePublish}
-                disabled={saving}
-              >
+              <button style={secondaryButtonStyle} onClick={() => setStep("template")}>← Back</button>
+              <button style={primaryButtonStyle} onClick={handlePublish} disabled={saving}>
                 {saving ? "Publishing..." : "Publish"}
               </button>
             </>
@@ -827,21 +971,12 @@ export default function LandingPageModal({
 
           {step === "editor" && isEditMode && (
             <>
-              <button style={secondaryButtonStyle} onClick={onClose}>
-                Cancel
-              </button>
-              <button
-                style={secondaryButtonStyle}
-                onClick={handlePreview}
-              >
+              <button style={secondaryButtonStyle} onClick={onClose}>Cancel</button>
+              <button style={secondaryButtonStyle} onClick={handlePreview}>
                 <ExternalLink size={14} style={{ marginRight: "6px" }} />
                 Preview
               </button>
-              <button
-                style={primaryButtonStyle}
-                onClick={handleSave}
-                disabled={saving}
-              >
+              <button style={primaryButtonStyle} onClick={handleSave} disabled={saving}>
                 {saving ? "Saving..." : "Save Changes"}
               </button>
             </>

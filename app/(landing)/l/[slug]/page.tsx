@@ -37,6 +37,12 @@ export async function generateMetadata({
   return {
     title,
     description,
+    openGraph: {
+      type: "website",
+      title,
+      description: description ?? undefined,
+      url: `/l/${params.slug}`,
+    },
   };
 }
 

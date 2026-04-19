@@ -330,6 +330,30 @@ test.describe('Services page — landing page integration', () => {
   });
 });
 
+// ─── Lead webhook rate limiting ───────────────────────────────────────────────
+
+test.describe('Lead webhook rate limiting', () => {
+  test('returns 429 after 5 requests from the same IP within 60s', async ({ request }) => {
+    const payload = {
+      name: 'Rate Test',
+      email: 'ratetest@example.com',
+      landingPageId: 'nonexistent-rate-limit-test-id',
+    };
+
+    // Fire 5 requests — all should pass rate limit (and return 404 for unknown page)
+    for (let i = 0; i < 5; i++) {
+      const res = await request.post('/api/webhooks/lead', { data: payload });
+      expect(res.status()).not.toBe(429);
+    }
+
+    // 6th request — should be rate limited
+    const res = await request.post('/api/webhooks/lead', { data: payload });
+    expect(res.status()).toBe(429);
+    const body = await res.json();
+    expect(body).toHaveProperty('error');
+  });
+});
+
 // ─── Lead form UI — mocked ─────────────────────────────────────────────────
 
 test.describe('Lead form UI', () => {

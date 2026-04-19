@@ -6,6 +6,7 @@ interface LeadFormProps {
   landingPageId: string;
   onSuccess?: () => void;
   variant?: "light" | "dark";
+  ctaText?: string;
 }
 
 type FormState = "idle" | "loading" | "success" | "error" | "duplicate";
@@ -14,7 +15,9 @@ export default function LeadForm({
   landingPageId,
   onSuccess,
   variant = "dark",
+  ctaText,
 }: LeadFormProps) {
+  const buttonLabel = ctaText?.trim() || "Get Started";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [formState, setFormState] = useState<FormState>("idle");
@@ -203,7 +206,7 @@ export default function LeadForm({
               Submitting…
             </span>
           ) : (
-            "Get Started"
+            buttonLabel
           )}
         </button>
       </div>
