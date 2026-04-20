@@ -47,23 +47,13 @@ info "Docker $(docker --version) installed."
 
 # ── 3. clone repo ─────────────────────────────────────────────────────────────
 
-echo ""
-warn "The repo is private. Enter a GitHub Personal Access Token (classic, repo scope):"
-read -rsp "Token: " GH_TOKEN
-echo ""
-
-CLONE_URL="https://${GH_TOKEN}@github.com/maykelevoni/postforge.git"
-
 if [ -d "$APP_DIR/.git" ]; then
   warn "$APP_DIR already exists — pulling latest instead."
   git -C "$APP_DIR" pull
 else
   info "Cloning repo to $APP_DIR..."
-  git clone "$CLONE_URL" "$APP_DIR"
+  git clone "$REPO_URL" "$APP_DIR"
 fi
-
-# remove token from git remote so it's not stored in plaintext
-git -C "$APP_DIR" remote set-url origin "$REPO_URL"
 
 # ── 4. create .env ────────────────────────────────────────────────────────────
 
