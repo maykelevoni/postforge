@@ -113,6 +113,84 @@ Test files live in `tests/`:
 
 ---
 
+## Deploy to production
+
+A single bootstrap script sets up everything on a **fresh Ubuntu VPS** — Docker, nginx, SSL, and the app.
+
+### Requirements
+- A fresh Ubuntu 22.04+ VPS
+- A domain with DNS access
+- A [Neon](https://neon.tech) PostgreSQL database URL
+
+### 1. SSH into your server
+
+```
+ssh root@YOUR_SERVER_IP
+```
+
+### 2. Download the bootstrap script
+
+```
+wget https://raw.githubusercontent.com/maykelevoni/postforge/master/bootstrap.sh
+```
+
+### 3. Run it
+
+```
+chmod +x bootstrap.sh
+```
+
+```
+sudo ./bootstrap.sh
+```
+
+The script will:
+- Install Docker, nginx, certbot, and git
+- Clone this repo to `/var/www/postforge`
+- Prompt for your `DATABASE_URL` (Neon connection string)
+- Auto-generate `AUTH_SECRET`
+- Build and start the Docker container
+
+### 4. Run migrations (first deploy only)
+
+```
+cd /var/www/postforge && docker compose exec app pnpm exec prisma migrate deploy
+```
+
+### 5. Configure nginx
+
+```
+bash /var/www/postforge/nginx-setup.sh
+```
+
+### 6. Point DNS to your server
+
+Get your server's IPv4:
+
+```
+hostname -I
+```
+
+In your DNS provider, set **A records** for `yourdomain.com` and `www.yourdomain.com` to that IP. Wait 2–5 minutes for DNS to propagate.
+
+### 7. Get SSL
+
+```
+bash /var/www/postforge/ssl.sh
+```
+
+App is live at `https://yourdomain.com`. Log in and fill in your API keys in Settings.
+
+---
+
+### Updating after a code push
+
+```
+cd /var/www/postforge && git pull && docker compose up -d --build
+```
+
+---
+
 ## Lead capture webhook
 
 PostForge landing pages submit leads to the built-in webhook automatically:
