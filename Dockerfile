@@ -22,10 +22,14 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install production deps only (tsx is now in dependencies so it's included)
+# Install production deps — skip postinstall (prisma generate needs the CLI
+# which is a devDep; we copy the already-generated client from builder instead)
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+
+# Copy the generated Prisma client from builder (avoids needing prisma CLI here)
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copy built app
 COPY --from=builder /app/.next ./.next
