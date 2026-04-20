@@ -1,31 +1,53 @@
-# Task 002: Add LandingPage, LandingPageSubmission, and Subscriber models to Prisma
+# Task 002: Backend — lib/polar.ts (Polar API helper)
 
 ## Description
-Add new database models for landing pages, form submissions, and the subscriber email list. Modify Service model to link to landing pages.
+Create `lib/polar.ts` — a thin helper that wraps the Polar API checkout creation endpoint.
 
 ## Files
-- `prisma/schema.prisma` (modify)
+- `lib/polar.ts` (create)
 
 ## Requirements
-1. Add `LandingPage` model with: id, userId, serviceId (unique), slug (unique), template, variables (JSON text), sections (JSON text), status, timestamps
-2. Add `LandingPageSubmission` model with: id, landingPageId, name, email, source, status, createdAt
-3. Add `Subscriber` model with: id, name, email, userId, serviceId (optional), landingPageId (optional), source (optional), createdAt. Add @@unique([email, userId]) to prevent duplicate subscribers per user
-4. Add `landingPageId String? @unique` to Service model
-5. Add `landingPage LandingPage?` relation to Service
-6. Add `landingPages LandingPage[]`, `submissions LandingPageSubmission[]`, and `subscribers Subscriber[]` relations to relevant models
-7. Run migration: `pnpm dlx "prisma@5.20.0" migrate dev --name add_landing_pages_submissions_subscribers`
+1. Export `createPolarCheckout(params)`:
+   ```ts
+   interface CreatePolarCheckoutParams {
+     polarApiKey: string;
+     amount: number;       // in cents (e.g. 9900 = $99)
+     clientEmail?: string;
+     ticketId: string;
+     serviceName: string;
+   }
+   interface PolarCheckoutResult {
+     checkoutUrl: string;
+     checkoutId: string;
+   }
+   export async function createPolarCheckout(params: CreatePolarCheckoutParams): Promise<PolarCheckoutResult>
+   ```
+2. Call `POST https://api.polar.sh/v1/checkouts/custom` with:
+   ```json
+   {
+     "amount": <cents>,
+     "currency": "usd",
+     "metadata": { "ticketId": "<id>", "serviceName": "<name>" },
+     "customer_email": "<email or omit if undefined>"
+   }
+   ```
+3. Auth header: `Authorization: Bearer <polarApiKey>`
+4. On non-2xx, throw an Error with the response body message
+5. Return `{ checkoutUrl: data.url, checkoutId: data.id }` from the response
 
 ## Existing Code to Reference
-- `prisma/schema.prisma` (existing Service model, User model for relation patterns)
+- `lib/email.ts` — pattern for external API helpers
+- `lib/ai.ts` — pattern for throwing on non-OK responses
 
 ## Acceptance Criteria
-- [ ] Prisma schema updated with all three new models and relations
-- [ ] Subscriber model has @@unique([email, userId]) constraint
-- [ ] Migration runs successfully
-- [ ] `pnpm dlx "prisma@5.20.0" generate` completes without errors
+- [ ] `lib/polar.ts` exports `createPolarCheckout`
+- [ ] Uses `fetch` with `Authorization: Bearer`
+- [ ] Throws descriptive error on non-2xx
+- [ ] Returns `{ checkoutUrl, checkoutId }`
+- [ ] No unused imports
 
 ## Dependencies
-- None
+- Task 001 (schema defines the data model context)
 
 ## Commit Message
-feat: add landing page, submission, and subscriber prisma models
+feat(lib): add Polar API client helper

@@ -41,6 +41,14 @@ export async function POST(
     );
   }
 
+  // Require payment before delivery
+  if (!["paid", "in_progress"].includes(ticket.status)) {
+    return NextResponse.json(
+      { error: "Payment required before delivery can be sent" },
+      { status: 403 }
+    );
+  }
+
   // Require deliverables to exist
   if (!ticket.deliverables) {
     return NextResponse.json(

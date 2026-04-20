@@ -37,6 +37,10 @@ export interface Ticket {
   quoteSentAt?: Date | string;
   deliverables?: string;
   deliveredAt?: Date | string;
+  polarCheckoutId?: string | null;
+  polarOrderId?: string | null;
+  paidAt?: Date | string | null;
+  amountPaid?: number | null;
   createdAt: Date | string;
   updatedAt: Date | string;
   service: {

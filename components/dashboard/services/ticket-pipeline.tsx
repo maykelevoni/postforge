@@ -11,6 +11,8 @@ interface TicketPipelineProps {
 const STATUS_COLORS: Record<string, string> = {
   new: "#3b82f6",
   quoted: "#f59e0b",
+  awaiting_payment: "#f97316",
+  paid: "#22c55e",
   in_progress: "#6366f1",
   delivered: "#22c55e",
   closed: "#6b7280",
@@ -94,6 +96,8 @@ const emptyPlaceholderStyle: React.CSSProperties = {
 const STATUS_COLUMNS = [
   { id: "new", label: "New" },
   { id: "quoted", label: "Quoted" },
+  { id: "awaiting_payment", label: "Awaiting Payment" },
+  { id: "paid", label: "Paid" },
   { id: "in_progress", label: "In Progress" },
   { id: "delivered", label: "Delivered" },
   { id: "closed", label: "Closed" },

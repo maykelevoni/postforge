@@ -1,116 +1,284 @@
-# Plan: Landing Page Enhancement — Conversion Sections + Production Hardening
+# Technical Plan: Payment Integration (Polar API) + Use-Case Hardening
 
-## Architecture Integration
+## Section 1: Architecture Integration
 
-All changes are purely frontend + one API route. No DB schema changes.
-- Template components: `components/landing-pages/templates/`
-- Modal editor: `components/dashboard/services/landing-page-modal.tsx`
-- Lead form: `components/landing-pages/lead-form.tsx`
-- Lead webhook: `app/api/webhooks/lead/route.ts`
-- Landing page renderer: `app/(landing)/l/[slug]/page.tsx`
+### How this fits the existing structure
 
-Data flow: modal writes JSON → DB `variables`/`sections` fields → page route parses JSON → template renders.
+PostForge follows a consistent pattern:
+- API keys live in the `Setting` table (`userId + key` unique)
+- Retrieved via `getSetting(key, userId)` from `lib/settings.ts`
+- External API calls go in `lib/` helpers (e.g., `lib/email.ts`, `lib/ai.ts`)
+- Webhooks live at `app/api/webhooks/[provider]/route.ts`
+- Ticket actions live at `app/api/tickets/[id]/[action]/route.ts`
 
-## Section 1: Data Model (no DB change)
+The Polar integration follows the exact same pattern:
 
-All new data slots into existing `variables` and `sections` JSON strings.
-
-### Variables additions (all three templates)
-```ts
-steps?:        { title: string; description: string }[]  // max 3
-faqs?:         { question: string; answer: string }[]
-testimonials?: { name: string; quote: string; role?: string }[]
+```
+lib/polar.ts                      ← Polar API client helper
+app/api/tickets/[id]/checkout/route.ts  ← create checkout session
+app/api/webhooks/polar/route.ts   ← receive payment events
 ```
 
-### Sections additions (all three templates)
-```ts
-howItWorks: boolean  // default true
-faq:        boolean  // default false
-testimonial: boolean // singular — fixing the plural key bug in SaaS
+### Status flow addition
+
+Current: `new → quoted → in_progress → delivered → closed`
+New:     `new → quoted → awaiting_payment → paid → in_progress → delivered → closed`
+
+The status is a `String` field (not an enum) so no migration enum change needed. New string values are additive.
+
+---
+
+## Section 2: Database Changes
+
+### ServiceTicket — 4 new columns
+
+```prisma
+// add to model ServiceTicket
+polarCheckoutId  String?    // Polar checkout session ID (used to match webhook)
+polarOrderId     String?    // Polar order ID (set when checkout.updated fires)
+paidAt           DateTime?  // Timestamp of confirmed payment
+amountPaid       Int?       // Amount in cents (e.g. 9900 = $99.00)
 ```
 
-### Removed
-- `logoGrid` from sections — ghost toggle, no template renders it
-- Flat testimonial fields replaced by `testimonials[]`
+Migration strategy (follows learnings.md pattern):
+1. `pnpm dlx "prisma@5.20.0" migrate diff --from-schema-datasource --to-schema-datamodel --script > migration.sql`
+2. Create `prisma/migrations/<timestamp>_add_polar_payment_fields/migration.sql`
+3. Apply with `pnpm dlx "prisma@5.20.0" migrate deploy`
 
-## Section 2: Bug Fixes
+---
 
-### Bug 1+2 — Testimonials (SaaS + Service templates)
-- `saas.tsx`: `LandingPageSections.testimonials` → `testimonial`; `variables.testimonials: { name, text }[]` → `{ name, quote, role? }[]`
-- `service.tsx`: add `testimonials?: { name, quote, role? }[]`; remove `(variables as any)`; render array
-- `lead-magnet.tsx`: add `testimonials?: { name, quote, role? }[]` for parity
+## Section 3: API Design
 
-### Bug 3 — LogoGrid ghost
-- Remove `logoGrid` from `SectionToggles` in modal and its render loop
+### New route: `POST /api/tickets/[id]/checkout`
 
-## Section 3: New Template Sections
+**Auth:** required (session)
 
-### How It Works
-- 3 numbered steps in horizontal grid (desktop) / vertical (mobile)
-- Number badge + title + description per step
-- Guard: `sections.howItWorks === true` AND at least 1 step with non-empty title
-- Position: after benefits/features, before testimonials
-- Theme per template: orange (Service), rose/purple (Lead Magnet), indigo (SaaS)
+**Request:** no body needed (price derived from service.priceMin)
 
-### FAQ
-- `<details>`/`<summary>` accordion — zero JS, server component compatible
-- Position: after testimonials, before CTA
-- Guard: `sections.faq === true` AND `faqs.length > 0`
+**Process:**
+1. Load ticket (verify ownership)
+2. Ticket must have status `quoted` — else 400
+3. Load `polar_api_key` from Setting table — else 400 with friendly message
+4. Call `lib/polar.ts → createCheckout(ticketId, amount, clientEmail)`
+5. Save `polarCheckoutId` + update status to `awaiting_payment`
+6. Return `{ checkoutUrl, checkoutId }`
 
-## Section 4: Modal Editor Changes
-
-### Testimonials list
-- Replace 3 flat inputs with a dynamic list (same pattern as features)
-- Each row: Name + Quote inputs + optional Role input
-- Add/remove buttons; up to 5 testimonials
-
-### How It Works editor
-- Fixed 3-row section (Step 1, 2, 3)
-- Each row: Title (short) + Description (textarea/input)
-
-### FAQ editor
-- Dynamic add/remove list like features
-- Each row: Question input + Answer input
-
-### Section toggles fix
-- Remove `logoGrid`
-- Add `howItWorks` (default true), `faq` (default false)
-
-## Section 5: LeadForm ctaText
-
-Add `ctaText?: string` prop, default `"Get Started"`. All three templates pass `variables.ctaText`.
-
-## Section 6: Rate Limiting
-
-In-memory map at module scope in the webhook route:
-```ts
-const rateMap = new Map<string, { count: number; resetAt: number }>();
+**Response (200):**
+```json
+{ "checkoutUrl": "https://checkout.polar.sh/...", "checkoutId": "ch_..." }
 ```
-- Key: IP from `x-forwarded-for` (first segment) or `x-real-ip`, fallback `"unknown"`
-- Window: 60 seconds, limit: 5 requests
-- Exceed: return `{ error: "Too many requests" }` with status 429
 
-## Section 7: OG Metadata
+**Errors:**
+- 400: ticket not in `quoted` state
+- 400: Polar API key not configured
+- 404: ticket not found or not owned by user
+- 502: Polar API call failed (forward error message)
 
-Extend `generateMetadata` in `app/(landing)/l/[slug]/page.tsx`:
+---
+
+### New route: `POST /api/webhooks/polar`
+
+**Auth:** none (public) — verified via HMAC header
+
+**Headers:** `webhook-id`, `webhook-timestamp`, `webhook-signature` (Polar standard webhook headers)
+
+**Process:**
+1. Read raw body as string (needed for HMAC verification)
+2. Load `polar_webhook_secret` from Setting for the matching ticket's userId
+3. Verify HMAC-SHA256 signature (skip in dev if secret not configured)
+4. Parse event body
+5. Handle `checkout.updated` where `data.status === "succeeded"`:
+   - Find ticket by `polarCheckoutId = data.id`
+   - Update: `status → "paid"`, `paidAt → now`, `amountPaid → data.amount`, `polarOrderId → data.metadata.orderId`
+6. Return 200 for all handled events, 400 for unknown events
+
+**Note:** Polar uses `webhook-id + webhook-timestamp + body` as the signed payload. Secret is stored per-user in Settings.
+
+---
+
+### Modified route: `POST /api/tickets/[id]/send-delivery`
+
+Add guard: reject with 403 if `ticket.status` is not `paid` or `in_progress`:
 ```ts
-openGraph: {
-  type: "website",
-  title,
-  description,
-  url: `/l/${params.slug}`,
+if (!["paid", "in_progress"].includes(ticket.status)) {
+  return NextResponse.json(
+    { error: "Payment required before delivery" },
+    { status: 403 }
+  );
 }
 ```
 
-## File Map
+---
 
-| File | Action |
-|------|--------|
-| `components/landing-pages/templates/service.tsx` | modify |
-| `components/landing-pages/templates/saas.tsx` | modify |
-| `components/landing-pages/templates/lead-magnet.tsx` | modify |
-| `components/dashboard/services/landing-page-modal.tsx` | modify |
-| `components/landing-pages/lead-form.tsx` | modify |
-| `app/api/webhooks/lead/route.ts` | modify |
-| `app/(landing)/l/[slug]/page.tsx` | modify |
-| `tests/landing-pages.spec.ts` | modify |
+### Modified route: `GET /api/settings` + `POST /api/settings`
+
+No route changes needed — the settings API already handles arbitrary key/value pairs. The two new keys (`polar_api_key`, `polar_webhook_secret`) are just added to the frontend component.
+
+---
+
+## Section 4: Frontend Components
+
+### `lib/polar.ts` (new file)
+
+```ts
+// Thin wrapper around Polar API
+export async function createPolarCheckout(params: {
+  polarApiKey: string;
+  amount: number;      // cents
+  clientEmail?: string;
+  ticketId: string;
+  serviceName: string;
+}): Promise<{ checkoutUrl: string; checkoutId: string }>
+```
+
+- Calls `POST https://api.polar.sh/v1/checkouts/custom`
+- Throws with a descriptive message on non-200
+
+### `components/dashboard/settings/api-keys-section.tsx` (modify)
+
+Add two new password inputs in the existing 2-column grid:
+- **Polar API Key** → `key: "polar_api_key"`
+- **Polar Webhook Secret** → `key: "polar_webhook_secret"`
+
+These plug into the existing `onSave(key, value)` pattern — no other changes.
+
+### `components/dashboard/services/service-form.tsx` (modify — Bug 1 fix)
+
+Add `id` + `htmlFor` to every field:
+
+| Field | `id` | label text |
+|---|---|---|
+| name | `service-name` | Name |
+| type | `service-type` | Type |
+| description | `service-description` | Description |
+| deliverables | `service-deliverables` | Deliverables |
+| priceMin | `service-price-min` | Min Price ($) |
+| priceMax | `service-price-max` | Max Price ($) |
+| turnaroundDays | `service-turnaround` | Turnaround (days) |
+| funnelUrl | `service-funnel-url` | Funnel URL (optional) |
+
+### `app/api/landing-pages/route.ts` (modify — Bug 2 fix)
+
+In the POST handler, before calling `JSON.stringify`:
+
+```ts
+// Normalize: accept either a plain object or a pre-stringified JSON string
+const normalizeJson = (value: unknown): string => {
+  if (typeof value === 'string') return value;       // already a string — use as-is
+  return value ? JSON.stringify(value) : '{}';       // object — stringify once
+};
+```
+
+Apply to both `variables` and `sections`.
+
+### Ticket UI (modify existing ticket card/detail)
+
+**Status badge additions** (in whatever component renders the status badge):
+- `awaiting_payment` → amber/yellow pill: "Awaiting Payment"
+- `paid` → green pill: "Paid"
+
+**"Request Payment" button** (shown when status = `quoted`):
+- Calls `POST /api/tickets/[id]/checkout`
+- On success: shows checkout URL in a read-only field with copy icon
+- On error "Polar API key not configured": shows inline link to Settings
+
+**Checkout URL display** (shown when `polarCheckoutId` is set):
+- Read-only input with the full checkout URL
+- Copy-to-clipboard button
+
+**"Send Delivery" button gating:**
+- Disable (grey out) when status is not `paid` or `in_progress`
+- Show tooltip: "Client must complete payment first"
+
+---
+
+## Section 5: Service Integration — Polar API
+
+### Polar checkout creation
+
+```
+POST https://api.polar.sh/v1/checkouts/custom
+Authorization: Bearer <polar_api_key>
+Content-Type: application/json
+
+{
+  "product_price_id": null,   // not used for custom amount
+  "amount": 9900,              // in cents
+  "currency": "usd",
+  "metadata": {
+    "ticketId": "cxxx...",
+    "serviceName": "Video Content Package"
+  },
+  "customer_email": "client@example.com"  // optional, pre-fills checkout
+}
+```
+
+Response contains `url` (the hosted checkout page) and `id` (the checkout ID).
+
+### Polar webhook verification
+
+```ts
+import { createHmac } from "crypto";
+
+function verifyPolarWebhook(
+  rawBody: string,
+  webhookId: string,
+  webhookTimestamp: string,
+  webhookSignature: string,
+  secret: string
+): boolean {
+  const signedContent = `${webhookId}.${webhookTimestamp}.${rawBody}`;
+  const expectedSig = createHmac("sha256", secret)
+    .update(signedContent)
+    .digest("base64");
+  const signatures = webhookSignature.split(" ");
+  return signatures.some((sig) => sig === `v1,${expectedSig}`);
+}
+```
+
+### Polar test mode
+
+Polar supports test mode via the same API key (sandbox vs. live depends on which key is used in the Polar dashboard). No separate env flag needed.
+
+---
+
+## Section 6: File Map
+
+### New files
+
+| File | Purpose |
+|---|---|
+| `lib/polar.ts` | Polar API client (createCheckout function) |
+| `app/api/tickets/[id]/checkout/route.ts` | Generate checkout session |
+| `app/api/webhooks/polar/route.ts` | Handle payment webhook |
+| `prisma/migrations/<ts>_add_polar_payment_fields/migration.sql` | DB migration |
+
+### Modified files
+
+| File | Change |
+|---|---|
+| `prisma/schema.prisma` | Add 4 columns to `ServiceTicket` |
+| `lib/polar.ts` | (new) |
+| `components/dashboard/settings/api-keys-section.tsx` | Add Polar API Key + Webhook Secret fields |
+| `components/dashboard/services/service-form.tsx` | Bug 1 fix: add `id`/`htmlFor` to all inputs |
+| `app/api/landing-pages/route.ts` | Bug 2 fix: normalize sections/variables encoding |
+| `app/api/tickets/[id]/send-delivery/route.ts` | Guard: require `paid` or `in_progress` status |
+| `app/(dashboard)/services/page.tsx` or ticket component | Add "Request Payment" button + checkout URL display + status badges |
+| `tests/use-cases.spec.ts` | Update existing tests to cover paid status + add payment tests |
+
+---
+
+## Implementation Order
+
+```
+Task 001 — DB: add polar columns to ServiceTicket + migration
+Task 002 — Backend: lib/polar.ts (Polar API helper)
+Task 003 — Backend: POST /api/tickets/[id]/checkout (create checkout session)
+Task 004 — Backend: POST /api/webhooks/polar (payment webhook handler)
+Task 005 — Backend: guard send-delivery behind paid/in_progress status
+Task 006 — Bug fix: service-form.tsx semantic labels
+Task 007 — Bug fix: landing-pages POST double-encoding guard
+Task 008 — Frontend: add Polar fields to api-keys-section.tsx
+Task 009 — Frontend: ticket UI — Request Payment button + checkout URL + status badges
+Task 010 — Tests: update use-cases.spec.ts + add payment E2E tests
+```

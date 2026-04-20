@@ -1,15 +1,15 @@
 {
   "project": "ship",
-  "feature": "landing-page-enhancement",
+  "feature": "payment-polar",
   "phase": "complete",
-  "current_task": 31,
-  "total_tasks": 9,
-  "completed_tasks": [23, 24, 25, 26, 27, 28, 29, 30, 31],
+  "current_task": 10,
+  "total_tasks": 10,
+  "completed_tasks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   "skipped_tasks": [],
   "failed_tasks": [],
   "playwright_cmd": "npx playwright test",
   "tests_written": true,
-  "verified": false,
-  "created_at": "2026-04-19T00:00:00Z",
-  "updated_at": "2026-04-19T02:00:00Z"
+  "verified": true,
+  "created_at": "2026-04-20T00:00:00Z",
+  "updated_at": "2026-04-20T00:00:00Z"
 }

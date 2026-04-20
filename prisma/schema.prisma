@@ -321,10 +321,14 @@ model ServiceTicket {
   quote        String?   @db.Text  // AI-generated proposal (editable)
   quoteSentAt  DateTime?
   notes        String?   @db.Text  // internal notes
-  deliverables String?   @db.Text  // JSON — generated content per type
-  deliveredAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  deliverables     String?   @db.Text  // JSON — generated content per type
+  deliveredAt      DateTime?
+  polarCheckoutId  String?   // Polar checkout session ID
+  polarOrderId     String?   // Polar order ID (set when webhook fires)
+  paidAt           DateTime? // Timestamp of confirmed payment
+  amountPaid       Int?      // Amount in cents
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@index([userId])
   @@index([serviceId])

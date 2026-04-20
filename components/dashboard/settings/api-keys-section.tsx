@@ -118,6 +118,12 @@ export default function ApiKeysSection({ settings, onSave }: ApiKeysSectionProps
           {renderInput("research_subreddits", "Research Subreddits (comma-separated)", false)}
         </div>
       </div>
+
+      <h2 style={{ ...headingStyle, marginTop: "40px" }}>Payment</h2>
+      <div style={gridStyle}>
+        {renderInput("polar_api_key", "Polar API Key", true)}
+        {renderInput("polar_webhook_secret", "Polar Webhook Secret", true)}
+      </div>
     </div>
   );
 }

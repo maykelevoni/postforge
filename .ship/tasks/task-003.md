@@ -1,37 +1,39 @@
-# Task 003: Install Resend and create lib/email.ts
+# Task 003: Backend — POST /api/tickets/[id]/checkout
 
 ## Description
-Replace Systeme.io email service with Resend. Create a new email service module with the same function signatures.
+Create the checkout API route. Authenticated seller calls this to generate a Polar checkout session for a quoted ticket.
 
 ## Files
-- `lib/email.ts` (create)
-- `package.json` (modify — add resend dependency)
+- `app/api/tickets/[id]/checkout/route.ts` (create)
 
 ## Requirements
-1. Install `resend` package
-2. Create `lib/email.ts` with these functions (matching systeme.ts interface):
-   - `sendConfirmationEmail(ticket)` — sends welcome email via Resend
-   - `sendQuoteEmail(ticket)` — sends quote via Resend
-   - `sendDeliveryEmail(ticket)` — sends deliverables via Resend
-   - `sendNewsletter(newsletter)` — sends newsletter via Resend, updates DB status
-3. Each function reads `resend_api_key` and `resend_from_email` from user's DB settings
-4. Uses `new Resend(apiKey)` client, calls `resend.emails.send({ from, to, subject, html })`
-5. HTML email body (not plain text) for better formatting
-6. Error handling: catch Resend errors, log, and throw with descriptive message
-7. Newsletter function updates DB status to "sent" or "failed"
+1. Auth guard: `const session = await auth(); if (!session?.user?.id) return 401`
+2. Load ticket via `db.serviceTicket.findFirst({ where: { id: params.id, userId: session.user.id }, include: { service: true } })`
+3. If not found → 404
+4. If `ticket.status !== "quoted"` → 400 `{ error: "Ticket must be in quoted status" }`
+5. Load `polar_api_key` from Setting: `getSetting("polar_api_key", userId)` — if missing/empty → 400 `{ error: "Polar API key not configured" }`
+6. Call `createPolarCheckout({ polarApiKey, amount: Math.round(ticket.service.priceMin * 100), clientEmail: ticket.clientEmail, ticketId: ticket.id, serviceName: ticket.service.name })`
+7. Save to DB: `db.serviceTicket.update({ where: { id }, data: { polarCheckoutId: checkoutId, status: "awaiting_payment" } })`
+8. Return `{ checkoutUrl, checkoutId }`
+9. On Polar error → 502 with the error message
 
 ## Existing Code to Reference
-- `worker/posting/systeme.ts` (function signatures, email body templates to reuse)
-- `lib/settings.ts` (getSetting pattern)
+- `app/api/tickets/[id]/route.ts` — auth + db pattern
+- `app/api/tickets/[id]/send-delivery/route.ts` — same structure
+- `lib/settings.ts` — `getSetting(key, userId)` helper
 
 ## Acceptance Criteria
-- [ ] `lib/email.ts` exports all 4 email functions
-- [ ] Functions read Resend settings from DB
-- [ ] Newsletter status updates correctly on success/failure
-- [ ] Code compiles without TypeScript errors
+- [ ] Route exports `POST` function
+- [ ] Returns 401 if unauthenticated
+- [ ] Returns 404 if ticket not found
+- [ ] Returns 400 if status !== "quoted"
+- [ ] Returns 400 with friendly message if Polar key missing
+- [ ] Updates ticket `polarCheckoutId` + status to `awaiting_payment`
+- [ ] Returns `{ checkoutUrl, checkoutId }`
 
 ## Dependencies
-- None
+- Task 001 (new DB columns)
+- Task 002 (polar.ts helper)
 
 ## Commit Message
-feat: add resend email service replacing systeme.io
+feat(api): add POST /api/tickets/[id]/checkout

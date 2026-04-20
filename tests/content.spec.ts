@@ -5,7 +5,7 @@ async function signIn(page: any) {
   await page.getByLabel('Email').fill('test@postforge.dev');
   await page.getByLabel('Password').fill('testpassword123');
   await page.getByRole('button', { name: 'Sign In' }).click();
-  await page.waitForURL('http://localhost:3000/');
+  await page.waitForURL('http://localhost:3002/');
 }
 
 test.describe('Content page', () => {

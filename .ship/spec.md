@@ -1,135 +1,178 @@
-# Landing Page Enhancement: Conversion Sections + Production Hardening
+# Feature Spec: Payment Integration (Polar API) + Use-Case Hardening
 
 ## Feature Summary
-Fix 3 known bugs in landing page templates, add two high-conversion sections (How It Works, FAQ), support multiple testimonials properly, remove a ghost UI toggle (logoGrid), harden the lead webhook against spam, improve Open Graph metadata, and make the CTA button text match what the user configured.
+
+Two tightly related improvements:
+
+1. **Payment integration via Polar API** — close the gap in the service delivery loop. After a quote is accepted, the seller generates a Polar checkout link and sends it to the client. When the client pays, Polar fires a webhook that marks the ticket as `paid` and unlocks the delivery workflow.
+
+2. **Use-case hardening** — two bugs surfaced during end-to-end customer journey tests that need to be fixed as part of this feature.
+
+---
 
 ## Problem Statement
-The landing pages are close to production-ready but have several blockers:
 
-1. **Bug — SaaS testimonials never render.** `sections.testimonials` (plural) is checked in the template but the modal stores the key as `sections.testimonial` (singular). Result: the section is always `undefined` → `false`.
-2. **Bug — SaaS testimonial data mismatch.** The modal saves flat fields (`testimonialName`, `testimonialQuote`, `testimonialRole`) but the SaaS template expects `variables.testimonials: { name, text }[]`. Even if Bug 1 were fixed, no data would render.
-3. **Bug — Service template type bypass.** `service.tsx` casts `variables as any` to access testimonial fields because they aren't declared in the `LandingPageVariables` interface.
-4. **Ghost toggle — `logoGrid`.** The modal shows a "Logo Grid" section toggle, but no template renders a logo grid. Users see a toggle that does nothing.
-5. **Missing conversion section — How It Works.** Services require an explanation of the process. This is among the highest-conversion sections on a service landing page.
-6. **Missing conversion section — FAQ.** Addresses visitor objections before they leave. Missing from all three templates.
-7. **CTA button text is hardcoded.** `LeadForm` always shows "Get Started" regardless of what the user set as `ctaText` in the modal.
-8. **No rate limiting on lead webhook.** `/api/webhooks/lead` accepts unlimited submissions. Susceptible to spam and list poisoning.
-9. **Thin Open Graph metadata.** Only title and description are set. Missing `og:type` and `og:url` for social sharing.
+The current service flow breaks at the payment step:
+
+```
+Lead → Ticket → Quote (AI) → ??? → Deliver
+```
+
+There is no way for a client to pay. The ticket sits in "quoted" status indefinitely until the seller manually changes it. This means:
+- Revenue can't be collected inside the product
+- There's no clear CTA for the client after receiving a quote
+- The delivery step is blocked in practice because there's no payment gate
+
+Additionally, two bugs were found during the use-case test run:
+
+**Bug 1 — Service form lacks semantic labels**
+The `ServiceForm` component renders `<label>Name</label>` with inline styles but no `htmlFor`, and the input has no `id`. This breaks screen readers and makes the form harder to target in tests.
+
+**Bug 2 — Landing page sections double-encoding**
+`POST /api/landing-pages` calls `JSON.stringify(sections)` on the received value. If a caller passes sections already stringified (a natural mistake), the DB stores a double-encoded JSON string. When the template later calls `JSON.parse(page.sections).cta`, it gets a string instead of an object, so `sections.cta` is `undefined` and the LeadForm (CTA section) silently disappears from the published page — losing all lead capture.
+
+---
 
 ## User Stories
 
-### Story 1 — Testimonials work correctly across all templates
-**As** a user who added testimonials in the modal,  
-**I want** them to actually render on my published landing page,  
-**So that** social proof is visible to visitors.
+### Story 1 — Seller generates a payment link for a ticket
+**As** a PostForge user (service seller),  
+**I want** to generate a Polar checkout link from a ticket's quoted price,  
+**So that** I can send the client a direct payment link without leaving the app.
 
-Acceptance criteria:
-- [ ] SaaS template reads `sections.testimonial` (singular) to control the section visibility
-- [ ] All three templates use a unified testimonials format: `{ name, quote, role? }[]`
-- [ ] The modal replaces the three flat testimonial inputs with an add/remove list (same UX as features)
-- [ ] Service template interface declares testimonial fields — no `as any`
+**Acceptance Criteria:**
+- [ ] Settings page has a "Polar API Key" field (stored in DB Setting table, key = `polar_api_key`)
+- [ ] Ticket detail view has a "Request Payment" button (visible when status is `quoted`)
+- [ ] Clicking it calls `/api/tickets/[id]/checkout` → creates a Polar checkout → returns `{ checkoutUrl, checkoutId }`
+- [ ] `checkoutId` is saved to the ticket; status moves to `awaiting_payment`
+- [ ] The checkout URL is displayed in the ticket with a copy button
+- [ ] If no Polar API key is configured, the button shows "Add Polar API Key in Settings"
 
-### Story 2 — LogoGrid ghost toggle removed
-**As** a user editing a landing page,  
-**I want** every toggle in the editor to do something real,  
-**So that** I'm not confused by phantom settings.
+### Story 2 — Client pays via Polar and ticket auto-updates
+**As** a client who received a quote,  
+**I want** to click a payment link and complete payment via Polar,  
+**So that** the seller is notified and can start working immediately.
 
-Acceptance criteria:
-- [ ] The "Logo Grid" checkbox is removed from the modal sections grid
-- [ ] No code references `sections.logoGrid` in any template
+**Acceptance Criteria:**
+- [ ] Polar webhook at `POST /api/webhooks/polar` handles `checkout.updated` event with `status: "succeeded"`
+- [ ] Webhook verifies the Polar-Webhook-Secret header
+- [ ] Ticket with matching `polarCheckoutId` is updated: `status → "paid"`, `paidAt` is set, `amountPaid` recorded
+- [ ] If ticket not found, returns 404 (does not crash)
+- [ ] Returns 200 for all recognized events (Polar retries on non-2xx)
 
-### Story 3 — How It Works section on all templates
-**As** a visitor on a landing page,  
-**I want** to understand how the service works in 3 clear steps,  
-**So that** I can evaluate whether it fits my needs before filling the form.
+### Story 3 — Seller views payment status and proceeds to delivery
+**As** a PostForge user,  
+**I want** to see payment status on a ticket and be able to send the delivery once paid,  
+**So that** I have a clear workflow: quoted → paid → delivered.
 
-Acceptance criteria:
-- [ ] A "How it Works" section with up to 3 steps (number badge + title + description) renders in all three templates
-- [ ] The modal editor has a steps section: up to 3 rows, each with a title field and description field
-- [ ] A `howItWorks` section toggle controls visibility
-- [ ] Default: section enabled (`true`), shown if at least 1 step has a non-empty title
-- [ ] Visual style matches each template's theme (orange for Service, rose/purple for Lead Magnet, indigo for SaaS)
+**Acceptance Criteria:**
+- [ ] Ticket status badge shows `awaiting_payment` and `paid` as distinct states with appropriate colors
+- [ ] "Send Delivery" button is only active when status is `paid` or `in_progress`
+- [ ] Ticket list/filter supports the new statuses
 
-### Story 4 — FAQ section on all templates
-**As** a visitor on a landing page,  
-**I want** to expand common questions to see answers,  
-**So that** objections are addressed before I decide to fill the form.
+### Story 4 (Bug Fix) — Service form accessibility
+**As** a user filling in the Add Service form,  
+**I want** the name field to have a proper label association,  
+**So that** clicking "Name" focuses the input and screen readers announce it correctly.
 
-Acceptance criteria:
-- [ ] An FAQ section with collapsible Q&A items (using `<details>`/`<summary>` — no JS required)
-- [ ] The modal editor has a FAQ section: add/remove Q&A pairs (question + answer)
-- [ ] A `faq` section toggle controls visibility
-- [ ] Default: section disabled (`false`)
-- [ ] Visual style matches each template's theme
+**Acceptance Criteria:**
+- [ ] `<label htmlFor="service-name">Name</label>` + `<input id="service-name" ...>`
+- [ ] Same fix applied to all other fields in ServiceForm (description, type, deliverables, price, turnaround, funnelUrl)
 
-### Story 5 — CTA button text matches user's configuration
-**As** a user who set "Book a Free Call" as the CTA text,  
-**I want** the form submit button to say "Book a Free Call",  
-**So that** the whole page is consistent.
+### Story 5 (Bug Fix) — Landing page sections encoding
+**As** a developer or API caller,  
+**I want** `POST /api/landing-pages` to accept sections/variables as either a plain object or a JSON string without double-encoding,  
+**So that** the published landing page always renders the CTA section and lead form.
 
-Acceptance criteria:
-- [ ] `LeadForm` accepts an optional `ctaText` prop
-- [ ] All three templates pass `variables.ctaText` to `LeadForm`
-- [ ] Falls back to "Get Started" when `ctaText` is empty or undefined
+**Acceptance Criteria:**
+- [ ] If `sections` is a string, the API stores it as-is (no double `JSON.stringify`)
+- [ ] If `sections` is an object, the API stringifies it once
+- [ ] Existing published pages with double-encoded data are not affected (migration not required — new writes are clean)
+- [ ] Test: creating a landing page with `sections: { cta: true }` always renders `#lead-name` on the published page
 
-### Story 6 — Lead webhook rate limiting
-**As** a system protecting user subscriber lists,  
-**I want** the lead webhook to reject excessive submissions from the same IP,  
-**So that** lists cannot be spammed.
-
-Acceptance criteria:
-- [ ] More than 5 POST requests to `/api/webhooks/lead` from the same IP within 60 seconds returns HTTP 429
-- [ ] The response body is `{ error: "Too many requests" }`
-- [ ] Legitimate submissions (≤5/min) are not affected
-
-### Story 7 — Open Graph metadata
-**As** a user sharing their landing page URL on social media,  
-**I want** rich preview cards to appear,  
-**So that** the page looks credible when shared.
-
-Acceptance criteria:
-- [ ] `generateMetadata` sets `openGraph.type = "website"`
-- [ ] `openGraph.title` and `openGraph.description` are populated from page variables
-- [ ] `openGraph.url` is set to the canonical `/l/[slug]` URL
+---
 
 ## Technical Requirements
 
-- **No DB schema changes.** All new section data (steps, FAQs) lives inside the existing `variables` JSON field. New section toggles live inside the existing `sections` JSON field.
-- **New variables shape additions** (applied to all three template `LandingPageVariables` interfaces):
-  - `steps?: { title: string; description: string }[]` — up to 3 steps
-  - `faqs?: { question: string; answer: string }[]`
-  - `testimonials?: { name: string; quote: string; role?: string }[]` — replaces flat fields
-- **New sections shape additions** (applied to all three template `LandingPageSections` interfaces and the modal `SectionToggles`):
-  - `howItWorks: boolean`
-  - `faq: boolean`
-- **`testimonial` key** — use `testimonial` (singular) everywhere; remove `testimonials` (plural) from SaaS interface
-- **FAQ accordion** — use `<details>`/`<summary>` HTML elements; no client-side JS needed; templates remain server components
-- **Rate limiting** — in-memory `Map<ip, { count, resetAt }>` in the webhook route; no external dependency
-- **LeadForm** — add `ctaText?: string` prop with a default of `"Get Started"`
-- **No new npm packages**
+### Polar API Integration
+- **API base:** `https://api.polar.sh`
+- **Auth:** `Authorization: Bearer <polar_api_key>` (key stored in DB Setting table, key = `polar_api_key`)
+- **Checkout creation:** `POST /v1/checkouts/custom` with `{ product_price_id, customer_email?, metadata: { ticketId } }`
+  - OR use Polar's "custom amount" checkout if the service price is variable
+- **Webhook verification:** `Polar-Webhook-Secret` header — verify using HMAC-SHA256 against a `polar_webhook_secret` stored in Settings
+- **Key events to handle:** `checkout.updated` (when `status === "succeeded"`)
+- **Amount:** use the ticket's agreed price (from the quote, stored separately) or use `service.priceMin` as the floor
 
-## Files to Change
-1. `components/landing-pages/templates/service.tsx` — fix types + add How It Works, FAQ, multi-testimonials
-2. `components/landing-pages/templates/saas.tsx` — fix `sections.testimonial` key + add How It Works, FAQ
-3. `components/landing-pages/templates/lead-magnet.tsx` — add How It Works, FAQ
-4. `components/dashboard/services/landing-page-modal.tsx` — remove logoGrid, add steps/FAQ editors, swap testimonials to list
-5. `components/landing-pages/lead-form.tsx` — add `ctaText` prop
-6. `app/api/webhooks/lead/route.ts` — add rate limiting
-7. `app/(landing)/l/[slug]/page.tsx` — improve OG metadata
-8. `tests/landing-pages.spec.ts` — tests for new sections and rate limit
+### Database Changes
+Add to `ServiceTicket`:
+```prisma
+polarCheckoutId  String?   // Polar checkout session ID
+polarOrderId     String?   // Polar order ID (set on payment)
+paidAt           DateTime? // When payment was received
+amountPaid       Int?      // Amount in cents
+```
+
+Status enum additions (string field, not enum — follows existing pattern):
+- `"awaiting_payment"` — checkout link generated, waiting for client
+- `"paid"` — Polar webhook confirmed payment
+
+---
+
+## UI/UX Requirements
+
+### Settings page
+- New section "Payment" under the existing API Keys section
+- Two fields: `Polar API Key` (password input) + `Polar Webhook Secret` (password input)
+- Saved via the existing `Save Changes` button (no separate save)
+
+### Ticket card / detail
+- Status badge: add `awaiting_payment` (yellow/amber) and `paid` (green) to existing badge styles
+- When status = `quoted`: show "Request Payment" button (indigo)
+- When `polarCheckoutId` exists: show checkout URL in a read-only input with copy button
+- "Send Delivery" button: disabled unless status is `paid` or `in_progress`
+
+### Ticket status flow
+```
+new → quoted → awaiting_payment → paid → in_progress → delivered → closed
+```
+(can still skip awaiting_payment / paid and go quoted → in_progress for offline payments)
+
+---
+
+## Integration Points
+
+- **Polar API:** `POST /v1/checkouts/custom` to create checkout sessions
+- **Polar Webhooks:** `POST /api/webhooks/polar` to receive payment events
+- **Resend (existing):** delivery email already wired — no changes needed
+- **DB Setting table:** stores `polar_api_key` and `polar_webhook_secret` — follows existing pattern for all API keys
+
+---
 
 ## Out of Scope
-- Custom favicon per landing page
-- Analytics/tracking pixels
-- Custom domain per landing page
-- Sitemap.xml / robots.txt
-- A/B testing
-- Image uploads for testimonial avatars
+
+- Stripe / other payment processors
+- Subscription billing
+- Refund handling
+- Polar product catalog sync (we create checkouts on-demand, not syncing a product library)
+- In-app invoice PDF generation (future)
+- Client-facing checkout status page inside PostForge
+
+---
 
 ## Success Criteria
-- All three template bugs are fixed; testimonials render correctly
-- How It Works and FAQ sections visible on all three templates when data is provided
-- LogoGrid toggle gone from modal
-- LeadForm button text matches ctaText
-- `/api/webhooks/lead` returns 429 after 5 requests per IP per minute
-- OG metadata includes type and URL
+
+1. A seller can generate a Polar checkout link from a ticket in under 10 seconds
+2. When a Polar test webhook fires, the ticket status updates to `paid` automatically
+3. The "Send Delivery" button is gated behind `paid` status
+4. Service form fields are all semantically labelled
+5. A landing page created with `sections: { cta: true }` always renders `#lead-name`
+6. All 40 use-case tests pass + new payment tests pass
+
+---
+
+## Bugs Found in Use-Case Test Run (2026-04-20)
+
+| # | Bug | Severity | Fix |
+|---|-----|----------|-----|
+| 1 | `ServiceForm` labels have no `htmlFor`; inputs have no `id` | Medium | Add `id`/`htmlFor` to all fields in `service-form.tsx` |
+| 2 | `POST /api/landing-pages` double-encodes `sections`/`variables` if caller passes them as a JSON string | High | Guard with `typeof value === 'string'` before calling `JSON.stringify` |

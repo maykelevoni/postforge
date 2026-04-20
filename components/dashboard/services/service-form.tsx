@@ -267,11 +267,12 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
 
         <form onSubmit={handleSubmit}>
           <div style={formGroupStyle}>
-            <label style={labelStyle}>
+            <label htmlFor="service-name" style={labelStyle}>
               Name
               <span style={requiredIndicatorStyle}>*</span>
             </label>
             <input
+              id="service-name"
               type="text"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
@@ -282,11 +283,12 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
           </div>
 
           <div style={formGroupStyle}>
-            <label style={labelStyle}>
+            <label htmlFor="service-type" style={labelStyle}>
               Type
               <span style={requiredIndicatorStyle}>*</span>
             </label>
             <select
+              id="service-type"
               value={formData.type}
               onChange={(e) => handleChange("type", e.target.value)}
               style={selectStyle}
@@ -300,11 +302,12 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
           </div>
 
           <div style={formGroupStyle}>
-            <label style={labelStyle}>
+            <label htmlFor="service-description" style={labelStyle}>
               Description
               <span style={requiredIndicatorStyle}>*</span>
             </label>
             <textarea
+              id="service-description"
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder="Brief description of your service..."
@@ -315,11 +318,12 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
           </div>
 
           <div style={formGroupStyle}>
-            <label style={labelStyle}>
+            <label htmlFor="service-deliverables" style={labelStyle}>
               Deliverables Template
               <span style={requiredIndicatorStyle}>*</span>
             </label>
             <textarea
+              id="service-deliverables"
               value={formData.deliverables}
               onChange={(e) => handleChange("deliverables", e.target.value)}
               placeholder="Generate 10 video scripts about [niche] with engaging hooks and clear calls-to-action. Each script should be 60-90 seconds long."
@@ -336,11 +340,12 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
 
           <div style={gridStyle}>
             <div style={formGroupStyle}>
-              <label style={labelStyle}>
+              <label htmlFor="service-price-min" style={labelStyle}>
                 Price Min ($)
                 <span style={requiredIndicatorStyle}>*</span>
               </label>
               <input
+                id="service-price-min"
                 type="number"
                 min="0"
                 step="1"
@@ -353,11 +358,12 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
             </div>
 
             <div style={formGroupStyle}>
-              <label style={labelStyle}>
+              <label htmlFor="service-price-max" style={labelStyle}>
                 Price Max ($)
                 <span style={requiredIndicatorStyle}>*</span>
               </label>
               <input
+                id="service-price-max"
                 type="number"
                 min="0"
                 step="1"
@@ -372,11 +378,12 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
 
           <div style={gridStyle}>
             <div style={formGroupStyle}>
-              <label style={labelStyle}>
+              <label htmlFor="service-turnaround" style={labelStyle}>
                 Turnaround (days)
                 <span style={requiredIndicatorStyle}>*</span>
               </label>
               <input
+                id="service-turnaround"
                 type="number"
                 min="1"
                 value={formData.turnaroundDays || ""}
@@ -388,8 +395,9 @@ export default function ServiceForm({ service, onSave, onCancel }: ServiceFormPr
             </div>
 
             <div style={formGroupStyle}>
-              <label style={labelStyle}>Funnel URL (optional)</label>
+              <label htmlFor="service-funnel-url" style={labelStyle}>Funnel URL (optional)</label>
               <input
+                id="service-funnel-url"
                 type="url"
                 value={formData.funnelUrl}
                 onChange={(e) => handleChange("funnelUrl", e.target.value)}

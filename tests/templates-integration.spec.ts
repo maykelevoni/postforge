@@ -84,7 +84,7 @@ test.describe("Template Generation Flow", () => {
     // 3. Functional template system
 
     // Mock the generation process
-    const baseUrl = "http://localhost:3000";
+    const baseUrl = "http://localhost:3002";
 
     // Get available templates
     const templatesResponse = await request.get(`${baseUrl}/api/templates?category=twitter`);
@@ -146,7 +146,7 @@ test.describe("Template Generation Flow", () => {
   });
 
   test("should handle template generation errors gracefully", async ({ page, request }) => {
-    const baseUrl = "http://localhost:3000";
+    const baseUrl = "http://localhost:3002";
 
     // Try to generate with invalid template ID
     const generateResponse = await request.post(
@@ -173,7 +173,7 @@ test.describe("Template Generation Flow", () => {
 
 test.describe("Template Favorites", () => {
   test("should toggle template favorite status", async ({ page, request }) => {
-    const baseUrl = "http://localhost:3000";
+    const baseUrl = "http://localhost:3002";
 
     // Get a template to favorite
     const listResponse = await request.get(`${baseUrl}/api/templates`);
@@ -233,7 +233,7 @@ test.describe("Template Favorites", () => {
 
 test.describe("Template Constraints Validation", () => {
   test("should validate Twitter character limits", async ({ page, request }) => {
-    const baseUrl = "http://localhost:3000";
+    const baseUrl = "http://localhost:3002";
 
     // Get a Twitter template
     const response = await request.get(`${baseUrl}/api/templates?category=twitter`);

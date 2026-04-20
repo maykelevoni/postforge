@@ -110,14 +110,19 @@ export async function POST(req: Request) {
 
   const slug = await generateUniqueSlug(service.name);
 
+  const normalizeJson = (value: unknown): string => {
+    if (typeof value === "string") return value;
+    return value ? JSON.stringify(value) : "{}";
+  };
+
   const landingPage = await db.landingPage.create({
     data: {
       userId: session.user.id,
       serviceId,
       slug,
       template,
-      variables: variables ? JSON.stringify(variables) : "{}",
-      sections: sections ? JSON.stringify(sections) : "{}",
+      variables: normalizeJson(variables),
+      sections: normalizeJson(sections),
       status: "published",
     },
   });

@@ -1,14 +1,15 @@
-# Feature Tasks: Landing Page Enhancement — Conversion Sections + Production Hardening
-Generated: 2026-04-19
-Total: 9 tasks
+# Feature Tasks: payment-polar
+Generated: 2026-04-20T00:00:00Z
+Total: 10 tasks
 
 ## Checklist
-- [ ] 023: Fix testimonials types across all three templates
-- [ ] 024: Update modal — testimonials list, remove logoGrid, add How It Works + FAQ editors
-- [ ] 025: Add How It Works and FAQ sections to Service template
-- [ ] 026: Add How It Works and FAQ sections to Lead Magnet template
-- [ ] 027: Add How It Works and FAQ sections to SaaS template
-- [ ] 028: LeadForm ctaText prop
-- [ ] 029: Rate limit /api/webhooks/lead
-- [ ] 030: Improve Open Graph metadata for landing pages
-- [ ] 031: Update Playwright tests for rate limiting
+- [x] 001: DB — Add Polar payment columns to ServiceTicket + migration
+- [x] 002: Backend — lib/polar.ts (Polar API helper)
+- [x] 003: Backend — POST /api/tickets/[id]/checkout
+- [x] 004: Backend — POST /api/webhooks/polar (payment webhook handler)
+- [x] 005: Backend — Guard send-delivery behind paid/in_progress status
+- [x] 006: Bug fix — ServiceForm semantic labels (id + htmlFor)
+- [x] 007: Bug fix — Landing page POST double-encoding guard
+- [x] 008: Frontend — Add Polar fields to api-keys-section.tsx
+- [x] 009: Frontend — Ticket UI (Request Payment + checkout URL + status badges)
+- [x] 010: Tests — use-cases.spec.ts payment + bug fix tests

@@ -1,10 +1,21 @@
 # Ship Context Log
 
 ## NEXT ACTION (resume here on /ship)
-- Feature: landing-pages-email — in implementation, task 1 complete, task 2 is next
-- Run: `./ship.sh run all` to execute remaining 15 tasks (002–016)
+- Feature: payment-polar — COMPLETE. Phase = complete, verified = true.
+- 53/53 tests pass in tests/use-cases.spec.ts
+- One test (Workflow 7, test 31) had a 15s timeout under load — fixed with timeout: 45000
 
 ## Key Decisions
+
+### payment-polar Feature Decisions (2026-04-20)
+- **Payment provider:** Polar API (not Stripe) — polar.sh, creator-focused
+- **Checkout type:** `POST /v1/checkouts/custom` — custom amount per ticket
+- **Webhook:** `/api/webhooks/polar` — verify via HMAC-SHA256 (webhook-id + timestamp + body)
+- **Keys stored:** `polar_api_key` + `polar_webhook_secret` in DB Setting table
+- **New ticket statuses:** `awaiting_payment`, `paid` (additive — no migration needed for enum)
+- **Delivery gate:** send-delivery API blocks unless status is `paid` or `in_progress`
+- **Bug 1 fixed:** service-form.tsx inputs need `id`/`htmlFor` (all 8 fields)
+- **Bug 2 fixed:** landing-pages POST must guard against double-encoding of sections/variables
 
 ### Project Decisions
 - **Stack:** Next.js 14 (App Router) + TypeScript + Prisma + Neon + Auth.js

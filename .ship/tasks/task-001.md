@@ -1,33 +1,37 @@
-# Task 001: Add Tailwind CSS to project
+# Task 001: DB — Add Polar payment columns to ServiceTicket + migration
 
 ## Description
-Install and configure Tailwind CSS so landing page components can use it. Must be scoped so it doesn't break the existing inline-styles dashboard convention.
+Add 4 new optional columns to the `ServiceTicket` model in `prisma/schema.prisma`, then create and apply a migration.
 
 ## Files
-- `tailwind.config.ts` (create)
-- `postcss.config.js` (create)
-- `app/(landing)/l/[slug]/globals.css` (create)
-- `app/(landing)/l/[slug]/layout.tsx` (create)
-- `package.json` (modify — add dependencies)
+- `prisma/schema.prisma` (modify)
+- `prisma/migrations/<timestamp>_add_polar_payment_fields/migration.sql` (create)
 
 ## Requirements
-1. Install `tailwindcss postcss autoprefixer` as dev dependencies
-2. Create `tailwind.config.ts` with content glob that only includes landing page components: `components/landing-pages/**/*.{ts,tsx}` and `app/(landing)/**/*.{ts,tsx}`
-3. Create `postcss.config.js` with tailwindcss and autoprefixer plugins
-4. Create `app/(landing)/l/[slug]/globals.css` with `@tailwind base; @tailwind components; @tailwind utilities;`
-5. Create layout at `app/(landing)/l/[slug]/layout.tsx` that imports the globals.css and wraps children
-6. Verify existing dashboard pages are NOT affected by Tailwind styles
+1. Add these columns to `model ServiceTicket` (after `deliveredAt`):
+   ```prisma
+   polarCheckoutId  String?    // Polar checkout session ID
+   polarOrderId     String?    // Polar order ID (set when webhook fires)
+   paidAt           DateTime?  // Timestamp of confirmed payment
+   amountPaid       Int?       // Amount in cents
+   ```
+2. Run: `pnpm dlx "prisma@5.20.0" migrate diff --from-schema-datasource --to-schema-datamodel --script > /tmp/polar_migration.sql`
+3. Create migration dir: `prisma/migrations/<YYYYMMDDHHmmss>_add_polar_payment_fields/`
+4. Copy `/tmp/polar_migration.sql` into that dir as `migration.sql`
+5. Apply: `pnpm dlx "prisma@5.20.0" migrate deploy`
+6. Regenerate client: `pnpm dlx "prisma@5.20.0" generate`
 
 ## Existing Code to Reference
-- `app/(dashboard)/layout.tsx` (pattern for route group layout)
+- `prisma/schema.prisma` — existing `ServiceTicket` model at line ~309
 
 ## Acceptance Criteria
-- [ ] Tailwind installed and configured
-- [ ] `app/(landing)/l/[slug]/layout.tsx` renders with Tailwind CSS
-- [ ] Dashboard pages unchanged (no Tailwind styles leaking in)
+- [ ] `prisma/schema.prisma` includes the 4 new columns
+- [ ] Migration SQL file exists in `prisma/migrations/`
+- [ ] `pnpm dlx "prisma@5.20.0" migrate deploy` exits 0
+- [ ] `pnpm dlx "prisma@5.20.0" generate` exits 0
 
 ## Dependencies
-- None
+None
 
 ## Commit Message
-feat: add tailwind css for landing pages only
+feat(db): add polar payment columns to ServiceTicket

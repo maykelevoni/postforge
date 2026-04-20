@@ -32,3 +32,7 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations/*/migration.sql
+
+# claude / local tooling
+.openclaude/
+.claude/scheduled_tasks.lock

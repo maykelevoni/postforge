@@ -8,7 +8,7 @@ export default defineConfig({
   reporter: 'list',
   timeout: 90000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3002',
     screenshot: 'only-on-failure',
     video: 'off',
     trace: 'off',

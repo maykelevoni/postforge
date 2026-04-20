@@ -1,42 +1,34 @@
-# Task 005: Replace systeme webhook with native lead webhook
+# Task 005: Backend — Guard send-delivery behind paid/in_progress status
 
 ## Description
-Replace the Systeme.io webhook handler with one that handles submissions from our own landing pages.
+Modify `app/api/tickets/[id]/send-delivery/route.ts` to reject delivery attempts unless the ticket is `paid` or `in_progress`.
 
 ## Files
-- `app/api/webhooks/lead/route.ts` (modify — replace existing content)
-- `app/api/webhooks/systeme/route.ts` (delete)
+- `app/api/tickets/[id]/send-delivery/route.ts` (modify)
 
 ## Requirements
-1. Delete `app/api/webhooks/systeme/route.ts` entirely
-2. Rewrite `app/api/webhooks/lead/route.ts`:
-   - Accept POST with body: `{ name, email, landingPageId }`
-   - Validate name and email are present
-   - Look up LandingPage by ID, verify it exists and is published
-   - Get userId and serviceId from the landing page
-   - Check for duplicate submission (same email on same landing page)
-   - If duplicate: create submission with status "duplicate", return 200 with `{ duplicate: true }`
-   - Create ServiceTicket with status "new", source from landing page slug
-   - Create LandingPageSubmission record
-   - Create Subscriber record (upsert on @@unique([email, userId]) — if already subscribed, skip silently)
-   - Send confirmation email via `sendConfirmationEmail` from `lib/email.ts`
-   - Always return 200 (don't fail on email errors)
-3. Remove any `x-systeme-token` auth — landing page submissions come from our own forms
+1. After loading the ticket (line ~17) and verifying ownership, add a status guard:
+   ```ts
+   if (!["paid", "in_progress"].includes(ticket.status)) {
+     return NextResponse.json(
+       { error: "Payment required before delivery can be sent" },
+       { status: 403 }
+     );
+   }
+   ```
+2. Place the check BEFORE the deliverables check (after the `!ticket.service` check at line ~37)
+3. No other changes to the file
 
 ## Existing Code to Reference
-- `app/api/webhooks/systeme/route.ts` (current webhook logic to replace)
-- `lib/email.ts` (sendConfirmationEmail)
-- `prisma/schema.prisma` (ServiceTicket and LandingPage models)
+- `app/api/tickets/[id]/send-delivery/route.ts` — modify this file (already read, modify at line ~44 before the deliverables check)
 
 ## Acceptance Criteria
-- [ ] `app/api/webhooks/systeme/route.ts` deleted
-- [ ] New lead webhook creates tickets and submissions correctly
-- [ ] Duplicate submissions handled gracefully
-- [ ] Confirmation email sent on new submission
-- [ ] Compiles without TypeScript errors
+- [ ] Returns 403 when status is `new`, `quoted`, or `awaiting_payment`
+- [ ] Allows delivery when status is `paid` or `in_progress`
+- [ ] No other behavior changes
 
 ## Dependencies
-- Task 002, Task 003
+- Task 001 (new statuses defined in schema)
 
 ## Commit Message
-refactor: replace systeme webhook with native landing page lead handler
+feat(api): gate send-delivery behind paid/in_progress status

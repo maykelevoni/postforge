@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Mail, Calendar, Clock, FileText, Package, Send } from "lucide-react";
+import { X, Mail, Calendar, Clock, FileText, Package, Send, CreditCard, Copy, Check } from "lucide-react";
 import { Ticket } from "./types";
 
 interface TicketDrawerProps {
@@ -231,6 +231,10 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
   const [isGeneratingDeliverables, setIsGeneratingDeliverables] = useState(false);
   const [isSendingDelivery, setIsSendingDelivery] = useState(false);
   const [deliverablesPreview, setDeliverablesPreview] = useState<string | null>(null);
+  const [isRequestingPayment, setIsRequestingPayment] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -357,6 +361,37 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
     }
   };
 
+  const handleRequestPayment = async () => {
+    setIsRequestingPayment(true);
+    setCheckoutError(null);
+    try {
+      const response = await fetch(`/api/tickets/${ticket.id}/checkout`, {
+        method: "POST",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setCheckoutUrl(data.checkoutUrl);
+        onUpdate({ ...ticket, status: "awaiting_payment", polarCheckoutId: data.checkoutId });
+      } else {
+        setCheckoutError(data.error || "Failed to create checkout");
+      }
+    } catch (error) {
+      setCheckoutError("Failed to create checkout");
+    } finally {
+      setIsRequestingPayment(false);
+    }
+  };
+
+  const handleCopyCheckoutUrl = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback: do nothing
+    }
+  };
+
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString("en-US", {
       month: "short",
@@ -365,7 +400,8 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
     });
   };
 
-  const showDeliverablesSection = ticket.status === "in_progress" || ticket.status === "delivered";
+  const showDeliverablesSection = ["paid", "in_progress", "delivered"].includes(ticket.status);
+  const canSendDelivery = ["paid", "in_progress"].includes(ticket.status);
 
   return (
     <>
@@ -415,6 +451,8 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
           >
             <option value="new">New</option>
             <option value="quoted">Quoted</option>
+            <option value="awaiting_payment">Awaiting Payment</option>
+            <option value="paid">Paid</option>
             <option value="in_progress">In Progress</option>
             <option value="delivered">Delivered</option>
             <option value="closed">Closed</option>
@@ -475,6 +513,94 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
           )}
         </div>
 
+        {ticket.status === "quoted" && (
+          <div style={sectionStyle}>
+            <h3 style={sectionTitleStyle}>Payment</h3>
+
+            <button
+              onClick={handleRequestPayment}
+              disabled={isRequestingPayment}
+              style={isRequestingPayment ? disabledButtonStyle : primaryButtonStyle}
+            >
+              <CreditCard size={16} />
+              {isRequestingPayment ? "Creating checkout..." : "Request Payment"}
+            </button>
+
+            {checkoutError && (
+              <div style={{ fontSize: "13px", color: "#ef4444", marginTop: "10px" }}>
+                {checkoutError.includes("Polar API key not configured") ? (
+                  <>Polar API key not configured.{" "}
+                    <a href="/settings" style={{ color: "#6366f1", textDecoration: "underline" }}>
+                      Add it in Settings
+                    </a>
+                  </>
+                ) : (
+                  checkoutError
+                )}
+              </div>
+            )}
+
+            {checkoutUrl && (
+              <div style={{ marginTop: "12px" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input
+                    readOnly
+                    value={checkoutUrl}
+                    style={{
+                      flex: 1,
+                      padding: "10px 12px",
+                      fontSize: "12px",
+                      backgroundColor: "#0a0a0a",
+                      border: "1px solid #222",
+                      borderRadius: "4px",
+                      color: "#888",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  />
+                  <button
+                    onClick={() => handleCopyCheckoutUrl(checkoutUrl)}
+                    style={{
+                      padding: "10px 12px",
+                      backgroundColor: copied ? "#22c55e20" : "#222",
+                      border: "1px solid #333",
+                      borderRadius: "4px",
+                      color: copied ? "#22c55e" : "#888",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontSize: "12px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(ticket.status === "awaiting_payment" || ticket.status === "paid") && ticket.polarCheckoutId && (
+          <div style={sectionStyle}>
+            <h3 style={sectionTitleStyle}>Payment Link</h3>
+            <div style={{ fontSize: "13px", color: "#888", marginBottom: "10px" }}>
+              {ticket.status === "awaiting_payment"
+                ? "Waiting for client to complete payment."
+                : <span style={{ color: "#22c55e" }}>Payment received.</span>
+              }
+            </div>
+            {ticket.amountPaid && (
+              <div style={{ fontSize: "13px", color: "#f5f5f5", marginBottom: "8px" }}>
+                Amount paid: <strong>${(ticket.amountPaid / 100).toFixed(2)}</strong>
+              </div>
+            )}
+          </div>
+        )}
+
         {showDeliverablesSection && (
           <div style={sectionStyle}>
             <h3 style={sectionTitleStyle}>Deliverables</h3>
@@ -495,9 +621,10 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
                 </div>
                 <button
                   onClick={handleSendDelivery}
-                  disabled={isSendingDelivery}
+                  disabled={isSendingDelivery || !canSendDelivery}
+                  title={!canSendDelivery ? "Client must complete payment first" : undefined}
                   style={
-                    isSendingDelivery
+                    isSendingDelivery || !canSendDelivery
                       ? { ...disabledButtonStyle, marginTop: "12px" }
                       : { ...successButtonStyle, marginTop: "12px" }
                   }
@@ -505,6 +632,11 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
                   <Send size={16} />
                   {isSendingDelivery ? "Sending..." : "Send Delivery"}
                 </button>
+                {!canSendDelivery && (
+                  <div style={{ fontSize: "12px", color: "#888", marginTop: "6px", textAlign: "center" }}>
+                    Client must complete payment first
+                  </div>
+                )}
               </>
             )}
 

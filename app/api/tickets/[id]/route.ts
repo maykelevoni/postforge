@@ -54,7 +54,7 @@ export async function PATCH(
   const { status, notes, quote } = body;
 
   // Validate status if provided
-  if (status && !["new", "quoted", "in_progress", "delivered", "closed"].includes(status)) {
+  if (status && !["new", "quoted", "awaiting_payment", "paid", "in_progress", "delivered", "closed"].includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 

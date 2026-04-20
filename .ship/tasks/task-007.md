@@ -1,50 +1,34 @@
-# Task 007: Create landing page API routes
+# Task 007: Bug fix — Landing page POST double-encoding guard
 
 ## Description
-Create CRUD API routes for managing landing pages (create, update, delete, list).
+Fix Bug 2: `app/api/landing-pages/route.ts` POST handler calls `JSON.stringify(sections)` even when sections is already a string. Guard against double-encoding.
 
 ## Files
-- `app/api/landing-pages/route.ts` (create)
-- `app/api/landing-pages/[id]/route.ts` (create)
+- `app/api/landing-pages/route.ts` (modify)
 
 ## Requirements
-1. **POST /api/landing-pages** (auth required):
-   - Accept: `{ serviceId, template, variables, sections }`
-   - Validate serviceId exists and belongs to user
-   - Generate unique slug from service name + random suffix
-   - Create LandingPage with status "published"
-   - Update Service.landingPageId
-   - Return: `{ id, slug, url: "/l/[slug]" }`
-
-2. **PATCH /api/landing-pages/[id]** (auth required):
-   - Accept: partial `{ variables?, sections?, status? }`
-   - Verify landing page belongs to user
-   - Update and return updated page
-
-3. **DELETE /api/landing-pages/[id]** (auth required):
-   - Verify landing page belongs to user
-   - Delete landing page
-   - Null out Service.landingPageId
-   - Return: `{ success: true }`
-
-4. **GET /api/landing-pages** (auth required):
-   - List all landing pages for current user
-   - Include service name in response
-   - Return: `[{ id, slug, template, status, service: { name } }]`
+1. Add a `normalizeJson` helper inside the POST handler (or at file scope):
+   ```ts
+   const normalizeJson = (value: unknown): string => {
+     if (typeof value === 'string') return value;
+     return value ? JSON.stringify(value) : '{}';
+   };
+   ```
+2. Replace all `JSON.stringify(sections)` calls with `normalizeJson(sections)`
+3. Replace all `JSON.stringify(variables)` calls with `normalizeJson(variables)`
+4. Read the file first to see the exact lines to change
 
 ## Existing Code to Reference
-- `app/api/settings/route.ts` (auth + DB pattern)
-- `app/api/services/route.ts` (CRUD pattern for similar resource)
+- `app/api/landing-pages/route.ts` — read this file first
 
 ## Acceptance Criteria
-- [ ] All 4 endpoints work correctly
-- [ ] Auth checks prevent cross-user access
-- [ ] Slug generation is unique
-- [ ] Service.landingPageId updated on create/delete
-- [ ] TypeScript compiles without errors
+- [ ] `sections` passed as object → stored as once-stringified JSON
+- [ ] `sections` passed as string → stored as-is (no double stringify)
+- [ ] Same guard applied to `variables`
+- [ ] No other changes to the route
 
 ## Dependencies
-- Task 002
+None
 
 ## Commit Message
-feat: add landing page CRUD API routes
+fix(api): guard landing-pages POST against double-encoding sections

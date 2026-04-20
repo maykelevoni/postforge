@@ -28,8 +28,8 @@ test.describe('Auth flows', () => {
     await page.getByRole('button', { name: 'Sign In' }).click();
 
     // After successful sign-in, redirects to dashboard root
-    await page.waitForURL('http://localhost:3000/');
-    await expect(page).toHaveURL('http://localhost:3000/');
+    await page.waitForURL('http://localhost:3002/');
+    await expect(page).toHaveURL('http://localhost:3002/');
   });
 
   test('redirect to sign-in when accessing / unauthenticated', async ({ page }) => {

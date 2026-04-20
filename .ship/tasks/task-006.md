@@ -1,34 +1,40 @@
-# Task 006: Update Settings page — swap Systeme.io for Resend
+# Task 006: Bug fix — ServiceForm semantic labels (id + htmlFor)
+
+## Type
+ui
 
 ## Description
-Update the settings page and API to replace Systeme.io settings with Resend settings.
+Fix Bug 1: `components/dashboard/services/service-form.tsx` has labels without `htmlFor` and inputs without `id`. Add them for all 8 fields.
 
 ## Files
-- `app/api/settings/route.ts` (modify)
-- `app/(dashboard)/settings/page.tsx` (modify)
-- `.env.example` (modify)
+- `components/dashboard/services/service-form.tsx` (modify)
 
 ## Requirements
-1. **API route:** Remove `systeme_api_key`, `systeme_domain`, `systeme_funnel_url`, `systeme_webhook_token` from allowed settings keys. Add `resend_api_key` and `resend_from_email`.
-2. **Settings page:** Replace Systeme.io input fields with Resend fields:
-   - `resend_api_key` — text input (sensitive)
-   - `resend_from_email` — text input (e.g. "you@yourdomain.com")
-   - Remove all Systeme.io related fields
-3. **.env.example:** Remove `SYSTEME_API_KEY` line, add `RESEND_API_KEY` (as fallback/example only)
-4. Keep the same settings save/load pattern — just change the keys.
+Add `id` to each input and matching `htmlFor` to each label. The mapping:
+
+| Field | id | label text |
+|---|---|---|
+| name | `service-name` | Name |
+| type | `service-type` | Type |
+| description | `service-description` | Description |
+| deliverables | `service-deliverables` | Deliverables |
+| priceMin | `service-price-min` | Min Price ($) |
+| priceMax | `service-price-max` | Max Price ($) |
+| turnaroundDays | `service-turnaround` | Turnaround (days) |
+| funnelUrl | `service-funnel-url` | Funnel URL (optional) |
+
+For `<select>` elements (type field), use `id="service-type"` on the select tag.
 
 ## Existing Code to Reference
-- `app/api/settings/route.ts` (current settings allowed keys)
-- `app/(dashboard)/settings/page.tsx` (current settings UI fields)
+- `components/dashboard/services/service-form.tsx` — read it first to see exact current structure
 
 ## Acceptance Criteria
-- [ ] Settings page shows Resend fields, no Systeme.io fields
-- [ ] Settings save/load works correctly
-- [ ] `.env.example` updated
-- [ ] No TypeScript errors
+- [ ] All 8 fields have matching `id` and `htmlFor` as per the table above
+- [ ] No visual or functional changes — only attributes added
+- [ ] `<label htmlFor="service-name">` pairs with `<input id="service-name" ...>`
 
 ## Dependencies
-- None
+None
 
 ## Commit Message
-refactor: swap systeme.io settings for resend settings
+fix(ui): add semantic id/htmlFor to all ServiceForm fields

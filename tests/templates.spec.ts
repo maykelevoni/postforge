@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Template API", () => {
-  const baseUrl = "http://localhost:3000"; // Adjust if needed
+  const baseUrl = "http://localhost:3002"; // Adjust if needed
 
   test.beforeAll(async () => {
     // Ensure we're authenticated
@@ -249,7 +249,7 @@ test.describe("Template API", () => {
 
 test.describe("Template Validation", () => {
   test("should enforce character limits", async ({ request }) => {
-    const baseUrl = "http://localhost:3000";
+    const baseUrl = "http://localhost:3002";
 
     // Create a template with maxLength constraint
     const newTemplate = {
