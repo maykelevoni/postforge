@@ -47,13 +47,13 @@ cmd_update() {
   git -C "$APP_DIR" pull
 
   info "Installing dependencies..."
-  pnpm --dir "$APP_DIR" install --frozen-lockfile
+  cd "$APP_DIR" && pnpm install --frozen-lockfile
 
   info "Running DB migrations..."
-  pnpm --dir "$APP_DIR" prisma migrate deploy
+  cd "$APP_DIR" && pnpm exec prisma migrate deploy
 
   info "Building app..."
-  pnpm --dir "$APP_DIR" build
+  cd "$APP_DIR" && pnpm build
 
   pm2_action
   info "Done. App is live."
@@ -66,13 +66,13 @@ cmd_setup() {
   env_check
 
   info "Installing dependencies..."
-  pnpm --dir "$APP_DIR" install --frozen-lockfile
+  cd "$APP_DIR" && pnpm install --frozen-lockfile
 
   info "Running DB migrations..."
-  pnpm --dir "$APP_DIR" prisma migrate deploy
+  cd "$APP_DIR" && pnpm exec prisma migrate deploy
 
   info "Building app..."
-  pnpm --dir "$APP_DIR" build
+  cd "$APP_DIR" && pnpm build
 
   pm2_action
 
