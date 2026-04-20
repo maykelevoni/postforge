@@ -1,17 +1,15 @@
 FROM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# ── install all deps (dev included — needed for build + prisma generate) ──────
-FROM base AS deps
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-COPY prisma ./prisma
-RUN pnpm install --frozen-lockfile
-
-# ── build ─────────────────────────────────────────────────────────────────────
+# ── install & build ───────────────────────────────────────────────────────────
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
+# Full install so prisma CLI is available for postinstall (prisma generate)
+RUN pnpm install --frozen-lockfile
+
 COPY . .
 # Skip runtime env validation during build
 ENV NEXT_PHASE=phase-production-build
@@ -22,20 +20,14 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install production deps — skip postinstall (prisma generate needs the CLI
-# which is a devDep; we copy the already-generated client from builder instead)
-COPY package.json pnpm-lock.yaml ./
-COPY prisma ./prisma
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
-
-# Copy the generated Prisma client from builder (avoids needing prisma CLI here)
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
-# Copy built app
+# Copy everything from builder — full node_modules keeps the prisma generated
+# client intact without having to locate pnpm's internal store path
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/worker ./worker
-COPY next.config.js tsconfig.json ./
+COPY --from=builder /app/prisma ./prisma
+COPY package.json next.config.js tsconfig.json ./
 
 EXPOSE 3000
 
