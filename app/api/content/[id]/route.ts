@@ -12,9 +12,28 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { content, subject, body } = await req.json();
+  const body = await req.json();
+  const { action, content, subject } = body;
 
-  // Check if it's a ContentPiece or Newsletter
+  // mark_posted action: manually confirm a queued post
+  if (action === "mark_posted") {
+    const piece = await db.contentPiece.findFirst({
+      where: { id: params.id, userId: session.user.id },
+    });
+
+    if (!piece) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    await db.contentPiece.update({
+      where: { id: params.id },
+      data: { status: "published", postedAt: new Date() },
+    });
+
+    return NextResponse.json({ success: true });
+  }
+
+  // Content edit: update text for piece or newsletter
   const piece = await db.contentPiece.findFirst({
     where: { id: params.id, userId: session.user.id },
   });
@@ -34,7 +53,7 @@ export async function PATCH(
   if (newsletter) {
     const updated = await db.newsletter.update({
       where: { id: params.id },
-      data: { subject, body },
+      data: { subject, body: body.body },
     });
     return NextResponse.json(updated);
   }
