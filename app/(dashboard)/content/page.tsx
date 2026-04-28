@@ -70,16 +70,147 @@ const gridStyle: React.CSSProperties = {
   gap: "20px",
 };
 
+const PLATFORM_COLORS: Record<string, string> = {
+  twitter: "#1DA1F2",
+  instagram: "#E1306C",
+  tiktok: "#222",
+  reddit: "#FF4500",
+  linkedin: "#0077b5",
+};
+
+const badgeStyle = (platform: string): React.CSSProperties => ({
+  padding: "4px 10px",
+  borderRadius: "4px",
+  fontSize: "12px",
+  fontWeight: "700",
+  color: "white",
+  backgroundColor: PLATFORM_COLORS[platform] || "#444",
+  textTransform: "capitalize",
+});
+
+const queueSectionStyle: React.CSSProperties = {
+  marginBottom: "40px",
+};
+
+const queueHeadingStyle: React.CSSProperties = {
+  fontSize: "18px",
+  fontWeight: "700",
+  color: "#f5f5f5",
+  marginBottom: "16px",
+};
+
+const queueCardStyle: React.CSSProperties = {
+  backgroundColor: "#111",
+  border: "1px solid #2a2a2a",
+  borderRadius: "8px",
+  padding: "16px",
+  marginBottom: "12px",
+};
+
+const queueCardHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  marginBottom: "12px",
+};
+
+const queueContentStyle: React.CSSProperties = {
+  fontSize: "14px",
+  color: "#ccc",
+  lineHeight: "1.6",
+  whiteSpace: "pre-wrap",
+  marginBottom: "12px",
+};
+
+const queueActionsStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "8px",
+};
+
+const copyBtnStyle: React.CSSProperties = {
+  padding: "8px 14px",
+  fontSize: "13px",
+  fontWeight: "600",
+  color: "#f5f5f5",
+  backgroundColor: "#222",
+  border: "1px solid #333",
+  borderRadius: "4px",
+  cursor: "pointer",
+};
+
+const markPostedBtnStyle: React.CSSProperties = {
+  padding: "8px 14px",
+  fontSize: "13px",
+  fontWeight: "600",
+  color: "white",
+  backgroundColor: "#22a360",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+};
+
+function ManualQueueCard({ item, onMarkPosted }: { item: any; onMarkPosted: (id: string) => void }) {
+  const [copyLabel, setCopyLabel] = useState("Copy");
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(item.content);
+    setCopyLabel("Copied ✓");
+    setTimeout(() => setCopyLabel("Copy"), 2000);
+  };
+
+  return (
+    <div style={queueCardStyle}>
+      <div style={queueCardHeaderStyle}>
+        <span style={badgeStyle(item.platform)}>{item.platform}</span>
+        {item.scheduledAt && (
+          <span style={{ fontSize: "12px", color: "#666" }}>
+            Was scheduled: {new Date(item.scheduledAt).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+      <div style={queueContentStyle}>{item.content}</div>
+      <div style={queueActionsStyle}>
+        <button onClick={handleCopy} style={copyBtnStyle}>{copyLabel}</button>
+        <button onClick={() => onMarkPosted(item.id)} style={markPostedBtnStyle}>Mark as Posted</button>
+      </div>
+    </div>
+  );
+}
+
 export default function ContentPage() {
   const [activeTab, setActiveTab] = useState<"posts" | "newsletters">("posts");
   const [platform, setPlatform] = useState("all");
   const [status, setStatus] = useState("all");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [manualQueue, setManualQueue] = useState<any[]>([]);
 
   useEffect(() => {
     loadItems();
   }, [activeTab, platform, status]);
+
+  useEffect(() => {
+    loadManualQueue();
+  }, []);
+
+  const loadManualQueue = async () => {
+    try {
+      const res = await fetch("/api/content?type=posts&status=needs_manual_post&page=1");
+      if (res.ok) {
+        const data = await res.json();
+        setManualQueue(data.items);
+      }
+    } catch {}
+  };
+
+  const handleMarkPosted = async (id: string) => {
+    setManualQueue((prev) => prev.filter((p) => p.id !== id));
+    await fetch(`/api/content/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "mark_posted" }),
+    });
+  };
 
   const loadItems = async () => {
     setLoading(true);
@@ -163,6 +294,15 @@ export default function ContentPage() {
         <h1 style={titleStyle}>Content</h1>
         <p style={subtitleStyle}>Manage your social posts and newsletters</p>
       </div>
+
+      {manualQueue.length > 0 && (
+        <div style={queueSectionStyle}>
+          <h2 style={queueHeadingStyle}>Ready to Post</h2>
+          {manualQueue.map((item) => (
+            <ManualQueueCard key={item.id} item={item} onMarkPosted={handleMarkPosted} />
+          ))}
+        </div>
+      )}
 
       <div style={tabsStyle}>
         <button
