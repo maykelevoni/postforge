@@ -76,6 +76,7 @@ const PLATFORM_COLORS: Record<string, string> = {
   tiktok: "#222",
   reddit: "#FF4500",
   linkedin: "#0077b5",
+  youtube: "#FF0000",
 };
 
 const badgeStyle = (platform: string): React.CSSProperties => ({
@@ -149,6 +150,46 @@ const markPostedBtnStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
+const intentBtnBaseStyle: React.CSSProperties = {
+  padding: "8px 14px",
+  fontSize: "13px",
+  fontWeight: "600",
+  color: "white",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+  textDecoration: "none",
+  display: "inline-block",
+  lineHeight: "1",
+};
+
+const postOnXBtnStyle: React.CSSProperties = {
+  ...intentBtnBaseStyle,
+  backgroundColor: "#000",
+};
+
+const postOnThreadsBtnStyle: React.CSSProperties = {
+  ...intentBtnBaseStyle,
+  backgroundColor: "#000",
+};
+
+const postOnRedditBtnStyle: React.CSSProperties = {
+  ...intentBtnBaseStyle,
+  backgroundColor: "#FF4500",
+};
+
+const openYouTubeBtnStyle: React.CSSProperties = {
+  ...intentBtnBaseStyle,
+  backgroundColor: "#FF0000",
+};
+
+const downloadBtnStyle: React.CSSProperties = {
+  ...copyBtnStyle,
+  textDecoration: "none",
+  display: "inline-block",
+  lineHeight: "1",
+};
+
 function ManualQueueCard({ item, onMarkPosted }: { item: any; onMarkPosted: (id: string) => void }) {
   const [copyLabel, setCopyLabel] = useState("Copy");
 
@@ -157,6 +198,9 @@ function ManualQueueCard({ item, onMarkPosted }: { item: any; onMarkPosted: (id:
     setCopyLabel("Copied ✓");
     setTimeout(() => setCopyLabel("Copy"), 2000);
   };
+
+  const encodedContent = encodeURIComponent(item.content || "");
+  const redditTitle = encodeURIComponent((item.content || "").split("\n")[0].slice(0, 300));
 
   return (
     <div style={queueCardStyle}>
@@ -171,6 +215,71 @@ function ManualQueueCard({ item, onMarkPosted }: { item: any; onMarkPosted: (id:
       <div style={queueContentStyle}>{item.content}</div>
       <div style={queueActionsStyle}>
         <button onClick={handleCopy} style={copyBtnStyle}>{copyLabel}</button>
+
+        {item.platform === "twitter" && (
+          <a
+            href={`https://twitter.com/intent/tweet?text=${encodedContent}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={postOnXBtnStyle}
+          >
+            Post on X
+          </a>
+        )}
+
+        {item.platform === "threads" && (
+          <a
+            href={`https://www.threads.net/intent/post?text=${encodedContent}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={postOnThreadsBtnStyle}
+          >
+            Post on Threads
+          </a>
+        )}
+
+        {item.platform === "reddit" && (
+          <a
+            href={`https://www.reddit.com/submit?selftext=true&title=${redditTitle}&text=${encodedContent}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={postOnRedditBtnStyle}
+          >
+            Post on Reddit
+          </a>
+        )}
+
+        {item.platform === "youtube" && (
+          <a
+            href="https://studio.youtube.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={openYouTubeBtnStyle}
+          >
+            Open YouTube
+          </a>
+        )}
+
+        {item.videoUrl && (
+          <a
+            href={item.videoUrl}
+            download
+            style={downloadBtnStyle}
+          >
+            Download Video
+          </a>
+        )}
+
+        {!item.videoUrl && item.imageUrl && (
+          <a
+            href={item.imageUrl}
+            download
+            style={downloadBtnStyle}
+          >
+            Download Image
+          </a>
+        )}
+
         <button onClick={() => onMarkPosted(item.id)} style={markPostedBtnStyle}>Mark as Posted</button>
       </div>
     </div>
@@ -332,6 +441,7 @@ export default function ContentPage() {
             <option value="reddit">Reddit</option>
             <option value="instagram">Instagram</option>
             <option value="tiktok">TikTok</option>
+            <option value="youtube">YouTube</option>
           </select>
         )}
         <select
