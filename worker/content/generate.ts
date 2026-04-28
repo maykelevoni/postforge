@@ -9,7 +9,7 @@ import {
   trackTemplateUsage,
 } from "@/lib/templates";
 
-const PLATFORMS = ["twitter", "linkedin", "reddit", "instagram", "tiktok"] as const;
+const PLATFORMS = ["twitter", "linkedin", "reddit", "instagram", "tiktok", "youtube"] as const;
 
 interface GenerationContext {
   promotion: {
@@ -41,6 +41,7 @@ async function generateContentForPlatform(
     reddit: "You are a helpful community member. Write valuable, non-promotional content that fits naturally in relevant subreddits. Focus on being helpful and authentic. No hard selling.",
     instagram: "You are an Instagram content creator. Write engaging captions that complement visual content. Include relevant hashtags. Max 150 characters.",
     tiktok: "You are a TikTok scriptwriter. Write scripts in the format: HOOK (3 seconds) + VALUE (15 seconds) + CTA (5 seconds). Make it engaging and authentic.",
+    youtube: "You are a YouTube Shorts content strategist. Write a Shorts description: HOOK (1 line, curiosity-driven) + VALUE (2-3 lines, what they'll learn) + CTA (subscribe/link). Under 500 characters total.",
   };
 
   const userPrompts = {
@@ -77,6 +78,11 @@ Include 3-5 relevant hashtags and this link in bio mention: ${utmUrl}`,
 ${context.promotion.description}
 
 Format: HOOK (3 sec) → VALUE (15 sec) → CTA with ${utmUrl} (5 sec)`,
+    youtube: `Write a YouTube Shorts description for: ${context.promotion.name}
+Description: ${context.promotion.description}
+Trending topic: ${context.topic?.title || "Current trends"}
+Include this link in CTA: ${utmUrl}
+Format: Hook → Value → CTA`,
   };
 
   const content = await generateText({

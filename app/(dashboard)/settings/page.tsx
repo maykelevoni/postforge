@@ -145,6 +145,7 @@ export default function SettingsPage() {
           { platform: "reddit", time: "12:00", daysOfWeek: "[2,4]", active: true },
           { platform: "instagram", time: "14:00", daysOfWeek: "[1,2,3,4,5]", active: true },
           { platform: "tiktok", time: "17:00", daysOfWeek: "[1,2,3,4,5]", active: true },
+          { platform: "youtube", time: "16:00", daysOfWeek: "[1,2,3,4,5]", active: true },
           { platform: "email", time: "08:00", daysOfWeek: "[1,2,3,4,5]", active: true },
         ];
         setSchedules(defaultSchedules);

@@ -56,8 +56,8 @@ export async function runContent(userId: string): Promise<void> {
       },
     });
 
-    // Generate media for Instagram and TikTok pieces
-    const mediaPieces = pieces.filter(p => p.platform === "instagram" || p.platform === "tiktok");
+    // Generate media for Instagram, TikTok, and YouTube pieces
+    const mediaPieces = pieces.filter(p => p.platform === "instagram" || p.platform === "tiktok" || p.platform === "youtube");
 
     for (const piece of mediaPieces) {
       await generateMediaForPiece(piece.id, userId);

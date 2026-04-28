@@ -23,8 +23,8 @@ export async function generateMediaForPiece(
     return;
   }
 
-  // Only generate media for Instagram and TikTok
-  if (piece.platform !== "instagram" && piece.platform !== "tiktok") {
+  // Only generate media for Instagram, TikTok, and YouTube Shorts (all 9:16 format)
+  if (piece.platform !== "instagram" && piece.platform !== "tiktok" && piece.platform !== "youtube") {
     console.log(`Skipping media generation for ${piece.platform}`);
     return;
   }
