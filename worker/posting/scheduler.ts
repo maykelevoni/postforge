@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { getSetting } from "@/lib/settings";
-import { postToPlatform } from "./post-bridge";
+import { postToPlatform, MANUAL_QUEUE } from "./post-bridge";
 import { sendNewsletter } from "../../lib/email";
 
 export async function postScheduledPieces(userId: string): Promise<void> {
@@ -36,11 +36,10 @@ export async function postScheduledPieces(userId: string): Promise<void> {
 
       await db.contentPiece.update({
         where: { id: piece.id },
-        data: {
-          status: "published",
-          postBridgeId: postId,
-          postedAt: now,
-        },
+        data:
+          postId === MANUAL_QUEUE
+            ? { status: "needs_manual_post" }
+            : { status: "published", postBridgeId: postId, postedAt: now },
       });
 
       console.log(`Published content piece ${piece.id} to ${piece.platform}`);
