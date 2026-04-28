@@ -110,8 +110,9 @@ export default function ApiKeysSection({ settings, onSave }: ApiKeysSectionProps
         {renderInput("openrouter_model", "OpenRouter Model", false)}
         {renderInput("falai_api_key", "fal.ai API Key", true)}
         {renderInput("postbridge_api_key", "post-bridge API Key", true)}
-{renderInput("resend_api_key", "Resend API Key", true)}
-        {renderInput("resend_from_email", "Resend From Email", false)}
+        {renderInput("brevo_api_key", "Brevo API Key", true)}
+        {renderInput("brevo_from_email", "Brevo From Email", false)}
+        {renderInput("brevo_from_name", "Brevo From Name", false)}
         {renderInput("youtube_api_key", "YouTube API Key", true)}
         {renderInput("newsapi_key", "NewsAPI Key", true)}
         <div style={fullGridStyle}>

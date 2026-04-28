@@ -15,21 +15,18 @@ Browse AI-curated research topics and niche opportunities. Feeds the content gen
 ### Content
 AI generates platform-ready posts (YouTube scripts, Twitter threads, LinkedIn articles, Reddit posts) targeting the trending niches found during research. One click publishes or schedules across connected platforms.
 
-### Promote
-Manage affiliate products and app ideas as promotion targets. PostForge weaves CTAs into generated content — your offers get in front of the right audience automatically.
-
 ### Services
 Define service offerings (video scripts, social packages, newsletters, landing pages, content strategy) and manage the entire client pipeline without calls or manual writing:
 
 - **Service Catalog** — Create services with deliverables templates, price ranges, and turnaround times. Active services are automatically added as promotion targets so PostForge generates content for them.
-- **Lead Capture** — Native landing page forms submit to `/api/webhooks/lead`, creating a ticket automatically. Auto-reply confirmation email sent immediately via Resend.
+- **Lead Capture** — Native landing page forms submit to `/api/webhooks/lead`, creating a ticket automatically. Auto-reply confirmation email sent immediately via Brevo.
 - **Client Pipeline** — 5-stage kanban: New → Quoted → In Progress → Delivered → Closed. Filter by service type.
 - **AI Quote Generation** — One click generates a personalized proposal (scope, timeline, price, next steps) tailored to the client's niche.
 - **AI Deliverable Generation** — PostForge generates the actual deliverables for the client's niche. `[niche]` placeholder in your template gets replaced with the real niche at generation time.
-- **Email delivery** — Quotes and deliverables sent via Resend API. No manual copy-paste.
+- **Email delivery** — Quotes and deliverables sent via Brevo API. No manual copy-paste.
 
 ### Settings
-Configure API keys (OpenRouter, fal.ai, Resend), posting schedules, gate mode, and platform connections.
+Configure API keys (OpenRouter, fal.ai, Brevo), posting schedules, gate mode, and platform connections.
 
 ---
 
@@ -41,7 +38,7 @@ Configure API keys (OpenRouter, fal.ai, Resend), posting schedules, gate mode, a
 | Auth | Auth.js v5 (credentials + Google OAuth) |
 | Database | PostgreSQL via Prisma ORM |
 | AI | OpenRouter (text) + fal.ai (images) |
-| Email | Resend API |
+| Email | Brevo API |
 | Worker | Node.js background worker (tsx watch) |
 | Testing | Playwright |
 
@@ -197,7 +194,7 @@ PostForge landing pages submit leads to the built-in webhook automatically:
 
 - Endpoint: `POST /api/webhooks/lead`
 - Payload: `{ name, email, niche, serviceId, message }`
-- On submit → Subscriber created or updated, ServiceTicket created, confirmation email sent via Resend
+- On submit → Subscriber created or updated, ServiceTicket created, confirmation email sent via Brevo
 
 ---
 
