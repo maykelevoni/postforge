@@ -18,6 +18,10 @@ const ALL_SETTING_KEYS = [
   "timezone",
   "gate_mode",
   "daily_run_hour",
+  "linkedin_access_token",
+  "linkedin_person_urn",
+  "linkedin_client_id",
+  "linkedin_client_secret",
 ];
 
 export async function GET() {
@@ -79,6 +83,26 @@ export async function POST(req: Request) {
       });
     }
   }
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(req: Request) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { keys } = await req.json();
+
+  if (!Array.isArray(keys)) {
+    return NextResponse.json({ error: "Invalid keys format" }, { status: 400 });
+  }
+
+  await db.setting.deleteMany({
+    where: { userId: session.user.id, key: { in: keys } },
+  });
 
   return NextResponse.json({ ok: true });
 }

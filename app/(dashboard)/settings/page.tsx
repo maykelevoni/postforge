@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import ApiKeysSection from "@/components/dashboard/settings/api-keys-section";
 import ScheduleSection from "@/components/dashboard/settings/schedule-section";
+import LinkedInConnect from "@/components/dashboard/settings/linkedin-connect";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { seedDefaults } from "@/lib/seeds";
@@ -214,6 +215,12 @@ export default function SettingsPage() {
       )}
 
       <ApiKeysSection settings={settings} onSave={handleChange} />
+      <Suspense fallback={null}>
+        <LinkedInConnect
+          isConnected={!!settings.linkedin_access_token}
+          personUrn={settings.linkedin_person_urn}
+        />
+      </Suspense>
       <ScheduleSection settings={settings} schedules={schedules} onSave={handleChange} />
 
       <div style={sectionStyle}>
