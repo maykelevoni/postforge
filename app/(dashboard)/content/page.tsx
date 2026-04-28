@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ContentPieceCard from "@/components/dashboard/content/content-piece-card";
 import NewsletterCard from "@/components/dashboard/content/newsletter-card";
+import TemplatesTab from "@/components/dashboard/content/templates-tab";
+import DocsTab from "@/components/dashboard/content/docs-tab";
 
 const pageStyle: React.CSSProperties = {
   padding: "24px",
@@ -286,8 +289,15 @@ function ManualQueueCard({ item, onMarkPosted }: { item: any; onMarkPosted: (id:
   );
 }
 
+const VALID_TABS = ["posts", "newsletters", "templates", "docs"] as const;
+type ContentTab = typeof VALID_TABS[number];
+
 export default function ContentPage() {
-  const [activeTab, setActiveTab] = useState<"posts" | "newsletters">("posts");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") as ContentTab | null;
+  const [activeTab, setActiveTab] = useState<ContentTab>(
+    tabParam && VALID_TABS.includes(tabParam) ? tabParam : "posts"
+  );
   const [platform, setPlatform] = useState("all");
   const [status, setStatus] = useState("all");
   const [items, setItems] = useState<any[]>([]);
@@ -426,67 +436,86 @@ export default function ContentPage() {
         >
           Newsletters
         </button>
-      </div>
-
-      <div style={filterBarStyle}>
-        {activeTab === "posts" && (
-          <select
-            value={platform}
-            onChange={(e) => setPlatform(e.target.value)}
-            style={selectStyle}
-          >
-            <option value="all">All Platforms</option>
-            <option value="twitter">Twitter</option>
-            <option value="linkedin">LinkedIn</option>
-            <option value="reddit">Reddit</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-            <option value="youtube">YouTube</option>
-          </select>
-        )}
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          style={selectStyle}
+        <button
+          onClick={() => setActiveTab("templates")}
+          style={activeTab === "templates" ? activeTabStyle : tabStyle}
         >
-          <option value="all">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="published">Published</option>
-          <option value="failed">Failed</option>
-        </select>
+          Templates
+        </button>
+        <button
+          onClick={() => setActiveTab("docs")}
+          style={activeTab === "docs" ? activeTabStyle : tabStyle}
+        >
+          Docs
+        </button>
       </div>
 
-      {loading ? (
-        <div style={{ padding: "60px", textAlign: "center", color: "#888" }}>
-          Loading...
-        </div>
-      ) : items.length === 0 ? (
-        <div style={{ padding: "60px", textAlign: "center", color: "#888" }}>
-          No items found
-        </div>
-      ) : (
-        <div style={gridStyle}>
-          {items.map((item) =>
-            activeTab === "posts" ? (
-              <ContentPieceCard
-                key={item.id}
-                {...item}
-                onApprove={handleApprove}
-                onPublish={handlePublish}
-                onEdit={handleEdit}
-              />
-            ) : (
-              <NewsletterCard
-                key={item.id}
-                {...item}
-                onApprove={handleApprove}
-                onPublish={handlePublish}
-                onEdit={handleEdit}
-              />
-            )
+      {activeTab === "templates" && <TemplatesTab />}
+      {activeTab === "docs" && <DocsTab />}
+
+      {(activeTab === "posts" || activeTab === "newsletters") && (
+        <>
+          <div style={filterBarStyle}>
+            {activeTab === "posts" && (
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="all">All Platforms</option>
+                <option value="twitter">Twitter</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="reddit">Reddit</option>
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="youtube">YouTube</option>
+              </select>
+            )}
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="published">Published</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+
+          {loading ? (
+            <div style={{ padding: "60px", textAlign: "center", color: "#888" }}>
+              Loading...
+            </div>
+          ) : items.length === 0 ? (
+            <div style={{ padding: "60px", textAlign: "center", color: "#888" }}>
+              No items found
+            </div>
+          ) : (
+            <div style={gridStyle}>
+              {items.map((item) =>
+                activeTab === "posts" ? (
+                  <ContentPieceCard
+                    key={item.id}
+                    {...item}
+                    onApprove={handleApprove}
+                    onPublish={handlePublish}
+                    onEdit={handleEdit}
+                  />
+                ) : (
+                  <NewsletterCard
+                    key={item.id}
+                    {...item}
+                    onApprove={handleApprove}
+                    onPublish={handlePublish}
+                    onEdit={handleEdit}
+                  />
+                )
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

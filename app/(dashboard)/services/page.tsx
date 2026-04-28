@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Plus, ExternalLink, Trash2, Globe } from "lucide-react";
 import ServiceCard from "@/components/dashboard/services/service-card";
 import ServiceForm, { ServiceFormData } from "@/components/dashboard/services/service-form";
 import LandingPageModal from "@/components/dashboard/services/landing-page-modal";
+import LandingPagesTab from "@/components/dashboard/services/landing-pages-tab";
 import { Service } from "@/components/dashboard/services/types";
 
 const pageStyle: React.CSSProperties = {
@@ -129,12 +131,35 @@ const deleteLandingPageButtonStyle: React.CSSProperties = {
   flexShrink: 0,
 };
 
+const tabBarStyle: React.CSSProperties = {
+  display: "flex",
+  borderBottom: "1px solid #222",
+  marginBottom: "24px",
+};
+
+const getTabStyle = (active: boolean): React.CSSProperties => ({
+  padding: "10px 20px",
+  fontSize: "14px",
+  fontWeight: active ? "600" : "400",
+  color: active ? "#f5f5f5" : "#888",
+  background: "none",
+  border: "none",
+  borderBottom: active ? "2px solid #6366f1" : "2px solid transparent",
+  cursor: "pointer",
+  transition: "all 0.15s ease",
+  marginBottom: "-1px",
+});
+
 export default function ServicesPage() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"services" | "pages">(
+    tabParam === "pages" ? "pages" : "services"
+  );
   const [services, setServices] = useState<Service[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
-  // Landing page modal state
   const [landingPageService, setLandingPageService] = useState<Service | null>(null);
 
   useEffect(() => {
@@ -260,13 +285,25 @@ export default function ServicesPage() {
     }
   };
 
-  if (loading) {
+  if (loading && activeTab === "services") {
     return <div style={loadingStyle}>Loading...</div>;
   }
 
   return (
     <div style={pageStyle}>
-      {/* Service Catalog Section */}
+      <div style={tabBarStyle}>
+        <button style={getTabStyle(activeTab === "services")} onClick={() => setActiveTab("services")}>
+          Services
+        </button>
+        <button style={getTabStyle(activeTab === "pages")} onClick={() => setActiveTab("pages")}>
+          Pages
+        </button>
+      </div>
+
+      {activeTab === "pages" && <LandingPagesTab />}
+
+      {activeTab === "services" && (
+        <>
       <div style={sectionStyle}>
         <div style={headerStyle}>
           <div>
@@ -369,6 +406,8 @@ export default function ServicesPage() {
           onCreated={handleLandingPageCreatedOrUpdated}
           onDeleted={handleLandingPageDeleted}
         />
+      )}
+        </>
       )}
     </div>
   );

@@ -1,63 +1,83 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import NavItem, { navItems } from "@/components/layout/nav-item";
+import { Icon } from "@/components/ui/icon";
 
-const sidebarStyle: React.CSSProperties = {
+const topbarStyle: React.CSSProperties = {
   position: "fixed",
-  left: 0,
   top: 0,
-  width: "220px",
-  height: "100vh",
+  left: 0,
+  right: 0,
+  height: "56px",
   backgroundColor: "#111111",
-  borderRight: "1px solid #222222",
-  padding: "24px 16px",
+  borderBottom: "1px solid #222222",
+  display: "flex",
+  alignItems: "center",
+  padding: "0 24px",
+  gap: "8px",
+  zIndex: 100,
   boxSizing: "border-box",
 };
 
 const logoStyle: React.CSSProperties = {
-  fontSize: "20px",
-  fontWeight: "bold",
+  fontSize: "16px",
+  fontWeight: "700",
   color: "#f5f5f5",
-  marginBottom: "32px",
-  padding: "0 16px",
+  marginRight: "16px",
+  whiteSpace: "nowrap",
+  flexShrink: 0,
 };
 
 const navStyle: React.CSSProperties = {
   display: "flex",
-  flexDirection: "column",
-  marginBottom: "32px",
-};
-
-const footerStyle: React.CSSProperties = {
-  marginTop: "auto",
-  paddingTop: "16px",
-  borderTop: "1px solid #222222",
+  alignItems: "center",
+  gap: "2px",
+  flex: 1,
+  overflowX: "auto",
 };
 
 const signOutButtonStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: "12px",
-  padding: "12px 16px",
+  gap: "6px",
+  padding: "6px 14px",
   color: "#888888",
   backgroundColor: "transparent",
-  border: "none",
+  border: "1px solid #222",
   borderRadius: "6px",
   cursor: "pointer",
-  fontSize: "14px",
+  fontSize: "13px",
   fontWeight: "500",
-  width: "100%",
+  whiteSpace: "nowrap",
+  flexShrink: 0,
   transition: "all 0.2s ease",
 };
 
+const settingsLinkStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "6px 10px",
+  textDecoration: "none",
+  color: "#888888",
+  backgroundColor: "transparent",
+  borderRadius: "6px",
+  transition: "all 0.2s ease",
+  flexShrink: 0,
+};
+
 export default function Sidebar() {
+  const pathname = usePathname();
+  const settingsActive = pathname === "/settings";
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/sign-in" });
   };
 
   return (
-    <aside style={sidebarStyle}>
+    <header style={topbarStyle}>
       <div style={logoStyle}>PostForge</div>
 
       <nav style={navStyle}>
@@ -66,22 +86,32 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div style={footerStyle}>
-        <button
-          onClick={handleSignOut}
-          style={signOutButtonStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#222222";
-            e.currentTarget.style.color = "#f5f5f5";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = "#888888";
-          }}
-        >
-          Sign Out
-        </button>
-      </div>
-    </aside>
+      <Link
+        href="/settings"
+        title="Settings"
+        style={{
+          ...settingsLinkStyle,
+          color: settingsActive ? "#f5f5f5" : "#888888",
+          backgroundColor: settingsActive ? "#6366f1" : "transparent",
+        }}
+      >
+        <Icon name="settings" size={18} />
+      </Link>
+
+      <button
+        onClick={handleSignOut}
+        style={signOutButtonStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "#222222";
+          e.currentTarget.style.color = "#f5f5f5";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+          e.currentTarget.style.color = "#888888";
+        }}
+      >
+        Sign Out
+      </button>
+    </header>
   );
 }

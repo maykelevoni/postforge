@@ -434,7 +434,9 @@ export default function SubscribersPage() {
                 </select>
               </div>
 
-              <TicketPipeline tickets={filteredTickets} onTicketClick={handleTicketClick} />
+              <div style={{ margin: `0 -${isMobile ? 16 : 24}px` }}>
+                <TicketPipeline tickets={filteredTickets} onTicketClick={handleTicketClick} />
+              </div>
 
               {selectedTicket && (
                 <TicketDrawer

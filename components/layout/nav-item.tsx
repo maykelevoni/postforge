@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
@@ -11,40 +13,33 @@ interface NavItemProps {
 const navItems: NavItemProps[] = [
   { href: "/", icon: "home", label: "Today" },
   { href: "/research", icon: "trending", label: "Research" },
-{ href: "/content", icon: "fileText", label: "Content" },
+  { href: "/content", icon: "fileText", label: "Content" },
   { href: "/services", icon: "briefcase", label: "Services" },
-  { href: "/landing-pages", icon: "globe", label: "Landing Pages" },
-  { href: "/subscribers", icon: "users", label: "Subscribers" },
-  { href: "/templates", icon: "layout", label: "Templates" },
-  { href: "/documents", icon: "fileDown", label: "Documents" },
-  { href: "/settings", icon: "settings", label: "Settings" },
+  { href: "/subscribers", icon: "users", label: "Audience" },
 ];
 
-export default function NavItem({
-  href,
-  icon,
-  label,
-}: NavItemProps) {
+export default function NavItem({ href, icon, label }: NavItemProps) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive =
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
 
   const itemStyle: React.CSSProperties = {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
-    padding: "12px 16px",
+    gap: "6px",
+    padding: "6px 10px",
     textDecoration: "none",
     color: isActive ? "#f5f5f5" : "#888888",
     backgroundColor: isActive ? "#6366f1" : "transparent",
     borderRadius: "6px",
-    marginBottom: "4px",
     transition: "all 0.2s ease",
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: "500",
+    whiteSpace: "nowrap",
   };
 
   return (
-    <Link href={href} style={itemStyle}>
+    <Link href={href} style={itemStyle} title={label}>
       <Icon name={icon as any} size={18} />
       <span>{label}</span>
     </Link>

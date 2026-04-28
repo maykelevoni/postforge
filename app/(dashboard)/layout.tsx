@@ -18,8 +18,7 @@ export default async function DashboardLayout({
       <Sidebar />
       <main
         style={{
-          marginLeft: "220px",
-          padding: "24px",
+          marginTop: "56px",
           minHeight: "100vh",
           backgroundColor: "#0a0a0a",
           color: "#f5f5f5",
