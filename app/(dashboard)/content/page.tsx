@@ -39,6 +39,8 @@ const tabStyle: React.CSSProperties = {
   fontSize: "14px",
   fontWeight: "500",
   color: "#888",
+  backgroundColor: "transparent",
+  border: "none",
   borderBottom: "2px solid transparent",
   cursor: "pointer",
   transition: "all 0.2s ease",
