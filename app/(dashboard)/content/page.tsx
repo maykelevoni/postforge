@@ -131,66 +131,68 @@ const queueActionsStyle: React.CSSProperties = {
   gap: "8px",
 };
 
-const copyBtnStyle: React.CSSProperties = {
-  padding: "8px 14px",
-  fontSize: "13px",
+const actionBtnBase: React.CSSProperties = {
+  padding: "7px 14px",
+  fontSize: "12px",
   fontWeight: "600",
-  color: "#f5f5f5",
-  backgroundColor: "#222",
-  border: "1px solid #333",
-  borderRadius: "4px",
+  borderRadius: "6px",
   cursor: "pointer",
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "5px",
+  lineHeight: "1",
+  transition: "opacity 0.15s ease",
+  whiteSpace: "nowrap",
+};
+
+const copyBtnStyle: React.CSSProperties = {
+  ...actionBtnBase,
+  color: "#aaa",
+  backgroundColor: "transparent",
+  border: "1px solid #333",
 };
 
 const markPostedBtnStyle: React.CSSProperties = {
-  padding: "8px 14px",
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "white",
-  backgroundColor: "#22a360",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-};
-
-const intentBtnBaseStyle: React.CSSProperties = {
-  padding: "8px 14px",
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  textDecoration: "none",
-  display: "inline-block",
-  lineHeight: "1",
+  ...actionBtnBase,
+  color: "#4ade80",
+  backgroundColor: "#0f2a1a",
+  border: "1px solid #166534",
 };
 
 const postOnXBtnStyle: React.CSSProperties = {
-  ...intentBtnBaseStyle,
-  backgroundColor: "#000",
+  ...actionBtnBase,
+  color: "#f5f5f5",
+  backgroundColor: "#1c1c1e",
+  border: "1px solid #3a3a3a",
 };
 
 const postOnThreadsBtnStyle: React.CSSProperties = {
-  ...intentBtnBaseStyle,
-  backgroundColor: "#000",
+  ...actionBtnBase,
+  color: "#f5f5f5",
+  backgroundColor: "#1c1c1e",
+  border: "1px solid #3a3a3a",
 };
 
 const postOnRedditBtnStyle: React.CSSProperties = {
-  ...intentBtnBaseStyle,
-  backgroundColor: "#FF4500",
+  ...actionBtnBase,
+  color: "#ff6a33",
+  backgroundColor: "#1f0c00",
+  border: "1px solid #7c2d00",
 };
 
 const openYouTubeBtnStyle: React.CSSProperties = {
-  ...intentBtnBaseStyle,
-  backgroundColor: "#FF0000",
+  ...actionBtnBase,
+  color: "#f87171",
+  backgroundColor: "#1a0000",
+  border: "1px solid #7f1d1d",
 };
 
 const downloadBtnStyle: React.CSSProperties = {
-  ...copyBtnStyle,
-  textDecoration: "none",
-  display: "inline-block",
-  lineHeight: "1",
+  ...actionBtnBase,
+  color: "#a78bfa",
+  backgroundColor: "#13102a",
+  border: "1px solid #3b2f6e",
 };
 
 function ManualQueueCard({ item, onMarkPosted }: { item: any; onMarkPosted: (id: string) => void }) {

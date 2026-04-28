@@ -90,16 +90,17 @@ const buttonGroupStyle: React.CSSProperties = {
 };
 
 const buttonStyle: React.CSSProperties = {
-  padding: "8px 14px",
+  padding: "7px 14px",
   fontSize: "12px",
   fontWeight: "600",
-  borderRadius: "4px",
-  border: "none",
+  borderRadius: "6px",
+  border: "1px solid transparent",
   cursor: "pointer",
   display: "flex",
   alignItems: "center",
-  gap: "4px",
-  transition: "all 0.2s ease",
+  gap: "5px",
+  transition: "opacity 0.15s ease",
+  whiteSpace: "nowrap",
 };
 
 const inputStyle: React.CSSProperties = {
@@ -210,7 +211,7 @@ export default function NewsletterCard({
           <>
             <button
               onClick={handleSave}
-              style={{ ...buttonStyle, backgroundColor: "#22c55e", color: "white" }}
+              style={{ ...buttonStyle, backgroundColor: "#0f2a1a", color: "#4ade80", borderColor: "#166534" }}
             >
               Save
             </button>
@@ -220,7 +221,7 @@ export default function NewsletterCard({
                 setEditBody(body);
                 setEditing(false);
               }}
-              style={{ ...buttonStyle, backgroundColor: "#222", color: "#888" }}
+              style={{ ...buttonStyle, backgroundColor: "transparent", color: "#666", borderColor: "#2a2a2a" }}
             >
               Cancel
             </button>
@@ -229,25 +230,25 @@ export default function NewsletterCard({
           <>
             <button
               onClick={() => setEditing(true)}
-              style={{ ...buttonStyle, backgroundColor: "#222", color: "#888" }}
+              style={{ ...buttonStyle, backgroundColor: "transparent", color: "#888", borderColor: "#333" }}
             >
-              <Edit2 size={14} />
+              <Edit2 size={13} />
               Edit
             </button>
             {!approved && status === "draft" && (
               <button
                 onClick={() => onApprove(id)}
-                style={{ ...buttonStyle, backgroundColor: "#22c55e", color: "white" }}
+                style={{ ...buttonStyle, backgroundColor: "#0f2a1a", color: "#4ade80", borderColor: "#166534" }}
               >
-                <Check size={14} />
+                <Check size={13} />
                 Approve
               </button>
             )}
             <button
               onClick={() => onPublish(id)}
-              style={{ ...buttonStyle, backgroundColor: "#6366f1", color: "white" }}
+              style={{ ...buttonStyle, backgroundColor: "#312e81", color: "#c7d2fe", borderColor: "#4338ca" }}
             >
-              <Send size={14} />
+              <Send size={13} />
               Send Now
             </button>
           </>
