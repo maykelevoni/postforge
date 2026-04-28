@@ -28,11 +28,23 @@ const filterBarStyle: React.CSSProperties = {
   gap: "16px",
   marginBottom: "24px",
   flexWrap: "wrap",
+  alignItems: "center",
 };
 
 const filterGroupStyle: React.CSSProperties = {
   display: "flex",
   gap: "8px",
+};
+
+const searchInputStyle: React.CSSProperties = {
+  padding: "8px 14px",
+  fontSize: "13px",
+  backgroundColor: "#111",
+  border: "1px solid #222",
+  borderRadius: "6px",
+  color: "#f5f5f5",
+  outline: "none",
+  width: "220px",
 };
 
 const buttonStyle: React.CSSProperties = {
@@ -95,11 +107,12 @@ export default function ResearchPage() {
   const [topics, setTopics] = useState<ResearchTopic[]>([]);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("new");
+  const [nicheSearch, setNicheSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTopics();
-  }, [sourceFilter, statusFilter]);
+  }, [sourceFilter, statusFilter, nicheSearch]);
 
   const loadTopics = async () => {
     setLoading(true);
@@ -108,6 +121,7 @@ export default function ResearchPage() {
         source: sourceFilter,
         status: statusFilter,
         page: "1",
+        ...(nicheSearch && { search: nicheSearch }),
       });
 
       const response = await fetch(`/api/research?${params}`);
@@ -151,6 +165,13 @@ export default function ResearchPage() {
       </div>
 
       <div style={filterBarStyle}>
+        <input
+          type="text"
+          placeholder="Filter by niche..."
+          value={nicheSearch}
+          onChange={(e) => setNicheSearch(e.target.value)}
+          style={searchInputStyle}
+        />
         <div style={filterGroupStyle}>
           <button
             onClick={() => setSourceFilter("all")}

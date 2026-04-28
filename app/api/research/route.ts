@@ -12,6 +12,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const source = searchParams.get("source");
   const status = searchParams.get("status");
+  const search = searchParams.get("search");
   const page = parseInt(searchParams.get("page") || "1");
   const limit = 20;
   const skip = (page - 1) * limit;
@@ -26,6 +27,13 @@ export async function GET(req: Request) {
 
   if (status && status !== "all") {
     where.status = status;
+  }
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { summary: { contains: search, mode: "insensitive" } },
+    ];
   }
 
   const [topics, total] = await Promise.all([

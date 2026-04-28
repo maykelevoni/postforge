@@ -1,13 +1,14 @@
 "use client";
 
 import {
-  FileText,
-  Mail,
-  Youtube,
+  Twitter,
   Linkedin,
-  Instagram,
+  MessageSquare,
+  Youtube,
+  Mail,
   Clock,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 
 interface QueueCardProps {
@@ -102,13 +103,20 @@ const getStatusBadge = (status: string) => {
   );
 };
 
+const PLATFORM_LABELS: Record<string, string> = {
+  twitter: "Twitter",
+  linkedin: "LinkedIn",
+  reddit: "Reddit",
+  youtube: "YouTube",
+  email: "Email",
+};
+
 const getPlatformIcon = (platform: string) => {
   const icons: Record<string, any> = {
-    twitter: <Youtube size={18} style={{ color: "#1DA1F2" }} />,
+    twitter: <Twitter size={18} style={{ color: "#1DA1F2" }} />,
     linkedin: <Linkedin size={18} style={{ color: "#0A66C2" }} />,
-    reddit: <FileText size={18} style={{ color: "#FF4500" }} />,
-    instagram: <Instagram size={18} style={{ color: "#E4405F" }} />,
-    tiktok: <FileText size={18} style={{ color: "#000" }} />,
+    reddit: <MessageSquare size={18} style={{ color: "#FF4500" }} />,
+    youtube: <Youtube size={18} style={{ color: "#FF0000" }} />,
     email: <Mail size={18} style={{ color: "#6366f1" }} />,
   };
 
@@ -116,14 +124,7 @@ const getPlatformIcon = (platform: string) => {
 };
 
 export default function QueueCard({ items }: QueueCardProps) {
-  const platforms = [
-    "twitter",
-    "linkedin",
-    "reddit",
-    "instagram",
-    "tiktok",
-    "email",
-  ];
+  const platforms = ["twitter", "linkedin", "reddit", "youtube", "email"];
 
   return (
     <div style={cardStyle}>
@@ -135,7 +136,7 @@ export default function QueueCard({ items }: QueueCardProps) {
         return (
           <div key={platform} style={index === platforms.length - 1 ? lastRowStyle : rowStyle}>
             <div style={iconStyle}>{getPlatformIcon(platform)}</div>
-            <span style={nameStyle}>{platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
+            <span style={nameStyle}>{PLATFORM_LABELS[platform] ?? platform}</span>
             {item ? (
               <>
                 {item.scheduledAt && (

@@ -159,6 +159,14 @@ const loadingStyle: React.CSSProperties = {
 
 export default function SubscribersPage() {
   const [activeTab, setActiveTab] = useState<"subscribers" | "clients">("subscribers");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Subscribers state
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -300,9 +308,9 @@ export default function SubscribersPage() {
   }
 
   return (
-    <div style={pageStyle}>
+    <div style={{ ...pageStyle, padding: isMobile ? "16px" : "24px" }}>
       {/* Header */}
-      <div style={headerStyle}>
+      <div style={{ ...headerStyle, flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? "12px" : undefined }}>
         <div style={titleRowStyle}>
           <h1 style={titleStyle}>Subscribers</h1>
           {activeTab === "subscribers" && (
@@ -312,13 +320,9 @@ export default function SubscribersPage() {
         {activeTab === "subscribers" && (
           <button
             onClick={handleExportCsv}
-            style={exportButtonStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#4f46e5";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#6366f1";
-            }}
+            style={{ ...exportButtonStyle, width: isMobile ? "100%" : undefined, justifyContent: isMobile ? "center" : undefined }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#4f46e5"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#6366f1"; }}
           >
             <Download size={16} />
             Export CSV
@@ -340,18 +344,16 @@ export default function SubscribersPage() {
       {activeTab === "subscribers" && (
         <>
           {/* Filters */}
-          <div style={filterRowStyle}>
+          <div style={{ ...filterRowStyle, flexWrap: "wrap", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center" }}>
             <label style={filterLabelStyle}>Landing Page:</label>
             <select
               value={filterLandingPageId}
               onChange={(e) => setFilterLandingPageId(e.target.value)}
-              style={selectStyle}
+              style={{ ...selectStyle, width: isMobile ? "100%" : undefined }}
             >
               <option value="all">All</option>
               {landingPages.map((lp) => (
-                <option key={lp.id} value={lp.id}>
-                  {lp.slug}
-                </option>
+                <option key={lp.id} value={lp.id}>{lp.slug}</option>
               ))}
             </select>
 
@@ -359,13 +361,11 @@ export default function SubscribersPage() {
             <select
               value={filterServiceId}
               onChange={(e) => setFilterServiceId(e.target.value)}
-              style={selectStyle}
+              style={{ ...selectStyle, width: isMobile ? "100%" : undefined }}
             >
               <option value="all">All</option>
               {services.map((svc) => (
-                <option key={svc.id} value={svc.id}>
-                  {svc.name}
-                </option>
+                <option key={svc.id} value={svc.id}>{svc.name}</option>
               ))}
             </select>
           </div>
@@ -420,18 +420,16 @@ export default function SubscribersPage() {
           ) : (
             <>
               {/* Service filter */}
-              <div style={filterRowStyle}>
+              <div style={{ ...filterRowStyle, flexWrap: "wrap", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center" }}>
                 <label style={filterLabelStyle}>Filter by service:</label>
                 <select
                   value={ticketFilterServiceId}
                   onChange={(e) => setTicketFilterServiceId(e.target.value)}
-                  style={selectStyle}
+                  style={{ ...selectStyle, width: isMobile ? "100%" : undefined }}
                 >
                   <option value="all">All Services</option>
                   {ticketServices.map((svc) => (
-                    <option key={svc.id} value={svc.id}>
-                      {svc.name}
-                    </option>
+                    <option key={svc.id} value={svc.id}>{svc.name}</option>
                   ))}
                 </select>
               </div>

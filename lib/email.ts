@@ -1,4 +1,4 @@
-import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys } from "@getbrevo/brevo";
+import { BrevoClient } from "@getbrevo/brevo";
 import { getSetting } from "@/lib/settings";
 import { db } from "@/lib/db";
 
@@ -25,7 +25,7 @@ interface Newsletter {
 
 async function getBrevoClient(
   userId: string
-): Promise<{ api: TransactionalEmailsApi; fromEmail: string; fromName: string }> {
+): Promise<{ client: BrevoClient; fromEmail: string; fromName: string }> {
   const apiKey = await getSetting("brevo_api_key", userId);
   if (!apiKey) throw new Error("Brevo API key not configured");
 
@@ -34,16 +34,15 @@ async function getBrevoClient(
 
   const fromName = (await getSetting("brevo_from_name", userId)) || "PostForge";
 
-  const api = new TransactionalEmailsApi();
-  api.setApiKey(TransactionalEmailsApiApiKeys.apiKey, apiKey as string);
+  const client = new BrevoClient({ apiKey: apiKey as string });
 
-  return { api, fromEmail: fromEmail as string, fromName: fromName as string };
+  return { client, fromEmail: fromEmail as string, fromName: fromName as string };
 }
 
 export async function sendConfirmationEmail(ticket: Ticket): Promise<void> {
-  const { api, fromEmail, fromName } = await getBrevoClient(ticket.userId);
+  const { client, fromEmail, fromName } = await getBrevoClient(ticket.userId);
 
-  await api.sendTransacEmail({
+  await client.transactionalEmails.sendTransacEmail({
     sender: { email: fromEmail, name: fromName },
     to: [{ email: ticket.clientEmail, name: ticket.clientName }],
     subject: "Got your request — we'll be in touch soon",
@@ -69,9 +68,9 @@ export async function sendConfirmationEmail(ticket: Ticket): Promise<void> {
 export async function sendQuoteEmail(ticket: Ticket): Promise<void> {
   if (!ticket.quote) throw new Error("Quote is required");
 
-  const { api, fromEmail, fromName } = await getBrevoClient(ticket.userId);
+  const { client, fromEmail, fromName } = await getBrevoClient(ticket.userId);
 
-  await api.sendTransacEmail({
+  await client.transactionalEmails.sendTransacEmail({
     sender: { email: fromEmail, name: fromName },
     to: [{ email: ticket.clientEmail, name: ticket.clientName }],
     subject: `Your quote for ${ticket.service.name}`,
@@ -94,9 +93,9 @@ export async function sendQuoteEmail(ticket: Ticket): Promise<void> {
 export async function sendDeliveryEmail(ticket: Ticket): Promise<void> {
   if (!ticket.deliverables) throw new Error("Deliverables are required");
 
-  const { api, fromEmail, fromName } = await getBrevoClient(ticket.userId);
+  const { client, fromEmail, fromName } = await getBrevoClient(ticket.userId);
 
-  await api.sendTransacEmail({
+  await client.transactionalEmails.sendTransacEmail({
     sender: { email: fromEmail, name: fromName },
     to: [{ email: ticket.clientEmail, name: ticket.clientName }],
     subject: `Your ${ticket.service.name} deliverables are ready`,
@@ -117,7 +116,7 @@ export async function sendDeliveryEmail(ticket: Ticket): Promise<void> {
 }
 
 export async function sendNewsletter(newsletter: Newsletter): Promise<void> {
-  const { api, fromEmail, fromName } = await getBrevoClient(newsletter.userId);
+  const { client, fromEmail, fromName } = await getBrevoClient(newsletter.userId);
 
   const subscribers = await db.subscriber.findMany({
     where: { userId: newsletter.userId },
@@ -136,7 +135,7 @@ export async function sendNewsletter(newsletter: Newsletter): Promise<void> {
   try {
     const sendResults = await Promise.allSettled(
       subscribers.map((subscriber) =>
-        api.sendTransacEmail({
+        client.transactionalEmails.sendTransacEmail({
           sender: { email: fromEmail, name: fromName },
           to: [{ email: subscriber.email, name: subscriber.name ?? undefined }],
           subject: newsletter.subject,

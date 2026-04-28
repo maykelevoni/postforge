@@ -33,7 +33,7 @@ const subtitleStyle: React.CSSProperties = {
 };
 
 export default function TemplatesPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("twitter");
+  const [selectedCategory, setSelectedCategory] = useState<string>("linkedin");
   const [showEditor, setShowEditor] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -54,8 +54,7 @@ export default function TemplatesPage() {
     { id: "twitter", label: "Twitter", icon: "twitter" },
     { id: "linkedin", label: "LinkedIn", icon: "linkedin" },
     { id: "reddit", label: "Reddit", icon: "reddit" },
-    { id: "instagram", label: "Instagram", icon: "instagram" },
-    { id: "tiktok", label: "TikTok", icon: "tiktok" },
+    { id: "youtube", label: "YouTube", icon: "youtube" },
     { id: "email_subject", label: "Email Subject", icon: "mail" },
     { id: "email_body", label: "Email Body", icon: "fileText" },
     { id: "image_prompt", label: "Image Prompts", icon: "image" },
