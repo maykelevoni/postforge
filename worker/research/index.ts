@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { generateText } from "@/lib/ai";
 import { fetchYouTube } from "./youtube";
 import { fetchReddit } from "./reddit";
 import { fetchNews } from "./newsapi";
@@ -46,13 +47,33 @@ async function deduplicateTopics(
   return unique;
 }
 
+async function expandKeyword(keyword: string, userId: string): Promise<string> {
+  try {
+    const expanded = await generateText({
+      system: "You are a search query expert.",
+      prompt: `Given the keyword "${keyword}", return 5-6 related search terms for the same niche (include competitors, product names, related topics, broader category). Return ONLY a space-separated list of terms, nothing else. No explanation, no punctuation, just the terms.`,
+      userId,
+    });
+    const result = expanded.trim();
+    return result || keyword;
+  } catch {
+    return keyword;
+  }
+}
+
 export async function runResearch(userId: string, keyword?: string): Promise<void> {
   console.log(`Starting research for user ${userId}${keyword ? ` [keyword: ${keyword}]` : ""}...`);
 
+  let fetchKeyword = keyword;
+  if (keyword) {
+    fetchKeyword = await expandKeyword(keyword, userId);
+    console.log(`Keyword expanded: "${keyword}" → "${fetchKeyword}"`);
+  }
+
   const results = await Promise.allSettled([
-    fetchYouTube(userId, keyword),
-    fetchReddit(userId, keyword),
-    fetchNews(userId, keyword),
+    fetchYouTube(userId, fetchKeyword),
+    fetchReddit(userId, fetchKeyword),
+    fetchNews(userId, fetchKeyword),
   ]);
 
   let allTopics: RawTopic[] = [];

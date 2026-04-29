@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     db.researchTopic.findMany({
       where,
       orderBy: {
-        date: "desc",
+        score: "desc",
       },
       skip,
       take: limit,

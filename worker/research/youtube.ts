@@ -89,7 +89,7 @@ export async function fetchYouTube(userId: string, keyword?: string): Promise<Ra
 
               if (views !== undefined) {
                 topic.views = views;
-                topic.score = Math.round(Math.min(10, Math.max(1, Math.log10(views + 1) / 4)) * 10) / 10;
+                topic.score = Math.round(Math.min(10, Math.max(1, Math.log10(views + 1) / 6 * 10)) * 10) / 10;
               }
               if (likes !== undefined) topic.likes = likes;
               if (comments !== undefined) topic.comments = comments;

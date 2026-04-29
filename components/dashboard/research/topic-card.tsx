@@ -229,8 +229,8 @@ export default function TopicCard({
       if (upvoteRatio != null) {
         items.push(
           <span key="upvoteRatio" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
-            <TrendingUp size={12} />
-            {Math.round(upvoteRatio * 100)}%
+            <ThumbsUp size={12} />
+            {Math.round(upvoteRatio * 100)}% upvoted
           </span>
         );
       }
