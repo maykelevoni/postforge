@@ -26,20 +26,28 @@ export async function fetchReddit(userId: string): Promise<RawTopic[]> {
       for (const post of posts) {
         const postData = post.data;
         const title = postData.title;
-        const url = postData.url;
+        const isSelf = postData.is_self;
+        const url = isSelf
+          ? `https://www.reddit.com${postData.permalink}`
+          : postData.url;
         const selftext = postData.selftext;
         const ups = postData.ups || 0;
+        const upvotes = postData.score as number;
+        const comments = postData.num_comments as number;
+        const upvoteRatio = postData.upvote_ratio as number;
 
-        if (title && url && !url.includes("/comments/")) {
-          // Score based on upvotes, normalized to 1-10
-          const score = Math.min(10, Math.max(1, Math.log10(ups + 1) / 1.5));
+        if (title && url) {
+          const score = Math.round(Math.min(10, Math.log10(ups + 1) / Math.log10(100000) * 9 + 1) * 10) / 10;
 
           topics.push({
             title,
             url,
             summary: selftext?.substring(0, 500) || title,
             source: "reddit",
-            score: Math.round(score * 10) / 10,
+            score,
+            upvotes,
+            comments,
+            upvoteRatio,
           });
         }
       }
