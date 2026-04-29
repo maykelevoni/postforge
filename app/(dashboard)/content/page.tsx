@@ -423,7 +423,9 @@ export default function ContentPage() {
         </button>
       </div>
 
-      {activeTab === "templates" && <TemplatesTab />}
+      {activeTab === "templates" && (
+        <TemplatesTab />
+      )}
 
       {activeTab === "posts" && (
         <div style={{ border: "1px solid #222", borderRadius: "8px", overflow: "hidden" }}>
