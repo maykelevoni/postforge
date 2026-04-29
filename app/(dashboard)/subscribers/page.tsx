@@ -281,6 +281,10 @@ export default function SubscribersPage() {
     }
   };
 
+  const handleTicketStatusChange = (ticketId: string, newStatus: string) => {
+    setTickets(tickets.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t)));
+  };
+
   const handleDrawerClose = () => {
     setSelectedTicket(null);
   };
@@ -435,7 +439,7 @@ export default function SubscribersPage() {
               </div>
 
               <div style={{ margin: `0 -${isMobile ? 16 : 24}px` }}>
-                <TicketPipeline tickets={filteredTickets} onTicketClick={handleTicketClick} />
+                <TicketPipeline tickets={filteredTickets} onTicketClick={handleTicketClick} onStatusChange={handleTicketStatusChange} />
               </div>
 
               {selectedTicket && (

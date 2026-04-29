@@ -7,6 +7,7 @@ import { Ticket } from "./types";
 interface TicketCardProps {
   ticket: Ticket;
   onClick: () => void;
+  onStatusChange: (ticketId: string, newStatus: string) => void;
 }
 
 const cardStyle: React.CSSProperties = {
@@ -63,8 +64,25 @@ const daysStyle: React.CSSProperties = {
   color: "#555",
 };
 
-export default function TicketCard({ ticket, onClick }: TicketCardProps) {
+export default function TicketCard({ ticket, onClick, onStatusChange }: TicketCardProps) {
   const [isHovered, setIsHovered] = React.useState(false);
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  const handleStatusSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.stopPropagation();
+    const newStatus = e.target.value;
+    setIsUpdating(true);
+    try {
+      const res = await fetch(`/api/tickets/${ticket.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) onStatusChange(ticket.id, newStatus);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   // Calculate days in current stage
   const daysInStage = Math.floor(
@@ -90,6 +108,31 @@ export default function TicketCard({ ticket, onClick }: TicketCardProps) {
           {daysInStage === 0 ? "Today" : `${daysInStage} day${daysInStage !== 1 ? "s" : ""}`}
         </span>
       </div>
+      <select
+        value={ticket.status}
+        onChange={handleStatusSelect}
+        onClick={(e) => e.stopPropagation()}
+        disabled={isUpdating}
+        style={{
+          fontSize: "11px",
+          backgroundColor: "#1a1a1a",
+          border: "1px solid #333",
+          borderRadius: "4px",
+          padding: "4px 6px",
+          color: "#888",
+          width: "100%",
+          marginTop: "8px",
+          cursor: isUpdating ? "not-allowed" : "pointer",
+        }}
+      >
+        <option value="new">New</option>
+        <option value="quoted">Quoted</option>
+        <option value="awaiting_payment">Awaiting Payment</option>
+        <option value="paid">Paid</option>
+        <option value="in_progress">In Progress</option>
+        <option value="delivered">Delivered</option>
+        <option value="closed">Closed</option>
+      </select>
     </div>
   );
 }

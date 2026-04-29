@@ -6,6 +6,7 @@ import { Ticket } from "./types";
 interface TicketPipelineProps {
   tickets: Ticket[];
   onTicketClick: (ticket: Ticket) => void;
+  onStatusChange: (ticketId: string, newStatus: string) => void;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -30,11 +31,11 @@ const containerStyle: React.CSSProperties = {
 };
 
 const columnStyle: React.CSSProperties = {
-  flex: "0 0 260px",
-  width: "260px",
+  flex: "0 0 180px",
+  width: "180px",
   backgroundColor: "#111",
   borderRadius: "6px",
-  padding: "12px",
+  padding: "8px",
   display: "flex",
   flexDirection: "column",
 };
@@ -103,7 +104,7 @@ const STATUS_COLUMNS = [
   { id: "closed", label: "Closed" },
 ];
 
-export default function TicketPipeline({ tickets, onTicketClick }: TicketPipelineProps) {
+export default function TicketPipeline({ tickets, onTicketClick, onStatusChange }: TicketPipelineProps) {
   return (
     <div style={containerStyle}>
       {STATUS_COLUMNS.map((column) => {
@@ -149,6 +150,7 @@ export default function TicketPipeline({ tickets, onTicketClick }: TicketPipelin
                     key={ticket.id}
                     ticket={ticket}
                     onClick={() => onTicketClick(ticket)}
+                    onStatusChange={onStatusChange}
                   />
                 ))
               )}
