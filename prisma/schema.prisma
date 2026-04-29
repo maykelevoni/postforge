@@ -82,17 +82,22 @@ model User {
 }
 
 model ResearchTopic {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date      DateTime
-  source    String   // "youtube" | "reddit" | "newsapi"
-  title     String
-  url       String?
-  summary   String?
-  score     Int      @default(5)
-  status    String   @default("new") // "new" | "used" | "dismissed"
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  source      String   // "youtube" | "reddit" | "newsapi"
+  title       String
+  url         String?
+  summary     String?
+  score       Int      @default(5)
+  status      String   @default("new") // "new" | "used" | "dismissed"
+  views       Int?
+  likes       Int?
+  comments    Int?
+  upvotes     Int?
+  upvoteRatio Float?
+  createdAt   DateTime @default(now())
 
   discoverItems DiscoverItem[]
 
