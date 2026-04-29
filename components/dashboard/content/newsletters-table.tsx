@@ -43,7 +43,7 @@ export default function NewslettersTable({ items, onApprove, onPublish }: Newsle
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       {/* Status tabs */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #222", overflowX: "auto", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #222", overflow: "hidden" }}>
         {STATUS_TABS.map((tab) => {
           const count = tab.id === "all" ? items.length : items.filter((i) => i.status === tab.id).length;
           const isActive = activeTab === tab.id;
@@ -86,7 +86,7 @@ export default function NewslettersTable({ items, onApprove, onPublish }: Newsle
       </div>
 
       {/* Table */}
-      <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 300px)" }}>
+      <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 350px)" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
             <col style={{ width: "28%" }} />

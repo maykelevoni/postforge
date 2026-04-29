@@ -166,7 +166,7 @@ export default function ResearchTable({
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       {/* Source tabs */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #222", overflowX: "auto", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #222", overflow: "hidden" }}>
         {SOURCE_TABS.map((tab) => {
           const count = tab.id === "all"
             ? topics.length
@@ -182,7 +182,7 @@ export default function ResearchTable({
       </div>
 
       {/* Status tabs */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #1a1a1a", overflowX: "auto", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #1a1a1a", overflow: "hidden" }}>
         {STATUS_TABS.map((tab) => {
           const count = tab.id === "all"
             ? topics.length
@@ -198,7 +198,7 @@ export default function ResearchTable({
       </div>
 
       {/* Table */}
-      <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 340px)" }}>
+      <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 375px)" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
             <col style={{ width: "9%" }} />
