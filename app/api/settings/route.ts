@@ -12,6 +12,7 @@ const ALL_SETTING_KEYS = [
   "brevo_from_name",
   "youtube_api_key",
   "newsapi_key",
+  "research_keywords",
   "research_subreddits",
   "timezone",
   "gate_mode",

@@ -2,7 +2,6 @@ import cron from "node-cron";
 import { db } from "@/lib/db";
 import { seedDefaults } from "@/lib/seeds";
 import { runResearch } from "./research";
-import { runDiscover } from "./discover";
 import { runContent } from "./content";
 import { postScheduledPieces, postScheduledNewsletters } from "./posting/scheduler";
 
@@ -42,13 +41,6 @@ async function initializeSchedules(): Promise<void> {
   scheduledTasks.push(
     cron.schedule("0 6 * * *", () => {
       runForAllUsers(runResearch, "Research");
-    })
-  );
-
-  // Discover: 07:00 UTC every day
-  scheduledTasks.push(
-    cron.schedule("0 7 * * *", () => {
-      runForAllUsers(runDiscover, "Discover");
     })
   );
 
@@ -98,7 +90,6 @@ export async function triggerFullRun(userId: string): Promise<void> {
 
   try {
     await runResearch(userId);
-    await runDiscover(userId);
     await runContent(userId);
     await postScheduledPieces(userId);
     await postScheduledNewsletters(userId);

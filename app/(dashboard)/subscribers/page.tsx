@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { Ticket } from "@/components/dashboard/services/types";
-import TicketPipeline from "@/components/dashboard/services/ticket-pipeline";
+import TicketTable from "@/components/dashboard/services/ticket-table";
 import TicketDrawer from "@/components/dashboard/services/ticket-drawer";
 
 interface Subscriber {
@@ -438,8 +438,8 @@ export default function SubscribersPage() {
                 </select>
               </div>
 
-              <div style={{ margin: `0 -${isMobile ? 16 : 24}px` }}>
-                <TicketPipeline tickets={filteredTickets} onTicketClick={handleTicketClick} onStatusChange={handleTicketStatusChange} />
+              <div style={{ border: "1px solid #222", borderRadius: "8px", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 280px)", minHeight: "320px" }}>
+                <TicketTable tickets={filteredTickets} onTicketClick={handleTicketClick} onStatusChange={handleTicketStatusChange} />
               </div>
 
               {selectedTicket && (

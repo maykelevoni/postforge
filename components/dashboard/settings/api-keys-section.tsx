@@ -115,6 +115,9 @@ export default function ApiKeysSection({ settings, onSave }: ApiKeysSectionProps
         {renderInput("youtube_api_key", "YouTube API Key", true)}
         {renderInput("newsapi_key", "NewsAPI Key", true)}
         <div style={fullGridStyle}>
+          {renderInput("research_keywords", "Research Keywords (comma-separated niche terms)", false)}
+        </div>
+        <div style={fullGridStyle}>
           {renderInput("research_subreddits", "Research Subreddits (comma-separated)", false)}
         </div>
       </div>

@@ -36,7 +36,7 @@ const navStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "2px",
   flex: 1,
-  overflowX: "auto",
+  overflow: "hidden",
 };
 
 const signOutButtonStyle: React.CSSProperties = {
