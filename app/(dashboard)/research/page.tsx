@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import TopicCard from "@/components/dashboard/research/topic-card";
+import ResearchTable from "@/components/dashboard/research/research-table";
 
 const pageStyle: React.CSSProperties = {
   padding: "24px",
@@ -30,19 +30,6 @@ const subtitleStyle: React.CSSProperties = {
   color: "#888",
 };
 
-const filterBarStyle: React.CSSProperties = {
-  display: "flex",
-  gap: "16px",
-  marginBottom: "24px",
-  flexWrap: "wrap",
-  alignItems: "center",
-};
-
-const filterGroupStyle: React.CSSProperties = {
-  display: "flex",
-  gap: "8px",
-};
-
 const searchInputStyle: React.CSSProperties = {
   padding: "8px 14px",
   fontSize: "13px",
@@ -66,57 +53,6 @@ const fetchButtonStyle: React.CSSProperties = {
   transition: "all 0.2s ease",
 };
 
-const buttonStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  fontSize: "13px",
-  fontWeight: "500",
-  borderRadius: "6px",
-  border: "1px solid #222",
-  backgroundColor: "#111",
-  color: "#888",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-};
-
-const activeButtonStyle: React.CSSProperties = {
-  ...buttonStyle,
-  backgroundColor: "#6366f1",
-  color: "white",
-  borderColor: "#6366f1",
-};
-
-
-const gridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
-  gap: "20px",
-};
-
-const emptyStateStyle: React.CSSProperties = {
-  textAlign: "center",
-  padding: "60px 20px",
-  backgroundColor: "#111",
-  border: "1px solid #222",
-  borderRadius: "8px",
-};
-
-const emptyTitleStyle: React.CSSProperties = {
-  fontSize: "18px",
-  fontWeight: "600",
-  color: "#f5f5f5",
-  marginBottom: "8px",
-};
-
-const emptyTextStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#888",
-};
-
-const loadMoreWrapperStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "center",
-  marginTop: "24px",
-};
 
 interface ResearchTopic {
   id: string;
@@ -262,104 +198,17 @@ export default function ResearchPage() {
         </button>
       </div>
 
-      <div style={filterBarStyle}>
-        <div style={filterGroupStyle}>
-          <button
-            onClick={() => setSourceFilter("all")}
-            style={sourceFilter === "all" ? activeButtonStyle : buttonStyle}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setSourceFilter("youtube")}
-            style={sourceFilter === "youtube" ? activeButtonStyle : buttonStyle}
-          >
-            YouTube
-          </button>
-          <button
-            onClick={() => setSourceFilter("reddit")}
-            style={sourceFilter === "reddit" ? activeButtonStyle : buttonStyle}
-          >
-            Reddit
-          </button>
-          <button
-            onClick={() => setSourceFilter("newsapi")}
-            style={sourceFilter === "newsapi" ? activeButtonStyle : buttonStyle}
-          >
-            News
-          </button>
-        </div>
-
-        <div style={filterGroupStyle}>
-          <button
-            onClick={() => setStatusFilter("all")}
-            style={statusFilter === "all" ? activeButtonStyle : buttonStyle}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setStatusFilter("new")}
-            style={statusFilter === "new" ? activeButtonStyle : buttonStyle}
-          >
-            New
-          </button>
-          <button
-            onClick={() => setStatusFilter("used")}
-            style={statusFilter === "used" ? activeButtonStyle : buttonStyle}
-          >
-            Used
-          </button>
-          <button
-            onClick={() => setStatusFilter("dismissed")}
-            style={statusFilter === "dismissed" ? activeButtonStyle : buttonStyle}
-          >
-            Dismissed
-          </button>
-        </div>
+      <div style={{ border: "1px solid #222", borderRadius: "8px", overflow: "hidden" }}>
+        <ResearchTable
+          topics={topics}
+          onStatusChange={handleStatusChange}
+          sourceFilter={sourceFilter}
+          setSourceFilter={setSourceFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          loading={loading && topics.length === 0}
+        />
       </div>
-
-      {loading && topics.length === 0 ? (
-        <div style={emptyStateStyle}>
-          <p style={emptyTextStyle}>Loading...</p>
-        </div>
-      ) : topics.length === 0 ? (
-        <div style={emptyStateStyle}>
-          <h3 style={emptyTitleStyle}>No topics found</h3>
-          <p style={emptyTextStyle}>
-            {sourceFilter === "all" && statusFilter === "new"
-              ? "Check back later for new research topics"
-              : "Try adjusting your filters"}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div style={gridStyle}>
-            {topics.map((topic) => (
-              <TopicCard
-                key={topic.id}
-                {...topic}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
-          </div>
-
-          {page < totalPages && (
-            <div style={loadMoreWrapperStyle}>
-              <button
-                onClick={loadMore}
-                disabled={loading}
-                style={{
-                  ...buttonStyle,
-                  opacity: loading ? 0.6 : 1,
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
-              >
-                {loading ? "Loading..." : "Load more"}
-              </button>
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }
