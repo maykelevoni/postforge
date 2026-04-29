@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TopicCard from "@/components/dashboard/research/topic-card";
 
 const pageStyle: React.CSSProperties = {
@@ -9,6 +9,13 @@ const pageStyle: React.CSSProperties = {
 
 const headerStyle: React.CSSProperties = {
   marginBottom: "32px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+};
+
+const headerTextStyle: React.CSSProperties = {
+  // no additional style needed — just groups title + subtitle
 };
 
 const titleStyle: React.CSSProperties = {
@@ -66,6 +73,12 @@ const activeButtonStyle: React.CSSProperties = {
   borderColor: "#6366f1",
 };
 
+const refreshButtonStyle: React.CSSProperties = {
+  ...buttonStyle,
+  color: "#6366f1",
+  borderColor: "#6366f1",
+};
+
 const gridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
@@ -92,6 +105,12 @@ const emptyTextStyle: React.CSSProperties = {
   color: "#888",
 };
 
+const loadMoreWrapperStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "center",
+  marginTop: "24px",
+};
+
 interface ResearchTopic {
   id: string;
   source: string;
@@ -101,14 +120,35 @@ interface ResearchTopic {
   url: string;
   date: Date;
   status: string;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  upvotes?: number;
+  upvoteRatio?: number;
 }
 
 export default function ResearchPage() {
   const [topics, setTopics] = useState<ResearchTopic[]>([]);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("new");
+  const [inputValue, setInputValue] = useState("");
   const [nicheSearch, setNicheSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce: update nicheSearch 400ms after user stops typing
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setNicheSearch(inputValue);
+    }, 400);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [inputValue]);
 
   useEffect(() => {
     loadTopics();
@@ -116,21 +156,55 @@ export default function ResearchPage() {
 
   const loadTopics = async () => {
     setLoading(true);
+    setPage(1);
     try {
       const params = new URLSearchParams({
         source: sourceFilter,
-        status: statusFilter,
         page: "1",
         ...(nicheSearch && { search: nicheSearch }),
       });
+
+      // Only include status param when not "all"
+      if (statusFilter !== "all") {
+        params.set("status", statusFilter);
+      }
 
       const response = await fetch(`/api/research?${params}`);
       if (response.ok) {
         const data = await response.json();
         setTopics(data.topics);
+        setTotalPages(data.pagination.totalPages);
       }
     } catch (error) {
       console.error("Failed to load topics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    const nextPage = page + 1;
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        source: sourceFilter,
+        page: String(nextPage),
+        ...(nicheSearch && { search: nicheSearch }),
+      });
+
+      if (statusFilter !== "all") {
+        params.set("status", statusFilter);
+      }
+
+      const response = await fetch(`/api/research?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTopics(prev => [...prev, ...data.topics]);
+        setPage(nextPage);
+        setTotalPages(data.pagination.totalPages);
+      }
+    } catch (error) {
+      console.error("Failed to load more topics:", error);
     } finally {
       setLoading(false);
     }
@@ -147,29 +221,59 @@ export default function ResearchPage() {
       });
 
       if (response.ok) {
-        // Update local state
-        setTopics(topics.map(topic =>
-          topic.id === id ? { ...topic, status } : topic
-        ));
+        if (statusFilter === "all") {
+          // In "all" view: update status badge in place
+          setTopics(prev =>
+            prev.map(t => t.id === id ? { ...t, status } : t)
+          );
+        } else {
+          // In filtered view: remove card immediately
+          setTopics(prev => prev.filter(t => t.id !== id));
+        }
       }
     } catch (error) {
       console.error("Failed to update topic:", error);
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetch("/api/research/run", { method: "POST" });
+    } catch (error) {
+      console.error("Failed to trigger research run:", error);
+    } finally {
+      await loadTopics();
+      setRefreshing(false);
+    }
+  };
+
   return (
     <div style={pageStyle}>
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Research</h1>
-        <p style={subtitleStyle}>Today's trending signals</p>
+        <div style={headerTextStyle}>
+          <h1 style={titleStyle}>Research</h1>
+          <p style={subtitleStyle}>Today&apos;s trending signals</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          style={{
+            ...refreshButtonStyle,
+            opacity: refreshing ? 0.6 : 1,
+            cursor: refreshing ? "not-allowed" : "pointer",
+          }}
+        >
+          {refreshing ? "Refreshing..." : "Refresh"}
+        </button>
       </div>
 
       <div style={filterBarStyle}>
         <input
           type="text"
           placeholder="Filter by niche..."
-          value={nicheSearch}
-          onChange={(e) => setNicheSearch(e.target.value)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           style={searchInputStyle}
         />
         <div style={filterGroupStyle}>
@@ -201,6 +305,12 @@ export default function ResearchPage() {
 
         <div style={filterGroupStyle}>
           <button
+            onClick={() => setStatusFilter("all")}
+            style={statusFilter === "all" ? activeButtonStyle : buttonStyle}
+          >
+            All
+          </button>
+          <button
             onClick={() => setStatusFilter("new")}
             style={statusFilter === "new" ? activeButtonStyle : buttonStyle}
           >
@@ -221,7 +331,7 @@ export default function ResearchPage() {
         </div>
       </div>
 
-      {loading ? (
+      {loading && topics.length === 0 ? (
         <div style={emptyStateStyle}>
           <p style={emptyTextStyle}>Loading...</p>
         </div>
@@ -235,15 +345,33 @@ export default function ResearchPage() {
           </p>
         </div>
       ) : (
-        <div style={gridStyle}>
-          {topics.map((topic) => (
-            <TopicCard
-              key={topic.id}
-              {...topic}
-              onStatusChange={handleStatusChange}
-            />
-          ))}
-        </div>
+        <>
+          <div style={gridStyle}>
+            {topics.map((topic) => (
+              <TopicCard
+                key={topic.id}
+                {...topic}
+                onStatusChange={handleStatusChange}
+              />
+            ))}
+          </div>
+
+          {page < totalPages && (
+            <div style={loadMoreWrapperStyle}>
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                style={{
+                  ...buttonStyle,
+                  opacity: loading ? 0.6 : 1,
+                  cursor: loading ? "not-allowed" : "pointer",
+                }}
+              >
+                {loading ? "Loading..." : "Load more"}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
