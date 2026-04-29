@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Mail, Calendar, Clock, FileText, Package, Send, CreditCard, Copy, Check } from "lucide-react";
 import { Ticket } from "./types";
+import { QuoteContent } from "@/components/dashboard/documents/document-preview";
 
 interface TicketDrawerProps {
   ticket: Ticket;
@@ -235,6 +236,7 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -392,6 +394,91 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
     }
   };
 
+  const handleDownloadQuotePdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      const prompt = [
+        ticket.service.name,
+        `$${ticket.service.priceMin}-$${ticket.service.priceMax}`,
+        `${ticket.service.turnaroundDays} days turnaround`,
+        `Quote: ${quote}`,
+      ].join(", ");
+
+      const res = await fetch("/api/documents/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "quote", prompt }),
+      });
+
+      if (!res.ok) return;
+      const c = (await res.json()) as QuoteContent;
+
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = 210;
+      const margin = 20;
+      const maxWidth = pageWidth - margin * 2;
+      let y = 20;
+
+      const checkPage = (needed: number) => {
+        if (y + needed > 270) { doc.addPage(); y = 20; }
+      };
+      const writeText = (text: string, x: number, fontSize: number) => {
+        doc.setFontSize(fontSize);
+        const lines = doc.splitTextToSize(text, maxWidth);
+        checkPage(lines.length * (fontSize * 0.35 + 1));
+        doc.text(lines, x, y);
+        y += lines.length * (fontSize * 0.35 + 1) + 4;
+      };
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(150);
+      doc.text("PROPOSAL", margin, y);
+      y += 8;
+      doc.setTextColor(0);
+      doc.setFont("helvetica", "bold");
+      writeText(c.title, margin, 18);
+      y += 2;
+      doc.setDrawColor(200);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      writeText(c.serviceDescription, margin, 11);
+      doc.setFont("helvetica", "bold");
+      writeText("SCOPE OF WORK", margin, 9);
+      doc.setFont("helvetica", "normal");
+      for (const item of c.scopeOfWork) writeText(`• ${item}`, margin + 2, 11);
+      y += 4;
+      doc.setFont("helvetica", "bold");
+      writeText("DELIVERABLES", margin, 9);
+      doc.setFont("helvetica", "normal");
+      for (const item of c.deliverables) writeText(`• ${item}`, margin + 2, 11);
+      y += 4;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("TIMELINE", margin, y);
+      doc.text("INVESTMENT", margin + 80, y);
+      y += 6;
+      doc.setFontSize(13);
+      doc.text(c.timeline, margin, y);
+      doc.text(c.investment, margin + 80, y);
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      y += 4;
+      doc.setDrawColor(220);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 6;
+      doc.setTextColor(150);
+      writeText(c.terms, margin, 9);
+      doc.setTextColor(0);
+
+      doc.save(`quote-${ticket.clientName.replace(/\s+/g, "-")}-${Date.now()}.pdf`);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString("en-US", {
       month: "short",
@@ -490,18 +577,32 @@ export default function TicketDrawer({ ticket, onClose, onUpdate }: TicketDrawer
                 onBlur={handleQuoteBlur}
                 style={{ ...textareaStyle, marginTop: "16px", minHeight: "200px" }}
               />
-              <button
-                onClick={handleSendQuote}
-                disabled={isSendingQuote || !quote}
-                style={
-                  isSendingQuote || !quote
-                    ? { ...disabledButtonStyle, marginTop: "12px" }
-                    : { ...successButtonStyle, marginTop: "12px" }
-                }
-              >
-                <Send size={16} />
-                {isSendingQuote ? "Sending..." : "Send Quote"}
-              </button>
+              <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                <button
+                  onClick={handleSendQuote}
+                  disabled={isSendingQuote || !quote}
+                  style={
+                    isSendingQuote || !quote
+                      ? { ...disabledButtonStyle, flex: 1 }
+                      : { ...successButtonStyle, flex: 1 }
+                  }
+                >
+                  <Send size={16} />
+                  {isSendingQuote ? "Sending..." : "Send Quote"}
+                </button>
+                <button
+                  onClick={handleDownloadQuotePdf}
+                  disabled={isDownloadingPdf}
+                  style={
+                    isDownloadingPdf
+                      ? { ...disabledButtonStyle, flex: "0 0 auto", width: "auto", padding: "10px 16px" }
+                      : { ...buttonStyle, flex: "0 0 auto", width: "auto", padding: "10px 16px", backgroundColor: "#1a1a2e", border: "1px solid #4338ca", color: "#a5b4fc" }
+                  }
+                >
+                  <FileText size={16} />
+                  {isDownloadingPdf ? "Downloading..." : "Download PDF"}
+                </button>
+              </div>
             </>
           )}
 
