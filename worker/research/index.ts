@@ -100,6 +100,11 @@ export async function runResearch(userId: string): Promise<void> {
         summary: topic.summary,
         score: topic.score,
         status: "new",
+        views:       topic.views       ?? null,
+        likes:       topic.likes       ?? null,
+        comments:    topic.comments    ?? null,
+        upvotes:     topic.upvotes     ?? null,
+        upvoteRatio: topic.upvoteRatio ?? null,
       },
     });
 
