@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import ContentPieceCard from "@/components/dashboard/content/content-piece-card";
 import NewsletterCard from "@/components/dashboard/content/newsletter-card";
 import TemplatesTab from "@/components/dashboard/content/templates-tab";
-import DocsTab from "@/components/dashboard/content/docs-tab";
 
 const pageStyle: React.CSSProperties = {
   padding: "24px",
@@ -293,7 +292,7 @@ function ManualQueueCard({ item, onMarkPosted }: { item: any; onMarkPosted: (id:
   );
 }
 
-const VALID_TABS = ["posts", "newsletters", "templates", "docs"] as const;
+const VALID_TABS = ["posts", "newsletters", "templates"] as const;
 type ContentTab = typeof VALID_TABS[number];
 
 export default function ContentPage() {
@@ -446,16 +445,9 @@ export default function ContentPage() {
         >
           Templates
         </button>
-        <button
-          onClick={() => setActiveTab("docs")}
-          style={activeTab === "docs" ? activeTabStyle : tabStyle}
-        >
-          Docs
-        </button>
       </div>
 
       {activeTab === "templates" && <TemplatesTab />}
-      {activeTab === "docs" && <DocsTab />}
 
       {(activeTab === "posts" || activeTab === "newsletters") && (
         <>
