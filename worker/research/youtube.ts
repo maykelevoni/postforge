@@ -6,6 +6,11 @@ export interface RawTopic {
   summary: string;
   source: "youtube" | "reddit" | "newsapi";
   score: number;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  upvotes?: number;
+  upvoteRatio?: number;
 }
 
 export async function fetchYouTube(userId: string): Promise<RawTopic[]> {
@@ -19,9 +24,11 @@ export async function fetchYouTube(userId: string): Promise<RawTopic[]> {
   try {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const publishedAfter = yesterday.toISOString();
+    const keywords = await getSetting("research_keywords", userId);
+    const q = keywords ? `&q=${encodeURIComponent(keywords)}` : "";
 
     const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&order=viewCount&publishedAfter=${publishedAfter}&maxResults=10&key=${apiKey}`
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&order=viewCount&publishedAfter=${publishedAfter}&maxResults=10${q}&key=${apiKey}`
     );
 
     if (!response.ok) {
@@ -31,6 +38,7 @@ export async function fetchYouTube(userId: string): Promise<RawTopic[]> {
 
     const data = await response.json();
     const topics: RawTopic[] = [];
+    const videoIds: string[] = [];
 
     for (const item of data.items || []) {
       const title = item.snippet?.title;
@@ -38,20 +46,58 @@ export async function fetchYouTube(userId: string): Promise<RawTopic[]> {
       const description = item.snippet?.description;
 
       if (title && videoId) {
-        // Score based on view count (if available) or default to 5
-        let score = 5;
-        if (item.statistics?.viewCount) {
-          const views = parseInt(item.statistics.viewCount, 10);
-          score = Math.min(10, Math.max(1, Math.log10(views + 1) / 4));
-        }
+        videoIds.push(videoId);
 
         topics.push({
           title,
           url: `https://www.youtube.com/watch?v=${videoId}`,
           summary: description?.substring(0, 500) || "",
           source: "youtube",
-          score: Math.round(score * 10) / 10,
+          score: 5,
         });
+      }
+    }
+
+    // Fetch engagement statistics for all collected video IDs
+    if (videoIds.length > 0) {
+      try {
+        const statsResponse = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds.join(",")}&key=${apiKey}`
+        );
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+
+          // Build a map of videoId → statistics
+          const statsMap: Record<string, { viewCount?: string; likeCount?: string; commentCount?: string }> = {};
+          for (const statsItem of statsData.items || []) {
+            if (statsItem.id) {
+              statsMap[statsItem.id] = statsItem.statistics || {};
+            }
+          }
+
+          // Attach stats to each topic and recalculate score
+          for (const topic of topics) {
+            const videoId = new URL(topic.url).searchParams.get("v");
+            if (videoId && statsMap[videoId]) {
+              const stats = statsMap[videoId];
+
+              const views = stats.viewCount !== undefined ? parseInt(stats.viewCount, 10) : undefined;
+              const likes = stats.likeCount !== undefined ? parseInt(stats.likeCount, 10) : undefined;
+              const comments = stats.commentCount !== undefined ? parseInt(stats.commentCount, 10) : undefined;
+
+              if (views !== undefined) {
+                topic.views = views;
+                topic.score = Math.round(Math.min(10, Math.max(1, Math.log10(views + 1) / 4)) * 10) / 10;
+              }
+              if (likes !== undefined) topic.likes = likes;
+              if (comments !== undefined) topic.comments = comments;
+            }
+          }
+        }
+      } catch (statsError) {
+        console.error("Error fetching YouTube video statistics (non-fatal):", statsError);
+        // Topics are returned without stats — graceful degradation
       }
     }
 
