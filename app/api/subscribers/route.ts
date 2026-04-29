@@ -10,8 +10,14 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
+  const count = searchParams.get("count");
   const landingPageId = searchParams.get("landingPageId");
   const serviceId = searchParams.get("serviceId");
+
+  if (count === "true") {
+    const n = await db.subscriber.count({ where: { userId: session.user.id } });
+    return NextResponse.json({ count: n });
+  }
 
   const where: any = {
     userId: session.user.id,

@@ -87,11 +87,16 @@ export default function TodayPage() {
   const [queueItems, setQueueItems] = useState<any[]>([]);
   const [researchTopics, setResearchTopics] = useState<any[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [stats, setStats] = useState<{
+    activeClients: number | null;
+    revenueThisMonth: number | null;
+    subscribers: number | null;
+  }>({ activeClients: null, revenueThisMonth: null, subscribers: null });
 
   useEffect(() => {
-    // Load initial data
     loadQueue();
     loadResearch();
+    loadStats();
 
     // Setup SSE connection
     const eventSource = new EventSource("/api/sse");
@@ -155,6 +160,34 @@ export default function TodayPage() {
     }
   };
 
+  const loadStats = async () => {
+    try {
+      const [ticketsRes, subRes] = await Promise.all([
+        fetch("/api/tickets"),
+        fetch("/api/subscribers?count=true"),
+      ]);
+      if (ticketsRes.ok) {
+        const data = await ticketsRes.json();
+        const tickets: any[] = data.tickets ?? [];
+        const activeClients = tickets.filter((t) => t.status !== "closed").length;
+        const now = new Date();
+        const revenueThisMonth =
+          tickets
+            .filter((t) => {
+              if (!t.paidAt || !t.amountPaid) return false;
+              const d = new Date(t.paidAt);
+              return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            })
+            .reduce((sum: number, t: any) => sum + (t.amountPaid ?? 0), 0) / 100;
+        setStats((prev) => ({ ...prev, activeClients, revenueThisMonth }));
+      }
+      if (subRes.ok) {
+        const data = await subRes.json();
+        setStats((prev) => ({ ...prev, subscribers: data.count ?? 0 }));
+      }
+    } catch {}
+  };
+
   const handleRunNow = async () => {
     setIsRunning(true);
     try {
@@ -213,6 +246,26 @@ export default function TodayPage() {
         >
           {isRunning ? "Running..." : "▶ Run Now"}
         </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+        {[
+          { label: "Active Clients", value: stats.activeClients === null ? "—" : String(stats.activeClients) },
+          {
+            label: "Revenue This Month",
+            value: stats.revenueThisMonth === null
+              ? "—"
+              : "$" + stats.revenueThisMonth.toLocaleString("en-US", { minimumFractionDigits: 0 }),
+          },
+          { label: "Subscribers", value: stats.subscribers === null ? "—" : String(stats.subscribers) },
+        ].map((card) => (
+          <div key={card.label} style={{ backgroundColor: "#111", border: "1px solid #222", borderRadius: "8px", padding: "20px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "600", color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+              {card.label}
+            </div>
+            <div style={{ fontSize: "32px", fontWeight: "700", color: "#6366f1" }}>{card.value}</div>
+          </div>
+        ))}
       </div>
 
       <div style={middleRowStyle}>
