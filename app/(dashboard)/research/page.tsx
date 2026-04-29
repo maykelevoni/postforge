@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import TopicCard from "@/components/dashboard/research/topic-card";
 
 const pageStyle: React.CSSProperties = {
@@ -51,7 +51,19 @@ const searchInputStyle: React.CSSProperties = {
   borderRadius: "6px",
   color: "#f5f5f5",
   outline: "none",
-  width: "220px",
+  width: "260px",
+};
+
+const fetchButtonStyle: React.CSSProperties = {
+  padding: "8px 16px",
+  fontSize: "13px",
+  fontWeight: "500",
+  borderRadius: "6px",
+  border: "1px solid #6366f1",
+  backgroundColor: "#6366f1",
+  color: "white",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
 };
 
 const buttonStyle: React.CSSProperties = {
@@ -73,11 +85,6 @@ const activeButtonStyle: React.CSSProperties = {
   borderColor: "#6366f1",
 };
 
-const refreshButtonStyle: React.CSSProperties = {
-  ...buttonStyle,
-  color: "#6366f1",
-  borderColor: "#6366f1",
-};
 
 const gridStyle: React.CSSProperties = {
   display: "grid",
@@ -131,43 +138,22 @@ export default function ResearchPage() {
   const [topics, setTopics] = useState<ResearchTopic[]>([]);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("new");
-  const [inputValue, setInputValue] = useState("");
-  const [nicheSearch, setNicheSearch] = useState("");
+  const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [refreshing, setRefreshing] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Debounce: update nicheSearch 400ms after user stops typing
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setNicheSearch(inputValue);
-    }, 400);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [inputValue]);
+  const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
     loadTopics();
-  }, [sourceFilter, statusFilter, nicheSearch]);
+  }, [sourceFilter, statusFilter]);
 
   const loadTopics = async () => {
     setLoading(true);
     setPage(1);
     try {
-      const params = new URLSearchParams({
-        source: sourceFilter,
-        page: "1",
-        ...(nicheSearch && { search: nicheSearch }),
-      });
-
-      // Only include status param when not "all"
-      if (statusFilter !== "all") {
-        params.set("status", statusFilter);
-      }
+      const params = new URLSearchParams({ source: sourceFilter, page: "1" });
+      if (statusFilter !== "all") params.set("status", statusFilter);
 
       const response = await fetch(`/api/research?${params}`);
       if (response.ok) {
@@ -186,15 +172,8 @@ export default function ResearchPage() {
     const nextPage = page + 1;
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        source: sourceFilter,
-        page: String(nextPage),
-        ...(nicheSearch && { search: nicheSearch }),
-      });
-
-      if (statusFilter !== "all") {
-        params.set("status", statusFilter);
-      }
+      const params = new URLSearchParams({ source: sourceFilter, page: String(nextPage) });
+      if (statusFilter !== "all") params.set("status", statusFilter);
 
       const response = await fetch(`/api/research?${params}`);
       if (response.ok) {
@@ -207,6 +186,22 @@ export default function ResearchPage() {
       console.error("Failed to load more topics:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFetch = async () => {
+    setFetching(true);
+    try {
+      await fetch("/api/research/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword: keyword.trim() || undefined }),
+      });
+      await loadTopics();
+    } catch (error) {
+      console.error("Failed to fetch research:", error);
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -236,18 +231,6 @@ export default function ResearchPage() {
     }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await fetch("/api/research/run", { method: "POST" });
-    } catch (error) {
-      console.error("Failed to trigger research run:", error);
-    } finally {
-      await loadTopics();
-      setRefreshing(false);
-    }
-  };
-
   return (
     <div style={pageStyle}>
       <div style={headerStyle}>
@@ -255,27 +238,31 @@ export default function ResearchPage() {
           <h1 style={titleStyle}>Research</h1>
           <p style={subtitleStyle}>Today&apos;s trending signals</p>
         </div>
+      </div>
+
+      <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+        <input
+          type="text"
+          placeholder="Search a keyword or niche..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && !fetching && handleFetch()}
+          style={searchInputStyle}
+        />
         <button
-          onClick={handleRefresh}
-          disabled={refreshing}
+          onClick={handleFetch}
+          disabled={fetching}
           style={{
-            ...refreshButtonStyle,
-            opacity: refreshing ? 0.6 : 1,
-            cursor: refreshing ? "not-allowed" : "pointer",
+            ...fetchButtonStyle,
+            opacity: fetching ? 0.6 : 1,
+            cursor: fetching ? "not-allowed" : "pointer",
           }}
         >
-          {refreshing ? "Refreshing..." : "Refresh"}
+          {fetching ? "Fetching..." : "Fetch"}
         </button>
       </div>
 
       <div style={filterBarStyle}>
-        <input
-          type="text"
-          placeholder="Filter by niche..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          style={searchInputStyle}
-        />
         <div style={filterGroupStyle}>
           <button
             onClick={() => setSourceFilter("all")}

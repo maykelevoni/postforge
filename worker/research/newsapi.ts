@@ -11,7 +11,7 @@ const HIGH_RANK_SOURCES = [
   "Business Insider",
 ];
 
-export async function fetchNews(userId: string): Promise<RawTopic[]> {
+export async function fetchNews(userId: string, keyword?: string): Promise<RawTopic[]> {
   const apiKey = await getSetting("newsapi_key", userId);
 
   if (!apiKey) {
@@ -20,6 +20,50 @@ export async function fetchNews(userId: string): Promise<RawTopic[]> {
   }
 
   const topics: RawTopic[] = [];
+  const fallback = await getSetting("research_keywords", userId);
+  const term = keyword || fallback;
+
+  if (term) {
+    try {
+      const response = await fetch(
+        `https://newsapi.org/v2/everything?language=en&q=${encodeURIComponent(term)}&pageSize=20&sortBy=publishedAt&apiKey=${apiKey}`
+      );
+
+      if (!response.ok) {
+        console.error("NewsAPI error:", await response.text());
+        return topics;
+      }
+
+      const data = await response.json();
+      const articles = data.articles || [];
+
+      for (const article of articles) {
+        const title = article.title;
+        const url = article.url;
+        const description = article.description;
+        const source = article.source?.name;
+
+        if (title && url && description) {
+          let score = 5;
+          if (source && HIGH_RANK_SOURCES.includes(source)) {
+            score = 8;
+          }
+
+          topics.push({
+            title,
+            url,
+            summary: description,
+            source: "newsapi",
+            score,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching NewsAPI topics by keyword:", error);
+    }
+
+    return topics;
+  }
 
   for (const category of ["technology", "business"]) {
     try {

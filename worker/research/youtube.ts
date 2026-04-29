@@ -13,7 +13,7 @@ export interface RawTopic {
   upvoteRatio?: number;
 }
 
-export async function fetchYouTube(userId: string): Promise<RawTopic[]> {
+export async function fetchYouTube(userId: string, keyword?: string): Promise<RawTopic[]> {
   const apiKey = await getSetting("youtube_api_key", userId);
 
   if (!apiKey) {
@@ -24,8 +24,9 @@ export async function fetchYouTube(userId: string): Promise<RawTopic[]> {
   try {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const publishedAfter = yesterday.toISOString();
-    const keywords = await getSetting("research_keywords", userId);
-    const q = keywords ? `&q=${encodeURIComponent(keywords)}` : "";
+    const fallback = await getSetting("research_keywords", userId);
+    const term = keyword || fallback;
+    const q = term ? `&q=${encodeURIComponent(term)}` : "";
 
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&order=viewCount&publishedAfter=${publishedAfter}&maxResults=10${q}&key=${apiKey}`

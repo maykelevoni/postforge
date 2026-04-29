@@ -1,7 +1,7 @@
 import { getSetting } from "@/lib/settings";
 import { RawTopic } from "./youtube";
 
-export async function fetchReddit(userId: string): Promise<RawTopic[]> {
+export async function fetchReddit(userId: string, keyword?: string): Promise<RawTopic[]> {
   const subredditsStr = await getSetting("research_subreddits", userId);
   const subreddits = subredditsStr
     ? subredditsStr.split(",").map((s) => s.trim())
@@ -11,9 +11,11 @@ export async function fetchReddit(userId: string): Promise<RawTopic[]> {
 
   for (const subreddit of subreddits) {
     try {
-      const response = await fetch(
-        `https://www.reddit.com/r/${subreddit}/hot.json?limit=10`
-      );
+      const url = keyword
+        ? `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(keyword)}&restrict_sr=true&sort=hot&limit=10`
+        : `https://www.reddit.com/r/${subreddit}/hot.json?limit=10`;
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         console.error(`Reddit API error for r/${subreddit}:`, await response.text());

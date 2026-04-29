@@ -46,13 +46,13 @@ async function deduplicateTopics(
   return unique;
 }
 
-export async function runResearch(userId: string): Promise<void> {
-  console.log(`Starting research for user ${userId}...`);
+export async function runResearch(userId: string, keyword?: string): Promise<void> {
+  console.log(`Starting research for user ${userId}${keyword ? ` [keyword: ${keyword}]` : ""}...`);
 
   const results = await Promise.allSettled([
-    fetchYouTube(userId),
-    fetchReddit(userId),
-    fetchNews(userId),
+    fetchYouTube(userId, keyword),
+    fetchReddit(userId, keyword),
+    fetchNews(userId, keyword),
   ]);
 
   let allTopics: RawTopic[] = [];
