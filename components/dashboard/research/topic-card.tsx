@@ -7,6 +7,9 @@ import {
   ExternalLink,
   Check,
   X,
+  Eye,
+  ThumbsUp,
+  MessageCircle,
 } from "lucide-react";
 
 interface TopicCardProps {
@@ -19,6 +22,17 @@ interface TopicCardProps {
   date: Date;
   status: string;
   onStatusChange: (id: string, status: string) => void;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  upvotes?: number;
+  upvoteRatio?: number;
+}
+
+function formatNum(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return Math.round(n / 1_000) + "K";
+  return String(n);
 }
 
 const cardStyle: React.CSSProperties = {
@@ -96,16 +110,16 @@ const buttonStyle: React.CSSProperties = {
   transition: "all 0.2s ease",
 };
 
-const getSourceIcon = (source: string) => {
+const getSourceInfo = (source: string): { icon: React.ReactNode; label: string } => {
   switch (source) {
     case "youtube":
-      return <Youtube size={16} style={{ color: "#ef4444" }} />;
+      return { icon: <Youtube size={16} style={{ color: "#ef4444" }} />, label: "YouTube" };
     case "reddit":
-      return <TrendingUp size={16} style={{ color: "#f97316" }} />;
+      return { icon: <TrendingUp size={16} style={{ color: "#f97316" }} />, label: "Reddit" };
     case "newsapi":
-      return <TrendingUp size={16} style={{ color: "#3b82f6" }} />;
+      return { icon: <TrendingUp size={16} style={{ color: "#3b82f6" }} />, label: "News" };
     default:
-      return <TrendingUp size={16} style={{ color: "#888" }} />;
+      return { icon: <TrendingUp size={16} style={{ color: "#888" }} />, label: "" };
   }
 };
 
@@ -145,6 +159,11 @@ export default function TopicCard({
   date,
   status,
   onStatusChange,
+  views,
+  likes,
+  comments,
+  upvotes,
+  upvoteRatio,
 }: TopicCardProps) {
   const [localStatus, setLocalStatus] = useState(status);
 
@@ -160,6 +179,80 @@ export default function TopicCard({
     });
   };
 
+  const sourceInfo = getSourceInfo(source);
+
+  const metricsRow = () => {
+    const items: React.ReactNode[] = [];
+
+    if (source === "youtube") {
+      if (views != null) {
+        items.push(
+          <span key="views" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+            <Eye size={12} />
+            {formatNum(views)}
+          </span>
+        );
+      }
+      if (likes != null) {
+        items.push(
+          <span key="likes" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+            <ThumbsUp size={12} />
+            {formatNum(likes)}
+          </span>
+        );
+      }
+      if (comments != null) {
+        items.push(
+          <span key="comments" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+            <MessageCircle size={12} />
+            {formatNum(comments)}
+          </span>
+        );
+      }
+    } else if (source === "reddit") {
+      if (upvotes != null) {
+        items.push(
+          <span key="upvotes" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+            <ThumbsUp size={12} />
+            {formatNum(upvotes)}
+          </span>
+        );
+      }
+      if (comments != null) {
+        items.push(
+          <span key="comments" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+            <MessageCircle size={12} />
+            {formatNum(comments)}
+          </span>
+        );
+      }
+      if (upvoteRatio != null) {
+        items.push(
+          <span key="upvoteRatio" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+            <TrendingUp size={12} />
+            {Math.round(upvoteRatio * 100)}%
+          </span>
+        );
+      }
+    }
+
+    if (items.length === 0) return null;
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          fontSize: "12px",
+          color: "#888",
+          marginBottom: "12px",
+        }}
+      >
+        {items}
+      </div>
+    );
+  };
+
   return (
     <div
       style={cardStyle}
@@ -173,12 +266,20 @@ export default function TopicCard({
       }}
     >
       <div style={headerStyle}>
-        <div style={sourceIconStyle}>{getSourceIcon(source)}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={sourceIconStyle}>{sourceInfo.icon}</div>
+          {sourceInfo.label && (
+            <span style={{ fontSize: "12px", color: "#888", fontWeight: "500" }}>
+              {sourceInfo.label}
+            </span>
+          )}
+        </div>
         {getScoreBadge(score)}
       </div>
 
       <h3 style={titleStyle}>{title}</h3>
       <p style={summaryStyle}>{summary}</p>
+      {metricsRow()}
 
       <div style={footerStyle}>
         <a
