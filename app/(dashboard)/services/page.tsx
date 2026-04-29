@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Plus, ExternalLink, Trash2, Globe } from "lucide-react";
-import ServiceCard from "@/components/dashboard/services/service-card";
+import { Plus, ExternalLink, Trash2, Globe, Briefcase } from "lucide-react";
 import ServiceForm, { ServiceFormData } from "@/components/dashboard/services/service-form";
 import LandingPageModal from "@/components/dashboard/services/landing-page-modal";
 import LandingPagesTab from "@/components/dashboard/services/landing-pages-tab";
@@ -47,15 +46,6 @@ const addButtonStyle: React.CSSProperties = {
   transition: "all 0.2s ease",
 };
 
-const sectionStyle: React.CSSProperties = {
-  marginBottom: "48px",
-};
-
-const gridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
-  gap: "20px",
-};
 
 const loadingStyle: React.CSSProperties = {
   padding: "60px",
@@ -69,67 +59,6 @@ const emptyStyle: React.CSSProperties = {
   color: "#888",
 };
 
-const landingPageRowStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  marginTop: "8px",
-  padding: "8px 12px",
-  backgroundColor: "#0a0a0a",
-  border: "1px solid #1a1a1a",
-  borderRadius: "6px",
-  minHeight: "38px",
-};
-
-const generateLandingPageButtonStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
-  background: "none",
-  border: "none",
-  color: "#6366f1",
-  fontSize: "13px",
-  fontWeight: "500",
-  cursor: "pointer",
-  padding: "2px 0",
-};
-
-const landingPageLinkStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "5px",
-  color: "#6366f1",
-  fontSize: "12px",
-  textDecoration: "none",
-  flex: 1,
-  overflow: "hidden",
-};
-
-const editLandingPageButtonStyle: React.CSSProperties = {
-  padding: "4px 10px",
-  fontSize: "12px",
-  fontWeight: "500",
-  borderRadius: "4px",
-  border: "1px solid #333",
-  backgroundColor: "transparent",
-  color: "#999",
-  cursor: "pointer",
-  flexShrink: 0,
-};
-
-const deleteLandingPageButtonStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "4px 8px",
-  fontSize: "12px",
-  borderRadius: "4px",
-  border: "none",
-  backgroundColor: "#ef444415",
-  color: "#ef4444",
-  cursor: "pointer",
-  flexShrink: 0,
-};
 
 const tabBarStyle: React.CSSProperties = {
   display: "flex",
@@ -304,7 +233,7 @@ export default function ServicesPage() {
 
       {activeTab === "services" && (
         <>
-      <div style={sectionStyle}>
+      <div>
         <div style={headerStyle}>
           <div>
             <h1 style={titleStyle}>Services</h1>
@@ -313,75 +242,168 @@ export default function ServicesPage() {
           <button
             onClick={handleAddService}
             style={addButtonStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#4f46e5";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#6366f1";
-            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#4f46e5"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#6366f1"; }}
           >
             <Plus size={18} />
             Add Service
           </button>
         </div>
 
-        {services.length === 0 ? (
-          <div style={emptyStyle}>
-            No services yet. Create your first service to get started.
-          </div>
-        ) : (
-          <div style={gridStyle}>
-            {services.map((service) => (
-              <div key={service.id}>
-                <ServiceCard
-                  service={service}
-                  onEdit={handleEditService}
-                  onDelete={handleDeleteService}
-                  onToggleStatus={handleToggleServiceStatus}
-                />
-                {/* Landing page row */}
-                <div style={landingPageRowStyle}>
-                  {service.ownedLandingPage ? (
-                    <>
-                      <a
-                        href={`/l/${service.ownedLandingPage.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={landingPageLinkStyle}
-                      >
-                        <Globe size={13} style={{ flexShrink: 0 }} />
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          /l/{service.ownedLandingPage.slug}
-                        </span>
-                        <ExternalLink size={12} style={{ flexShrink: 0, opacity: 0.6 }} />
-                      </a>
-                      <button
-                        style={editLandingPageButtonStyle}
-                        onClick={() => handleOpenLandingPageModal(service)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        style={deleteLandingPageButtonStyle}
-                        onClick={() => handleDeleteLandingPage(service.ownedLandingPage!.id)}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      style={generateLandingPageButtonStyle}
-                      onClick={() => handleOpenLandingPageModal(service)}
-                    >
-                      <Globe size={14} />
-                      Generate Landing Page
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <div style={{ border: "1px solid #222", borderRadius: "8px", overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "22%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "18%" }} />
+            </colgroup>
+            <thead>
+              <tr style={{ backgroundColor: "#111", position: "sticky", top: 0, zIndex: 1 }}>
+                {["Name", "Type", "Price", "Status", "Tickets", "Landing Page", "Actions"].map((label) => (
+                  <th key={label} style={{
+                    padding: "10px 12px",
+                    textAlign: "left",
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    color: "#666",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    borderBottom: "1px solid #222",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {services.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ padding: "48px", textAlign: "center", color: "#555", fontSize: "13px" }}>
+                    No services yet. Click Add Service to get started.
+                  </td>
+                </tr>
+              ) : services.map((service) => {
+                const isActive = service.status === "active";
+                const lp = service.ownedLandingPage;
+                return (
+                  <tr
+                    key={service.id}
+                    style={{ borderBottom: "1px solid #1a1a1a" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#161616")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    {/* Name */}
+                    <td style={{ padding: "12px 12px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#f5f5f5", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {service.name}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#555", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {service.turnaroundDays}d turnaround
+                      </div>
+                    </td>
+
+                    {/* Type */}
+                    <td style={{ padding: "12px 12px" }}>
+                      <span style={{
+                        fontSize: "10px", fontWeight: "700", padding: "2px 7px", borderRadius: "4px",
+                        backgroundColor: "#6366f120", color: "#6366f1", textTransform: "capitalize",
+                      }}>
+                        {service.type.replace(/_/g, " ")}
+                      </span>
+                    </td>
+
+                    {/* Price */}
+                    <td style={{ padding: "12px 12px", fontSize: "12px", color: "#888", whiteSpace: "nowrap" }}>
+                      ${service.priceMin}–${service.priceMax}
+                    </td>
+
+                    {/* Status */}
+                    <td style={{ padding: "12px 12px" }}>
+                      <span style={{
+                        fontSize: "10px", fontWeight: "700", padding: "2px 7px", borderRadius: "4px",
+                        backgroundColor: isActive ? "#22c55e20" : "#6b728020",
+                        color: isActive ? "#22c55e" : "#6b7280",
+                      }}>
+                        {isActive ? "Active" : "Paused"}
+                      </span>
+                    </td>
+
+                    {/* Tickets */}
+                    <td style={{ padding: "12px 12px" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "#888" }}>
+                        <Briefcase size={12} />
+                        {service._count?.tickets ?? 0}
+                      </span>
+                    </td>
+
+                    {/* Landing Page */}
+                    <td style={{ padding: "12px 12px", overflow: "hidden" }}>
+                      {lp ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <a
+                            href={`/l/${lp.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "#6366f1", textDecoration: "none", overflow: "hidden" }}
+                          >
+                            <Globe size={11} style={{ flexShrink: 0 }} />
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>/l/{lp.slug}</span>
+                            <ExternalLink size={11} style={{ flexShrink: 0, opacity: 0.6 }} />
+                          </a>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleOpenLandingPageModal(service)}
+                          style={{ fontSize: "11px", color: "#6366f1", background: "none", border: "none", cursor: "pointer", padding: 0, display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        >
+                          <Globe size={11} />
+                          Generate
+                        </button>
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    <td style={{ padding: "12px 12px" }}>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <button
+                          onClick={() => handleEditService(service.id)}
+                          style={{ padding: "4px 10px", fontSize: "11px", fontWeight: "600", borderRadius: "4px", border: "1px solid #333", backgroundColor: "transparent", color: "#aaa", cursor: "pointer" }}
+                        >
+                          Edit
+                        </button>
+                        {lp && (
+                          <button
+                            onClick={() => handleOpenLandingPageModal(service)}
+                            style={{ padding: "4px 10px", fontSize: "11px", fontWeight: "600", borderRadius: "4px", border: "1px solid #333", backgroundColor: "transparent", color: "#aaa", cursor: "pointer" }}
+                          >
+                            Edit Page
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleToggleServiceStatus(service.id)}
+                          style={{ padding: "4px 10px", fontSize: "11px", fontWeight: "600", borderRadius: "4px", border: "1px solid #6366f130", backgroundColor: "#6366f115", color: "#6366f1", cursor: "pointer" }}
+                        >
+                          {isActive ? "Pause" : "Activate"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteService(service.id)}
+                          style={{ padding: "4px 8px", fontSize: "11px", borderRadius: "4px", border: "none", backgroundColor: "#ef444415", color: "#ef4444", cursor: "pointer", display: "inline-flex", alignItems: "center" }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Service Form Modal */}

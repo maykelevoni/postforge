@@ -28,19 +28,20 @@ const theadStyle: React.CSSProperties = {
 };
 
 const thStyle: React.CSSProperties = {
-  padding: "12px 16px",
+  padding: "10px 12px",
   textAlign: "left",
-  fontSize: "12px",
+  fontSize: "11px",
   fontWeight: "600",
-  color: "#888",
+  color: "#666",
   textTransform: "uppercase",
   letterSpacing: "0.05em",
   borderBottom: "1px solid #222",
+  whiteSpace: "nowrap",
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "14px 16px",
-  fontSize: "14px",
+  padding: "10px 12px",
+  fontSize: "13px",
   color: "#f5f5f5",
   borderBottom: "1px solid #1a1a1a",
 };
@@ -73,7 +74,7 @@ const urlLinkStyle: React.CSSProperties = {
   alignItems: "center",
   gap: "5px",
   color: "#6366f1",
-  fontSize: "14px",
+  fontSize: "12px",
   textDecoration: "none",
 };
 
@@ -339,8 +340,8 @@ export default function LandingPagesTab() {
       ) : (
         <div style={tableWrapperStyle}>
           <table style={tableStyle}>
-            <thead style={theadStyle}>
-              <tr>
+            <thead>
+              <tr style={{ backgroundColor: "#111", position: "sticky", top: 0, zIndex: 1 }}>
                 <th style={thStyle}>URL</th>
                 <th style={thStyle}>Template</th>
                 <th style={thStyle}>Service</th>
@@ -352,7 +353,11 @@ export default function LandingPagesTab() {
             <tbody>
               {landingPages.map((lp) => (
                 <>
-                  <tr key={lp.id}>
+                  <tr
+                    key={lp.id}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#161616")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
                     <td style={tdStyle}>
                       <a
                         href={`/l/${lp.slug}`}

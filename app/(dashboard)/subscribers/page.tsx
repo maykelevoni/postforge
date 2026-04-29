@@ -122,19 +122,20 @@ const theadStyle: React.CSSProperties = {
 };
 
 const thStyle: React.CSSProperties = {
-  padding: "12px 16px",
+  padding: "10px 12px",
   textAlign: "left",
-  fontSize: "12px",
+  fontSize: "11px",
   fontWeight: "600",
-  color: "#888",
+  color: "#666",
   textTransform: "uppercase",
   letterSpacing: "0.05em",
   borderBottom: "1px solid #222",
+  whiteSpace: "nowrap",
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "14px 16px",
-  fontSize: "14px",
+  padding: "10px 12px",
+  fontSize: "13px",
   color: "#f5f5f5",
   borderBottom: "1px solid #1a1a1a",
 };
@@ -382,8 +383,8 @@ export default function SubscribersPage() {
           ) : (
             <div style={tableWrapperStyle}>
               <table style={tableStyle}>
-                <thead style={theadStyle}>
-                  <tr>
+                <thead>
+                  <tr style={{ backgroundColor: "#111", position: "sticky", top: 0, zIndex: 1 }}>
                     <th style={thStyle}>Name</th>
                     <th style={thStyle}>Email</th>
                     <th style={thStyle}>Source</th>
@@ -394,17 +395,23 @@ export default function SubscribersPage() {
                 </thead>
                 <tbody>
                   {subscribers.map((sub) => (
-                    <tr key={sub.id}>
-                      <td style={tdStyle}>{sub.name}</td>
-                      <td style={tdStyle}>{sub.email}</td>
+                    <tr
+                      key={sub.id}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#161616")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <td style={tdStyle}>
+                        <div style={{ fontWeight: "600" }}>{sub.name}</div>
+                      </td>
+                      <td style={mutedTdStyle}>{sub.email}</td>
                       <td style={mutedTdStyle}>{sub.source ?? "—"}</td>
                       <td style={mutedTdStyle}>{sub.landingPage?.slug ?? "—"}</td>
                       <td style={mutedTdStyle}>{sub.service?.name ?? "—"}</td>
                       <td style={mutedTdStyle}>
                         {new Date(sub.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
                           month: "short",
                           day: "numeric",
+                          year: "numeric",
                         })}
                       </td>
                     </tr>
