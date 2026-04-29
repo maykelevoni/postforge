@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import ContentPieceCard from "@/components/dashboard/content/content-piece-card";
-import NewsletterCard from "@/components/dashboard/content/newsletter-card";
 import TemplatesTab from "@/components/dashboard/content/templates-tab";
+import PostsTable from "@/components/dashboard/content/posts-table";
+import NewslettersTable from "@/components/dashboard/content/newsletters-table";
 
 const pageStyle: React.CSSProperties = {
   padding: "24px",
@@ -51,28 +51,6 @@ const activeTabStyle: React.CSSProperties = {
   borderBottomColor: "#6366f1",
 };
 
-const filterBarStyle: React.CSSProperties = {
-  display: "flex",
-  gap: "16px",
-  marginBottom: "24px",
-  flexWrap: "wrap",
-};
-
-const selectStyle: React.CSSProperties = {
-  padding: "8px 12px",
-  fontSize: "13px",
-  backgroundColor: "#111",
-  border: "1px solid #222",
-  borderRadius: "4px",
-  color: "#f5f5f5",
-  cursor: "pointer",
-};
-
-const gridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
-  gap: "20px",
-};
 
 const PLATFORM_COLORS: Record<string, string> = {
   twitter: "#1DA1F2",
@@ -301,15 +279,13 @@ export default function ContentPage() {
   const [activeTab, setActiveTab] = useState<ContentTab>(
     tabParam && VALID_TABS.includes(tabParam) ? tabParam : "posts"
   );
-  const [platform, setPlatform] = useState("all");
-  const [status, setStatus] = useState("all");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [manualQueue, setManualQueue] = useState<any[]>([]);
 
   useEffect(() => {
     loadItems();
-  }, [activeTab, platform, status]);
+  }, [activeTab]);
 
   useEffect(() => {
     loadManualQueue();
@@ -339,8 +315,8 @@ export default function ContentPage() {
     try {
       const params = new URLSearchParams({
         type: activeTab,
-        platform,
-        status,
+        platform: "all",
+        status: "all",
         page: "1",
       });
 
@@ -449,69 +425,25 @@ export default function ContentPage() {
 
       {activeTab === "templates" && <TemplatesTab />}
 
-      {(activeTab === "posts" || activeTab === "newsletters") && (
-        <>
-          <div style={filterBarStyle}>
-            {activeTab === "posts" && (
-              <select
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="all">All Platforms</option>
-                <option value="twitter">Twitter</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="reddit">Reddit</option>
-                <option value="instagram">Instagram</option>
-                <option value="tiktok">TikTok</option>
-                <option value="youtube">YouTube</option>
-              </select>
-            )}
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="all">All Status</option>
-              <option value="draft">Draft</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="published">Published</option>
-              <option value="failed">Failed</option>
-            </select>
-          </div>
+      {activeTab === "posts" && (
+        <div style={{ border: "1px solid #222", borderRadius: "8px", overflow: "hidden" }}>
+          <PostsTable
+            items={items}
+            onApprove={handleApprove}
+            onPublish={handlePublish}
+            onMarkPosted={handleMarkPosted}
+          />
+        </div>
+      )}
 
-          {loading ? (
-            <div style={{ padding: "60px", textAlign: "center", color: "#888" }}>
-              Loading...
-            </div>
-          ) : items.length === 0 ? (
-            <div style={{ padding: "60px", textAlign: "center", color: "#888" }}>
-              No items found
-            </div>
-          ) : (
-            <div style={gridStyle}>
-              {items.map((item) =>
-                activeTab === "posts" ? (
-                  <ContentPieceCard
-                    key={item.id}
-                    {...item}
-                    onApprove={handleApprove}
-                    onPublish={handlePublish}
-                    onEdit={handleEdit}
-                  />
-                ) : (
-                  <NewsletterCard
-                    key={item.id}
-                    {...item}
-                    onApprove={handleApprove}
-                    onPublish={handlePublish}
-                    onEdit={handleEdit}
-                  />
-                )
-              )}
-            </div>
-          )}
-        </>
+      {activeTab === "newsletters" && (
+        <div style={{ border: "1px solid #222", borderRadius: "8px", overflow: "hidden" }}>
+          <NewslettersTable
+            items={items}
+            onApprove={handleApprove}
+            onPublish={handlePublish}
+          />
+        </div>
       )}
     </div>
   );
