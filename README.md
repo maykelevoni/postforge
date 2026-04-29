@@ -112,79 +112,121 @@ Test files live in `tests/`:
 
 ## Deploy to production
 
-A single bootstrap script sets up everything on a **fresh Ubuntu VPS** — Docker, nginx, SSL, and the app.
-
 ### Requirements
-- A fresh Ubuntu 22.04+ VPS
+- A VPS running Ubuntu 22.04+ (Hostinger, DigitalOcean, etc.)
+- Docker and Docker Compose installed
 - A domain with DNS access
-- A [Neon](https://neon.tech) PostgreSQL database URL
 
-### 1. SSH into your server
+---
 
-```
+### 1. SSH in and clone the repo
+
+```bash
 ssh root@YOUR_SERVER_IP
+git clone https://github.com/maykelevoni/postforge.git /var/www/postforge
+cd /var/www/postforge
 ```
 
-### 2. Download the bootstrap script
+---
 
-```
-wget https://raw.githubusercontent.com/maykelevoni/postforge/master/bootstrap.sh
-```
+### 2. Connect the database
 
-### 3. Run it
+Pick one option:
 
-```
-chmod +x bootstrap.sh
-```
+#### Option A — Local Postgres (no external service needed)
 
-```
-sudo ./bootstrap.sh
-```
+The docker-compose file includes a Postgres 16 service. Start it with the `local` profile and use the internal hostname `db` in your connection string.
 
-The script will:
-- Install Docker, nginx, certbot, and git
-- Clone this repo to `/var/www/postforge`
-- Prompt for your `DATABASE_URL` (Neon connection string)
-- Auto-generate `AUTH_SECRET`
-- Build and start the Docker container
+Create `.env`:
 
-### 4. Run migrations (first deploy only)
-
-```
-cd /var/www/postforge && docker compose exec app pnpm exec prisma migrate deploy
+```env
+DATABASE_URL="postgresql://postforge:postforge@db:5432/postforge"
+AUTH_SECRET="$(openssl rand -base64 32)"
+NEXTAUTH_URL="https://yourdomain.com"
 ```
 
-### 5. Configure nginx
+Start everything (app + db):
 
+```bash
+docker compose --profile local up -d --build
 ```
+
+#### Option B — External managed DB (Neon, Supabase, etc.)
+
+Create a free database at [neon.tech](https://neon.tech) (or any Postgres provider) and copy the connection string.
+
+Create `.env`:
+
+```env
+DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+AUTH_SECRET="$(openssl rand -base64 32)"
+NEXTAUTH_URL="https://yourdomain.com"
+```
+
+Start only the app:
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+### 3. Run migrations (first deploy only)
+
+```bash
+docker compose exec app pnpm exec prisma migrate deploy
+```
+
+---
+
+### 4. Configure nginx
+
+```bash
 bash /var/www/postforge/nginx-setup.sh
 ```
 
-### 6. Point DNS to your server
+---
 
-Get your server's IPv4:
+### 5. Point DNS to your server
 
-```
+Get your server IP:
+
+```bash
 hostname -I
 ```
 
-In your DNS provider, set **A records** for `yourdomain.com` and `www.yourdomain.com` to that IP. Wait 2–5 minutes for DNS to propagate.
+In your DNS provider, create **A records** for `yourdomain.com` and `www.yourdomain.com` pointing to that IP. Wait 2–5 minutes.
 
-### 7. Get SSL
+---
 
-```
+### 6. Get SSL
+
+```bash
 bash /var/www/postforge/ssl.sh
 ```
 
-App is live at `https://yourdomain.com`. Log in and fill in your API keys in Settings.
+App is live at `https://yourdomain.com`. Sign in and fill in your API keys in Settings.
 
 ---
 
 ### Updating after a code push
 
-```
+```bash
 cd /var/www/postforge && git pull && docker compose up -d --build
 ```
+
+---
+
+### Automated bootstrap (alternative)
+
+If you prefer a single command that does steps 1–6 automatically:
+
+```bash
+wget https://raw.githubusercontent.com/maykelevoni/postforge/master/bootstrap.sh
+chmod +x bootstrap.sh && sudo ./bootstrap.sh
+```
+
+The script installs Docker, nginx, certbot, clones the repo, prompts for a `DATABASE_URL`, and starts the container.
 
 ---
 
