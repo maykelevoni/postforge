@@ -10,6 +10,8 @@ import {
   Eye,
   ThumbsUp,
   MessageCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 interface TopicCardProps {
@@ -35,15 +37,6 @@ function formatNum(n: number): string {
   return String(n);
 }
 
-const cardStyle: React.CSSProperties = {
-  backgroundColor: "#111",
-  border: "1px solid #222",
-  borderRadius: "8px",
-  padding: "20px",
-  transition: "all 0.2s ease",
-  cursor: "pointer",
-};
-
 const headerStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
@@ -65,31 +58,12 @@ const titleStyle: React.CSSProperties = {
   lineHeight: "1.4",
 };
 
-const summaryStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#888",
-  marginBottom: "12px",
-  display: "-webkit-box",
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: "vertical",
-  overflow: "hidden",
-};
-
 const footerStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
   paddingTop: "12px",
   borderTop: "1px solid #222",
-};
-
-const linkStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "4px",
-  fontSize: "12px",
-  color: "#6366f1",
-  textDecoration: "none",
 };
 
 const buttonGroupStyle: React.CSSProperties = {
@@ -166,10 +140,16 @@ export default function TopicCard({
   upvoteRatio,
 }: TopicCardProps) {
   const [localStatus, setLocalStatus] = useState(status);
+  const [expanded, setExpanded] = useState(false);
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = (e: React.MouseEvent, newStatus: string) => {
+    e.stopPropagation();
     setLocalStatus(newStatus);
     onStatusChange(id, newStatus);
+  };
+
+  const handleCardClick = () => {
+    setExpanded((prev) => !prev);
   };
 
   const formatDate = (date: Date) => {
@@ -255,7 +235,15 @@ export default function TopicCard({
 
   return (
     <div
-      style={cardStyle}
+      style={{
+        backgroundColor: "#111",
+        border: "1px solid #222",
+        borderRadius: "8px",
+        padding: "20px",
+        transition: "all 0.2s ease",
+        cursor: "pointer",
+      }}
+      onClick={handleCardClick}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = "#1a1a1a";
         e.currentTarget.style.borderColor = "#333";
@@ -274,28 +262,74 @@ export default function TopicCard({
             </span>
           )}
         </div>
-        {getScoreBadge(score)}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {getScoreBadge(score)}
+          {expanded ? <ChevronUp size={14} color="#888" /> : <ChevronDown size={14} color="#888" />}
+        </div>
       </div>
 
       <h3 style={titleStyle}>{title}</h3>
-      <p style={summaryStyle}>{summary}</p>
+
+      <p
+        style={{
+          fontSize: "14px",
+          color: "#888",
+          marginBottom: "12px",
+          lineHeight: "1.6",
+          ...(expanded
+            ? {}
+            : {
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical" as const,
+                overflow: "hidden",
+              }),
+        }}
+      >
+        {summary}
+      </p>
+
       {metricsRow()}
 
-      <div style={footerStyle}>
+      {expanded && (
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          style={linkStyle}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "8px 14px",
+            marginBottom: "12px",
+            fontSize: "13px",
+            fontWeight: "500",
+            color: "white",
+            backgroundColor: "#6366f1",
+            borderRadius: "6px",
+            textDecoration: "none",
+            transition: "background-color 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#4f46e5";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#6366f1";
+          }}
         >
-          <span>{formatDate(date)}</span>
-          <ExternalLink size={12} />
+          <ExternalLink size={14} />
+          Open original
         </a>
+      )}
+
+      <div style={footerStyle}>
+        <span style={{ fontSize: "12px", color: "#555" }}>{formatDate(date)}</span>
 
         {localStatus === "new" && (
           <div style={buttonGroupStyle}>
             <button
-              onClick={() => handleStatusChange("used")}
+              onClick={(e) => handleStatusChange(e, "used")}
               style={{
                 ...buttonStyle,
                 backgroundColor: "#22c55e",
@@ -312,7 +346,7 @@ export default function TopicCard({
               Used
             </button>
             <button
-              onClick={() => handleStatusChange("dismissed")}
+              onClick={(e) => handleStatusChange(e, "dismissed")}
               style={{
                 ...buttonStyle,
                 backgroundColor: "#ef4444",
