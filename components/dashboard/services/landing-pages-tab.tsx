@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ExternalLink, Trash2, Globe } from "lucide-react";
 import LandingPageModal from "@/components/dashboard/services/landing-page-modal";
 import { LandingPageData } from "@/components/dashboard/services/types";
+import { LeadMagnetContent } from "@/components/dashboard/documents/document-preview";
 
 interface LandingPage extends LandingPageData {
   service: { id: string; name: string } | null;
@@ -115,6 +116,86 @@ const deleteButtonStyle: React.CSSProperties = {
   cursor: "pointer",
 };
 
+const genPdfButtonStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "4px 10px",
+  fontSize: "12px",
+  fontWeight: "500",
+  borderRadius: "4px",
+  border: "1px solid #6366f1",
+  backgroundColor: "transparent",
+  color: "#6366f1",
+  cursor: "pointer",
+  marginLeft: "4px",
+};
+
+const pdfPanelStyle: React.CSSProperties = {
+  backgroundColor: "#0d0d1a",
+  border: "1px solid #2a2a4a",
+  borderRadius: "6px",
+  padding: "16px",
+  margin: "0 8px 8px",
+};
+
+const pdfTextareaStyle: React.CSSProperties = {
+  width: "100%",
+  minHeight: "80px",
+  padding: "10px 12px",
+  backgroundColor: "#111",
+  border: "1px solid #333",
+  borderRadius: "6px",
+  color: "#f5f5f5",
+  fontSize: "13px",
+  resize: "vertical",
+  boxSizing: "border-box",
+  marginBottom: "10px",
+};
+
+const pdfActionsRowStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "8px",
+  alignItems: "center",
+};
+
+const generateBtnStyle: React.CSSProperties = {
+  padding: "7px 16px",
+  fontSize: "13px",
+  fontWeight: "600",
+  borderRadius: "6px",
+  border: "none",
+  backgroundColor: "#6366f1",
+  color: "white",
+  cursor: "pointer",
+};
+
+const generateBtnDisabledStyle: React.CSSProperties = {
+  ...generateBtnStyle,
+  backgroundColor: "#444",
+  cursor: "not-allowed",
+};
+
+const downloadBtnStyle: React.CSSProperties = {
+  padding: "7px 16px",
+  fontSize: "13px",
+  fontWeight: "600",
+  borderRadius: "6px",
+  border: "none",
+  backgroundColor: "#16a34a",
+  color: "white",
+  cursor: "pointer",
+};
+
+const dismissLinkStyle: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#666",
+  cursor: "pointer",
+  background: "none",
+  border: "none",
+  padding: "0",
+  marginLeft: "auto",
+};
+
 function templateLabel(template: string): string {
   switch (template) {
     case "saas":
@@ -132,6 +213,87 @@ export default function LandingPagesTab() {
   const [landingPages, setLandingPages] = useState<LandingPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<LandingPage | null>(null);
+  const [activePdfRow, setActivePdfRow] = useState<string | null>(null);
+  const [pdfPrompt, setPdfPrompt] = useState("");
+  const [pdfContent, setPdfContent] = useState<LeadMagnetContent | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+
+  const openPdfPanel = (id: string) => {
+    setActivePdfRow(id);
+    setPdfPrompt("");
+    setPdfContent(null);
+    setPdfError(null);
+  };
+
+  const handleGeneratePdf = async () => {
+    setPdfLoading(true);
+    setPdfError(null);
+    setPdfContent(null);
+    try {
+      const res = await fetch("/api/documents/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "lead_magnet", prompt: pdfPrompt }),
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        setPdfError(json.error ?? "Failed to generate");
+        return;
+      }
+      const data = await res.json();
+      setPdfContent(data as LeadMagnetContent);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const downloadLeadMagnetPdf = async () => {
+    if (!pdfContent) return;
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageWidth = 210;
+    const margin = 20;
+    const maxWidth = pageWidth - margin * 2;
+    let y = 20;
+
+    const checkPage = (needed: number) => {
+      if (y + needed > 270) { doc.addPage(); y = 20; }
+    };
+    const writeText = (text: string, x: number, fontSize: number) => {
+      doc.setFontSize(fontSize);
+      const lines = doc.splitTextToSize(text, maxWidth);
+      checkPage(lines.length * (fontSize * 0.35 + 1));
+      doc.text(lines, x, y);
+      y += lines.length * (fontSize * 0.35 + 1) + 4;
+    };
+
+    doc.setFont("helvetica", "bold");
+    writeText(pdfContent.title, margin, 20);
+    doc.setFont("helvetica", "normal");
+    writeText(pdfContent.subtitle, margin, 13);
+    y += 4;
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+    writeText(pdfContent.introduction, margin, 11);
+    for (const s of pdfContent.sections) {
+      doc.setFont("helvetica", "bold");
+      writeText(s.heading, margin, 13);
+      doc.setFont("helvetica", "normal");
+      writeText(s.body, margin, 11);
+      y += 4;
+    }
+    y += 4;
+    doc.setFillColor(99, 102, 241);
+    doc.rect(margin, y, maxWidth, 20, "F");
+    doc.setTextColor(255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(pdfContent.cta, pageWidth / 2, y + 12, { align: "center" });
+    doc.setTextColor(0);
+    doc.save(`lead-magnet-${Date.now()}.pdf`);
+  };
 
   useEffect(() => {
     loadLandingPages();
@@ -189,54 +351,98 @@ export default function LandingPagesTab() {
             </thead>
             <tbody>
               {landingPages.map((lp) => (
-                <tr key={lp.id}>
-                  <td style={tdStyle}>
-                    <a
-                      href={`/l/${lp.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={urlLinkStyle}
-                    >
-                      <Globe size={13} style={{ flexShrink: 0 }} />
-                      /l/{lp.slug}
-                      <ExternalLink size={12} style={{ opacity: 0.6, flexShrink: 0 }} />
-                    </a>
-                  </td>
-                  <td style={mutedTdStyle}>{templateLabel(lp.template)}</td>
-                  <td style={mutedTdStyle}>{lp.service?.name ?? "—"}</td>
-                  <td style={mutedTdStyle}>{lp._count?.subscribers ?? 0}</td>
-                  <td style={mutedTdStyle}>
-                    {new Date(lp.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                  <td style={actionsTdStyle}>
-                    <a
-                      href={`/l/${lp.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ ...iconButtonStyle, textDecoration: "none" }}
-                      title="Preview"
-                    >
-                      <ExternalLink size={15} />
-                    </a>
-                    <button
-                      style={editButtonStyle}
-                      onClick={() => setEditingPage(lp)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      style={deleteButtonStyle}
-                      onClick={() => handleDelete(lp.id)}
-                      title="Delete"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </td>
-                </tr>
+                <>
+                  <tr key={lp.id}>
+                    <td style={tdStyle}>
+                      <a
+                        href={`/l/${lp.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={urlLinkStyle}
+                      >
+                        <Globe size={13} style={{ flexShrink: 0 }} />
+                        /l/{lp.slug}
+                        <ExternalLink size={12} style={{ opacity: 0.6, flexShrink: 0 }} />
+                      </a>
+                    </td>
+                    <td style={mutedTdStyle}>{templateLabel(lp.template)}</td>
+                    <td style={mutedTdStyle}>{lp.service?.name ?? "—"}</td>
+                    <td style={mutedTdStyle}>{lp._count?.subscribers ?? 0}</td>
+                    <td style={mutedTdStyle}>
+                      {new Date(lp.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+                    <td style={actionsTdStyle}>
+                      <a
+                        href={`/l/${lp.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ ...iconButtonStyle, textDecoration: "none" }}
+                        title="Preview"
+                      >
+                        <ExternalLink size={15} />
+                      </a>
+                      <button
+                        style={editButtonStyle}
+                        onClick={() => setEditingPage(lp)}
+                      >
+                        Edit
+                      </button>
+                      {lp.template === "lead_magnet" && (
+                        <button
+                          style={genPdfButtonStyle}
+                          onClick={() => openPdfPanel(lp.id)}
+                        >
+                          Generate PDF
+                        </button>
+                      )}
+                      <button
+                        style={deleteButtonStyle}
+                        onClick={() => handleDelete(lp.id)}
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                  {activePdfRow === lp.id && (
+                    <tr key={`${lp.id}-pdf`}>
+                      <td colSpan={6} style={{ padding: "0 0 4px" }}>
+                        <div style={pdfPanelStyle}>
+                          <textarea
+                            style={pdfTextareaStyle}
+                            placeholder="e.g. 5 ways AI can save a small business 10 hours a week"
+                            value={pdfPrompt}
+                            onChange={(e) => setPdfPrompt(e.target.value)}
+                          />
+                          <div style={pdfActionsRowStyle}>
+                            <button
+                              style={pdfLoading ? generateBtnDisabledStyle : generateBtnStyle}
+                              onClick={handleGeneratePdf}
+                              disabled={pdfLoading || !pdfPrompt.trim()}
+                            >
+                              {pdfLoading ? "Generating..." : "Generate"}
+                            </button>
+                            {pdfContent && (
+                              <button style={downloadBtnStyle} onClick={downloadLeadMagnetPdf}>
+                                Download PDF
+                              </button>
+                            )}
+                            {pdfError && (
+                              <span style={{ fontSize: "12px", color: "#f87171" }}>{pdfError}</span>
+                            )}
+                            <button style={dismissLinkStyle} onClick={() => setActivePdfRow(null)}>
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
             </tbody>
           </table>
