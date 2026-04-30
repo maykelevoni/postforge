@@ -1,16 +1,30 @@
 import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
-const authMiddleware = auth((req) => {
-  const isLoggedIn = !!req.auth;
+export default auth((req) => {
   const { pathname } = req.nextUrl;
 
+  // Setup mode: DATABASE_URL or AUTH_SECRET not configured — redirect everything to /setup
+  if (!process.env.DATABASE_URL || !process.env.AUTH_SECRET) {
+    const isAllowed =
+      pathname === "/setup" ||
+      pathname.startsWith("/api/setup") ||
+      pathname.startsWith("/_next") ||
+      /\.(png|jpg|jpeg|svg|ico|css|js|woff|woff2)$/.test(pathname);
+
+    if (isAllowed) return NextResponse.next();
+    return NextResponse.redirect(new URL("/setup", req.url));
+  }
+
+  const isLoggedIn = !!req.auth;
   const isPublic =
     pathname.startsWith("/sign-in") ||
     pathname.startsWith("/register") ||
+    pathname.startsWith("/setup") ||
+    pathname.startsWith("/api/setup") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/webhooks") ||
     pathname.startsWith("/l/");
@@ -22,23 +36,6 @@ const authMiddleware = auth((req) => {
     return Response.redirect(new URL("/sign-in", req.url));
   }
 });
-
-export default function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (!process.env.DATABASE_URL || !process.env.AUTH_SECRET) {
-    const isAllowed =
-      pathname === "/setup" ||
-      pathname.startsWith("/api/setup") ||
-      pathname.startsWith("/_next") ||
-      /\.(png|jpg|jpeg|svg|ico|css|js|woff|woff2)$/.test(pathname);
-
-    if (isAllowed) return NextResponse.next();
-    return NextResponse.redirect(new URL("/setup", request.url));
-  }
-
-  return authMiddleware(request, {} as any);
-}
 
 export const config = {
   matcher: [
