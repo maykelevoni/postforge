@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { HoverDeleteButton } from "@/components/ui/hover-delete-button";
 
 interface TopicCardProps {
   id: string;
@@ -24,6 +25,7 @@ interface TopicCardProps {
   date: Date;
   status: string;
   onStatusChange: (id: string, status: string) => void;
+  onDelete?: () => Promise<void>;
   views?: number;
   likes?: number;
   comments?: number;
@@ -133,6 +135,7 @@ export default function TopicCard({
   date,
   status,
   onStatusChange,
+  onDelete,
   views,
   likes,
   comments,
@@ -324,7 +327,15 @@ export default function TopicCard({
       )}
 
       <div style={footerStyle}>
-        <span style={{ fontSize: "12px", color: "#555" }}>{formatDate(date)}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "12px", color: "#555" }}>{formatDate(date)}</span>
+          {onDelete && (
+            <HoverDeleteButton
+              onDelete={onDelete}
+              onDeleted={() => {}}
+            />
+          )}
+        </div>
 
         {localStatus === "new" && (
           <div style={buttonGroupStyle}>

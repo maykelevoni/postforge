@@ -141,6 +141,13 @@ export default function ResearchPage() {
     }
   };
 
+  const handleDeleteTopic = async (id: string) => {
+    const response = await fetch(`/api/research/${id}`, { method: "DELETE" });
+    if (response.ok) {
+      setTopics(prev => prev.filter(t => t.id !== id));
+    }
+  };
+
   const handleStatusChange = async (id: string, status: string) => {
     try {
       const response = await fetch(`/api/research/${id}`, {
@@ -202,6 +209,7 @@ export default function ResearchPage() {
         <ResearchTable
           topics={topics}
           onStatusChange={handleStatusChange}
+          onDelete={handleDeleteTopic}
           sourceFilter={sourceFilter}
           setSourceFilter={setSourceFilter}
           statusFilter={statusFilter}

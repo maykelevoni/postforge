@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Eye, ThumbsUp, MessageCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { HoverDeleteButton } from "@/components/ui/hover-delete-button";
 
 interface ResearchTopic {
   id: string;
@@ -21,6 +22,7 @@ interface ResearchTopic {
 interface ResearchTableProps {
   topics: ResearchTopic[];
   onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => Promise<void>;
   sourceFilter: string;
   setSourceFilter: (s: string) => void;
   statusFilter: string;
@@ -66,6 +68,7 @@ type SortDir = "asc" | "desc";
 export default function ResearchTable({
   topics,
   onStatusChange,
+  onDelete,
   sourceFilter,
   setSourceFilter,
   statusFilter,
@@ -318,33 +321,39 @@ export default function ResearchTable({
 
                   {/* Actions */}
                   <td style={{ padding: "10px 12px" }}>
-                    {status === "new" ? (
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        <button
-                          onClick={() => handleStatusChange(topic.id, "used")}
-                          style={{ ...btnBase, color: "white", backgroundColor: "#22c55e", borderColor: "#16a34a" }}
-                        >
-                          Use
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(topic.id, "dismissed")}
-                          style={{ ...btnBase, color: "white", backgroundColor: "#ef4444", borderColor: "#dc2626" }}
-                        >
-                          Dismiss
-                        </button>
-                      </div>
-                    ) : (
-                      <span style={{
-                        fontSize: "11px",
-                        fontWeight: "600",
-                        padding: "3px 8px",
-                        borderRadius: "4px",
-                        backgroundColor: status === "used" ? "#22c55e20" : "#ef444420",
-                        color: status === "used" ? "#22c55e" : "#ef4444",
-                      }}>
-                        {status === "used" ? "✓ Used" : "✕ Dismissed"}
-                      </span>
-                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      {status === "new" ? (
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button
+                            onClick={() => handleStatusChange(topic.id, "used")}
+                            style={{ ...btnBase, color: "white", backgroundColor: "#22c55e", borderColor: "#16a34a" }}
+                          >
+                            Use
+                          </button>
+                          <button
+                            onClick={() => handleStatusChange(topic.id, "dismissed")}
+                            style={{ ...btnBase, color: "white", backgroundColor: "#ef4444", borderColor: "#dc2626" }}
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          padding: "3px 8px",
+                          borderRadius: "4px",
+                          backgroundColor: status === "used" ? "#22c55e20" : "#ef444420",
+                          color: status === "used" ? "#22c55e" : "#ef4444",
+                        }}>
+                          {status === "used" ? "✓ Used" : "✕ Dismissed"}
+                        </span>
+                      )}
+                      <HoverDeleteButton
+                        onDelete={() => onDelete(topic.id)}
+                        onDeleted={() => {}}
+                      />
+                    </div>
                   </td>
                 </tr>
               );
