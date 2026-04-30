@@ -1,10 +1,10 @@
 import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+const authMiddleware = auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
 
@@ -16,13 +16,29 @@ export default auth((req) => {
     pathname.startsWith("/l/");
 
   if (!isLoggedIn && !isPublic) {
-    // Return 401 for API routes so clients get a proper error response
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return Response.redirect(new URL("/sign-in", req.url));
   }
 });
+
+export default function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (!process.env.DATABASE_URL || !process.env.AUTH_SECRET) {
+    const isAllowed =
+      pathname === "/setup" ||
+      pathname.startsWith("/api/setup") ||
+      pathname.startsWith("/_next") ||
+      /\.(png|jpg|jpeg|svg|ico|css|js|woff|woff2)$/.test(pathname);
+
+    if (isAllowed) return NextResponse.next();
+    return NextResponse.redirect(new URL("/setup", request.url));
+  }
+
+  return authMiddleware(request, {} as any);
+}
 
 export const config = {
   matcher: [
