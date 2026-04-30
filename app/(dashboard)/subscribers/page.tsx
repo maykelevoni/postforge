@@ -5,6 +5,7 @@ import { Download } from "lucide-react";
 import { Ticket } from "@/components/dashboard/services/types";
 import TicketTable from "@/components/dashboard/services/ticket-table";
 import TicketDrawer from "@/components/dashboard/services/ticket-drawer";
+import { HoverDeleteButton } from "@/components/ui/hover-delete-button";
 
 interface Subscriber {
   id: string;
@@ -286,6 +287,10 @@ export default function SubscribersPage() {
     setTickets(tickets.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t)));
   };
 
+  const handleDeleteTicket = (id: string) => {
+    setTickets((prev) => prev.filter((t) => t.id !== id));
+  };
+
   const handleDrawerClose = () => {
     setSelectedTicket(null);
   };
@@ -391,6 +396,7 @@ export default function SubscribersPage() {
                     <th style={thStyle}>Landing Page</th>
                     <th style={thStyle}>Service</th>
                     <th style={thStyle}>Date Joined</th>
+                    <th style={{ ...thStyle, width: "48px" }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -413,6 +419,18 @@ export default function SubscribersPage() {
                           day: "numeric",
                           year: "numeric",
                         })}
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: "right" }}>
+                        <HoverDeleteButton
+                          onDelete={() =>
+                            fetch(`/api/subscribers/${sub.id}`, { method: "DELETE" }).then(
+                              (res) => { if (!res.ok) throw new Error("Delete failed"); }
+                            )
+                          }
+                          onDeleted={() =>
+                            setSubscribers((prev) => prev.filter((s) => s.id !== sub.id))
+                          }
+                        />
                       </td>
                     </tr>
                   ))}
@@ -446,7 +464,7 @@ export default function SubscribersPage() {
               </div>
 
               <div style={{ border: "1px solid #222", borderRadius: "8px", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 280px)", minHeight: "320px" }}>
-                <TicketTable tickets={filteredTickets} onTicketClick={handleTicketClick} onStatusChange={handleTicketStatusChange} />
+                <TicketTable tickets={filteredTickets} onTicketClick={handleTicketClick} onStatusChange={handleTicketStatusChange} onDelete={handleDeleteTicket} />
               </div>
 
               {selectedTicket && (
