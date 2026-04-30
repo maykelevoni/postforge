@@ -30,7 +30,11 @@ COPY --from=builder /app/worker ./worker
 COPY --from=builder /app/prisma ./prisma
 COPY package.json next.config.js tsconfig.json ./
 
+RUN mkdir -p /app/config
+
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 EXPOSE 3000
 
-# Runs: next start + tsx worker/index.ts (via concurrently)
-CMD ["pnpm", "start"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
