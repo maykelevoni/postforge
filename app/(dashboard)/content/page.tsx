@@ -364,6 +364,10 @@ export default function ContentPage() {
     }
   };
 
+  const handleDeleteItem = (id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
   const handleEdit = async (id: string, content: string, subject?: string) => {
     try {
       const response = await fetch(`/api/content/${id}`, {
@@ -434,6 +438,7 @@ export default function ContentPage() {
             onApprove={handleApprove}
             onPublish={handlePublish}
             onMarkPosted={handleMarkPosted}
+            onDelete={handleDeleteItem}
           />
         </div>
       )}
@@ -444,6 +449,7 @@ export default function ContentPage() {
             items={items}
             onApprove={handleApprove}
             onPublish={handlePublish}
+            onDelete={handleDeleteItem}
           />
         </div>
       )}

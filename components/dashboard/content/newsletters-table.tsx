@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HoverDeleteButton } from "@/components/ui/hover-delete-button";
 
 const STATUS_TABS = [
   { id: "all", label: "All" },
@@ -14,9 +15,10 @@ interface NewslettersTableProps {
   items: any[];
   onApprove: (id: string) => void;
   onPublish: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function NewslettersTable({ items, onApprove, onPublish }: NewslettersTableProps) {
+export default function NewslettersTable({ items, onApprove, onPublish, onDelete }: NewslettersTableProps) {
   const [activeTab, setActiveTab] = useState("all");
 
   const filtered = activeTab === "all" ? items : items.filter((i) => i.status === activeTab);
@@ -160,6 +162,12 @@ export default function NewslettersTable({ items, onApprove, onPublish }: Newsle
                     >
                       Send Now
                     </button>
+
+                    <HoverDeleteButton
+                      onDelete={() => fetch(`/api/content/${item.id}`, { method: "DELETE" }).then(() => {})}
+                      onDeleted={() => onDelete(item.id)}
+                      style={{ marginLeft: "4px", alignSelf: "center" }}
+                    />
                   </div>
                 </td>
               </tr>

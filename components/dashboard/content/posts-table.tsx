@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HoverDeleteButton } from "@/components/ui/hover-delete-button";
 
 const PLATFORM_COLORS: Record<string, string> = {
   twitter: "#1DA1F2",
@@ -24,9 +25,10 @@ interface PostsTableProps {
   onApprove: (id: string) => void;
   onPublish: (id: string) => void;
   onMarkPosted: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function PostsTable({ items, onApprove, onPublish, onMarkPosted }: PostsTableProps) {
+export default function PostsTable({ items, onApprove, onPublish, onMarkPosted, onDelete }: PostsTableProps) {
   const [activeTab, setActiveTab] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [copyLabels, setCopyLabels] = useState<Record<string, string>>({});
@@ -272,6 +274,12 @@ export default function PostsTable({ items, onApprove, onPublish, onMarkPosted }
                       >
                         Mark Posted
                       </button>
+
+                      <HoverDeleteButton
+                        onDelete={() => fetch(`/api/content/${item.id}`, { method: "DELETE" }).then(() => {})}
+                        onDeleted={() => onDelete(item.id)}
+                        style={{ marginLeft: "4px", alignSelf: "center" }}
+                      />
                     </div>
                   </td>
                 </tr>
