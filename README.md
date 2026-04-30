@@ -113,73 +113,40 @@ Test files live in `tests/`:
 ## Deploy to production
 
 ### Requirements
-- A VPS running Ubuntu 22.04+ (Hostinger, DigitalOcean, etc.)
-- Docker and Docker Compose installed
+- A VPS running Ubuntu 22.04+ with Docker installed (Hostinger, DigitalOcean, etc.)
 - A domain with DNS access
+- A free [Neon](https://neon.tech) PostgreSQL database
 
 ---
 
-### 1. SSH in and clone the repo
+### 1. Clone the repo and start the container
+
+SSH into your server:
 
 ```bash
 ssh root@YOUR_SERVER_IP
 git clone https://github.com/maykelevoni/postforge.git /var/www/postforge
 cd /var/www/postforge
-```
-
----
-
-### 2. Connect the database
-
-Pick one option:
-
-#### Option A — Local Postgres (no external service needed)
-
-The docker-compose file includes a Postgres 16 service. Start it with the `local` profile and use the internal hostname `db` in your connection string.
-
-Create `.env`:
-
-```env
-DATABASE_URL="postgresql://postforge:postforge@db:5432/postforge"
-AUTH_SECRET="$(openssl rand -base64 32)"
-NEXTAUTH_URL="https://yourdomain.com"
-```
-
-Start everything (app + db):
-
-```bash
-docker compose --profile local up -d --build
-```
-
-#### Option B — External managed DB (Neon, Supabase, etc.)
-
-Create a free database at [neon.tech](https://neon.tech) (or any Postgres provider) and copy the connection string.
-
-Create `.env`:
-
-```env
-DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
-AUTH_SECRET="$(openssl rand -base64 32)"
-NEXTAUTH_URL="https://yourdomain.com"
-```
-
-Start only the app:
-
-```bash
 docker compose up -d --build
 ```
 
----
-
-### 3. Run migrations (first deploy only)
-
-```bash
-docker compose exec app pnpm exec prisma migrate deploy
-```
+Or via **Hostinger Docker manager**: upload the `docker-compose.yml` and hit run.
 
 ---
 
-### 4. Configure nginx
+### 2. Open the setup wizard
+
+Open `http://YOUR_SERVER_IP:3000` in your browser. The setup wizard appears automatically.
+
+1. Paste your Neon database URL
+2. Set your app domain (e.g. `https://getpostforge.cloud`)
+3. Click **Save & Restart**
+
+The app writes its config, Docker restarts the container, and migrations run automatically. No SSH required.
+
+---
+
+### 3. Configure nginx
 
 ```bash
 bash /var/www/postforge/nginx-setup.sh
@@ -187,19 +154,17 @@ bash /var/www/postforge/nginx-setup.sh
 
 ---
 
-### 5. Point DNS to your server
-
-Get your server IP:
+### 4. Point DNS to your server
 
 ```bash
 hostname -I
 ```
 
-In your DNS provider, create **A records** for `yourdomain.com` and `www.yourdomain.com` pointing to that IP. Wait 2–5 minutes.
+Set **A records** for `yourdomain.com` and `www.yourdomain.com` to that IP. Wait 2–5 minutes.
 
 ---
 
-### 6. Get SSL
+### 5. Get SSL
 
 ```bash
 bash /var/www/postforge/ssl.sh
@@ -217,16 +182,17 @@ cd /var/www/postforge && git pull && docker compose up -d --build
 
 ---
 
-### Automated bootstrap (alternative)
+### Advanced: manual .env setup
 
-If you prefer a single command that does steps 1–6 automatically:
+If you prefer to configure via `.env` file instead of the wizard, create `/var/www/postforge/.env`:
 
-```bash
-wget https://raw.githubusercontent.com/maykelevoni/postforge/master/bootstrap.sh
-chmod +x bootstrap.sh && sudo ./bootstrap.sh
+```env
+DATABASE_URL="postgresql://..."
+AUTH_SECRET="$(openssl rand -base64 32)"
+NEXTAUTH_URL="https://yourdomain.com"
 ```
 
-The script installs Docker, nginx, certbot, clones the repo, prompts for a `DATABASE_URL`, and starts the container.
+Then `docker compose up -d --build`.
 
 ---
 
