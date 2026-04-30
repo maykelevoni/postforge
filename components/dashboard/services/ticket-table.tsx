@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Ticket } from "./types";
+import { HoverDeleteButton } from "@/components/ui/hover-delete-button";
 
 interface TicketTableProps {
   tickets: Ticket[];
   onTicketClick: (ticket: Ticket) => void;
   onStatusChange: (ticketId: string, newStatus: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const STATUS_TABS = [
@@ -44,7 +46,7 @@ const STATUS_LABELS: Record<string, string> = {
 type SortKey = "clientName" | "service" | "daysOpen" | "status";
 type SortDir = "asc" | "desc";
 
-export default function TicketTable({ tickets, onTicketClick, onStatusChange }: TicketTableProps) {
+export default function TicketTable({ tickets, onTicketClick, onStatusChange, onDelete }: TicketTableProps) {
   const [activeTab, setActiveTab] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("daysOpen");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -145,9 +147,10 @@ export default function TicketTable({ tickets, onTicketClick, onStatusChange }: 
             <col style={{ width: "22%" }} />
             <col style={{ width: "20%" }} />
             <col style={{ width: "14%" }} />
-            <col style={{ width: "22%" }} />
+            <col style={{ width: "20%" }} />
             <col style={{ width: "10%" }} />
-            <col style={{ width: "12%" }} />
+            <col style={{ width: "8%" }} />
+            <col style={{ width: "6%" }} />
           </colgroup>
           <thead>
             <tr style={{ backgroundColor: "#111", position: "sticky", top: 0, zIndex: 1 }}>
@@ -158,6 +161,7 @@ export default function TicketTable({ tickets, onTicketClick, onStatusChange }: 
                 { key: "status",     label: "Status" },
                 { key: "daysOpen",   label: "Days" },
                 { key: null,         label: "Source" },
+                { key: null,         label: "" },
               ] as { key: SortKey | null; label: string }[]).map(({ key, label }) => (
                 <th
                   key={label}
@@ -187,7 +191,7 @@ export default function TicketTable({ tickets, onTicketClick, onStatusChange }: 
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: "48px", textAlign: "center", color: "#555", fontSize: "13px" }}>
+                <td colSpan={7} style={{ padding: "48px", textAlign: "center", color: "#555", fontSize: "13px" }}>
                   No tickets
                 </td>
               </tr>
@@ -267,6 +271,17 @@ export default function TicketTable({ tickets, onTicketClick, onStatusChange }: 
                   {/* Source */}
                   <td style={{ padding: "12px 12px", fontSize: "11px", color: "#555", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {ticket.source ?? "—"}
+                  </td>
+
+                  {/* Delete */}
+                  <td
+                    style={{ padding: "12px 12px", textAlign: "center" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <HoverDeleteButton
+                      onDelete={() => fetch(`/api/tickets/${ticket.id}`, { method: "DELETE" }).then(() => {})}
+                      onDeleted={() => onDelete(ticket.id)}
+                    />
                   </td>
                 </tr>
               );

@@ -92,3 +92,29 @@ export async function PATCH(
 
   return NextResponse.json(updated);
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const ticket = await db.serviceTicket.findFirst({
+    where: {
+      id: params.id,
+      service: { userId: session.user.id },
+    },
+  });
+
+  if (!ticket) {
+    return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+  }
+
+  await db.serviceTicket.delete({ where: { id: params.id } });
+
+  return NextResponse.json({ success: true });
+}
